@@ -195,3 +195,207 @@ IONEは観察研究における隠れた集団構造の検出と抽出のため�
 ---
 
 *本抄訳は原稿（約7,300語、図12点、表7点）の全セクションを網羅しています。*
+
+---
+
+# English Translation
+
+---
+
+# IONE論文 日本語抄訳
+
+## タイトル
+
+**IONE：観察研究における隠れた集団構造の検出のためのインコヒーレンス指向の中和と抽出**
+
+IONE: Incoherence-Oriented Neutralisation and Extraction for Detecting Hidden Population Structure in Observational Studies
+
+---
+
+## 抄録（構造化抄録）
+
+**背景：** 観察研究は、隠れた集団構造に起因する複数のバイアス（交絡、シンプソンのパラドックス、未検出の効果修飾、生態学的誤謬、非崩壊性）の影響を受けやすい。傾向スコアや予後スコアなどの既存の調整手法は測定された交絡因子のみに対処し、未測定変数による部分集団構造を検出する仕組みを持たない。本研究では、日常的に測定される変数のみを用いて集団のインコヒーレンスを定量化し、コヒーレントな部分集団を抽出する枠組みであるIONE（Incoherence-Oriented Neutralisation and Extraction）を提案する。
+
+**方法：** ADEMPフレームワークに準拠したモンテカルロシミュレーション研究を実施した。意図的に除外した3つの重大変数（年齢、性別、BMI）が10の測定変数と二値アウトカムに影響する因果有向非巡回グラフ（DAG）からデータを生成した。決定力ベース手法4種（予測確率、残差、交差検証型、機械学習不確実性）と特徴量得点ベース手法2種（主成分分析、クラスタリング）の計6手法を2つのファミリーで評価した。性能はAdjusted Rand Index（ARI）、イータ二乗（η²）、I²異質性統計量に基づくコヒーレンス指標（C1）で評価した。Phase 1は1,200シナリオにわたる18,000評価、感度分析は8,100シナリオにわたる48,600評価で構成された。さらに、IONEを5つの既報シンプソンのパラドックス事例（COVID-19致死率、腎結石治療、UCバークレー入学、イスラエルワクチン有効性、喫煙・死亡率パラドックス）に適用した。
+
+**結果：** シミュレーションでは、全提案手法がランダム層別化を有意に上回った（最良ARI = 0.020 vs. 0.000, p < 0.001）。決定力ベース手法は一貫して特徴量得点ベース手法を上回った。隠れた変数の測定変数への影響力（Z→X影響度）が性能の最大の決定因子であり、弱条件から強条件でARIが最大18倍に増加した。コヒーレンス指標C1は、インコヒーレントな集団とコヒーレントな集団を明確に識別した（提案手法C1 = 0.001 vs. ランダムC1 = 0.863）。実データ検証では、C1は全5事例でインコヒーレンスを正確に検出した（C1 = 0.001〜0.034 vs. ランダムC1 = 0.695〜1.000）。2群構造に対しては高い精度を達成した（腎結石ARI = 0.851、イスラエルワクチンARI = 0.746）。多群構造に対しては検出力が限定的であった（COVID-19 ARI = 0.064、バークレーARI = 0.082）。
+
+**結論：** IONEは二段階の貢献を提供する。第一に、C1コヒーレンス指標はサブグループの複雑さに関わらず集団のインコヒーレンスを確実に検出する。第二に、層別化によるコヒーレント部分集団の抽出は、隠れた変数が測定変数に十分強い痕跡を残す場合（η² > 0.4）かつ部分集団構造が離散的である場合に有効である。コヒーレンス評価を観察研究報告の標準的なステップとして組み込むことを推奨する。
+
+**キーワード：** シンプソンのパラドックス、交絡、集団異質性、コヒーレンス、層別化、未測定交絡因子、観察研究、因果推論
+
+---
+
+## 各セクション概要
+
+### 1. 背景（Background）
+
+観察研究（特に後ろ向きコホート研究）は、治療割り付けが研究者の制御下にないため、隠れた集団構造に起因する複数のバイアスに脆弱である。これらのバイアスはすべて単一の根本原因——研究対象集団が異質な部分集団を内包していること——から生じる。
+
+- **交絡バイアス**：曝露と結果の両方に影響する未測定変数が見かけ上の関連を生む
+- **シンプソンのパラドックス**：全体の関連がサブグループで逆転する現象
+- **効果修飾の見落とし**：効果が部分集団間で真に異なるのに単一の「平均的」効果として報告される
+- **生態学的誤謬**：集団レベルの関連を個人に不適切に一般化する
+- **非崩壊性**：オッズ比が交絡なしでも周辺と条件付きで一致しない数学的性質
+
+既存手法（傾向スコア、予後スコア、hdPS等）は**測定された共変量のみ**を調整し、**未測定変数による集団構造を検出する仕組みがない**。
+
+IONEは2段階アプローチを提案：
+1. **コヒーレンス度指標（C1）**で集団の均質性を定量評価
+2. インコヒーレンスが検出された場合、**測定変数の多変量パターンで層別化**し、各部分集団内で分析
+
+### 2. 方法（Methods）— ADEMP構造
+
+#### 目的（Aims）
+1. 測定変数のみによる層別化で未測定変数による群構造を再現できるか
+2. 決定力ベース手法 vs 特徴量得点ベース手法の比較
+3. C1指標のインコヒーレンス検出能力の評価
+4. 手法が有効/無効なデータ生成条件の特定
+
+#### データ生成メカニズム（Data-generating mechanisms）
+- **因果DAG**：重大変数Z（年齢・性別・BMI）→ 一般変数X（10変数）→ アウトカムY（二値）
+- Z₁（年齢）：N(60, 12²)、Z₂（性別）：Bernoulli(0.5)、Z₃（BMI区分）：3水準
+- X：臨床検査値を模擬（HbA1c、コレステロール、血圧、ALT、クレアチニン等）
+- Y：ロジスティックモデル、イベント率10-20%
+
+#### 推定量（Estimands）
+1. サブグループ再現度（ARI）
+2. 痕跡捕捉度（η²）
+3. コヒーレンス（C1 = 1 − I²）
+
+#### 評価手法（Methods）
+| ファミリー | 手法 | 概要 |
+|-----------|------|------|
+| 決定力ベース（アウトカム使用） | 1A 予測確率 | ロジスティック回帰の予測確率で層別化 |
+| | 1B 残差 | 絶対残差の大きさで層別化 |
+| | 1C 交差検証型 | K-fold CVで過学習を回避 |
+| | 1D ML不確実性 | ランダムフォレストの予測分散で層別化 |
+| 特徴量得点ベース（アウトカム不使用） | 2A PCA | 第1主成分得点で層別化 |
+| | 2B クラスタリング | k-meansのクラスタ割当を層とする |
+| ベースライン | ランダム | 無作為に層を割当（下限） |
+| | Oracle | 真のZでk-means（上限） |
+
+#### 性能指標（Performance measures）
+- **ARI**（Adjusted Rand Index）：偶然一致補正済みクラスタ一致度
+- **η²**（イータ二乗）：層別化がZの分散を説明する割合
+- **C1**（コヒーレンス指標）：層間の効果異質性。C1 ≈ 0 で異質（インコヒーレント）、C1 ≈ 1 で均質（コヒーレント）
+
+#### シミュレーション規模
+- Phase 1：1,200シナリオ × 15手法 = **18,000評価**（6.0分）
+- 感度分析：8,100シナリオ × 6手法 = **48,600評価**（9.4分）
+- **合計66,600評価**
+
+#### 実データ検証
+5つの既報シンプソンのパラドックス事例に適用：
+1. COVID-19致死率（N=50,459、9年齢群）
+2. 腎結石治療（N=700、2群）
+3. UCバークレー入学（N=4,425、6学部）
+4. イスラエルワクチン（N=6,100、2年齢群）
+5. 喫煙・死亡率（N=1,314、7年齢群）
+
+### 3. 結果（Results）
+
+#### シミュレーション結果
+
+**手法ランキング（Phase 1）：**
+
+| 順位 | 手法 | ARI | C1 |
+|------|------|-----|-----|
+| 1 | Oracle（k-means on Z） | 0.353 | 0.019 |
+| 2 | **1B 残差** | **0.020** | **0.001** |
+| 3 | 1D ML不確実性 | 0.017 | 0.001 |
+| 4 | 1A 予測確率 | 0.014 | 0.022 |
+| 5 | 1C 交差検証型 | 0.014 | 0.028 |
+| 6 | 2A PCA | 0.012 | 0.098 |
+| 7 | 2B クラスタリング | 0.011 | 0.079 |
+| 8 | ランダム | −0.000 | 0.863 |
+
+**重要な知見：**
+- **Z→X影響度が最大の決定因子**：弱(0.3)→強(1.0)でARI最大18倍増加
+- **年齢（連続変数）の捕捉が最も良好**：η² = 0.327。性別（二値）は困難：η² < 0.03
+- **C1指標は確実にインコヒーレンスを検出**：提案手法C1 = 0.001 vs ランダムC1 = 0.863
+- サンプルサイズの影響は小さい（N=500でもN=10,000でもほぼ同じARI）
+
+#### 実データ検証結果
+
+| 事例 | 最良手法 | ARI | C1（提案） | C1（ランダム） |
+|------|---------|-----|-----------|--------------|
+| 腎結石（2群） | 2B クラスタリング | **0.851** | 0.034 | 0.695 |
+| イスラエルワクチン（2群） | 2B クラスタリング | **0.746** | 0.005 | 0.770 |
+| 喫煙・死亡率（7群） | 1A 予測確率 | **0.498** | 0.005 | 1.000 |
+| UCバークレー（6群） | 1A 予測確率 | 0.082 | 0.011 | 0.954 |
+| COVID-19 CFR（9群） | 1B 残差 | 0.064 | 0.001 | 0.778 |
+
+**5つの知見：**
+1. **C1指標は全5事例でインコヒーレンスを正確に検出**（普遍的に有効）
+2. **Two-group structure is identified with high accuracy when ARI > 0.7**, multi-group structure is limited when ARI < 0.1
+3. Decision power-based methods and feature score-based methods are **complementary**
+4. **The higher η², the higher the ARI** (consistent with simulation results)
+5. Simulation results and real data results are **consistent**
+
+### 4. Discussion
+
+#### Two levels of usefulness
+- **First stage (certain)**: "Warning" function using C1 indicator—detects that the population is not homogeneous. Robust in all conditions
+- **Second stage (conditional)**: Extraction of subpopulations by stratification—ARI > 0.7 in two-group structure, ARI < 0.1 in multi-group structure. Valid if η² is over 0.4
+
+#### Relationship with existing methods
+IONE complements, not replaces, existing methods:
+- Verify population homogeneity with C1 as a pre-propensity score analysis step
+- If incoherence is detected, stratify → propensity score analysis within stratum
+- This two-step adjustment allows for more reliable effect estimates than single methods
+
+#### Main limitations
+1. Validation of real data uses pseudo-general variables (validation with real clinical data is the next step)
+2. The simulation data generation mechanism is relatively simple.
+3. Large gap with Oracle (ARI 0.020 vs 0.353)
+4. Difficult to capture binary variables (gender)
+5. C1 threshold 0.05 is a provisional value (further calibration required)
+
+### 5. Conclusions
+
+IONE provides a framework for detecting and extracting hidden population structure in observational studies. Through 66,600 simulation evaluations and demonstration to five previously published Simpson's paradox cases, we demonstrated a two-step contribution:
+
+1. **C1 Coherence Index** reliably detects population incoherence
+2. **Subpopulation extraction by stratification** is effective when the trace is sufficiently strong and the structure is discrete.
+
+**We recommend incorporating coherence assessment as a standard step in reporting observational studies. **
+
+---
+
+## References (28 total)
+
+Main citations:
+- [4] Simpson EH (1951) — Original paper on Simpson's paradox
+- [9] Charig et al. (1986, BMJ) — Kidney stone treatment
+- [10] Bickel et al. (1975, Science) — UC Berkeley admission
+- [11] von Kügelgen et al. (2021, IEEE TAI) — COVID-19 fatality rate
+- [14] Rosenbaum & Rubin (1983) — Propensity score
+- [15] Hansen (2008) — Prognostic score
+- [19] Schneeweiss et al. (2009) — High-dimensional propensity score
+- [25] Higgins & Thompson (2002) — I² statistic
+- [26] Morris et al. (2019) — ADEMP framework
+
+---
+
+## Submission information
+
+- **Submitted to**: BMC Medical Research Methodology
+- **Special Issue**: Causal inference and observational data vol. 2
+- **Deadline**: July 30, 2026
+- **IF**: 3.4 (Open Access)
+
+## Blank space
+
+The following fields are currently blank:
+- Author name/affiliation/contact information
+- Conflict of interest, funding source, author contribution, and acknowledgments
+- Repository URL
+- Monte Carlo standard error (for supplementary tables)
+- Additional file 1 (details of supplementary methods)
+- Additional file 4 (details of supplementary results)
+- STROBE-Sim Item 18 (MC SE in main tables), Item 23/25 (funding/funder role)
+
+---
+
+*This abstract translation covers all sections of the manuscript (approximately 7,300 words, 12 figures, and 7 tables). *
