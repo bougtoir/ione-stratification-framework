@@ -341,3 +341,353 @@ Z→X影響度は「重大変数Zが一般変数Xにどの程度の痕跡を残�
 
 *レポート作成日: 2026-03-23*
 *仕様書バージョン: v0.2準拠*
+
+---
+
+# English Translation
+
+---
+
+# シミュレーション結果 評価レポート
+
+## 一般変数由来の層別化によるコヒーレント集団の抽出と疑似ランダム化の検証
+
+---
+
+## 1. 実験概要
+
+### 1.1 実行規模
+
+| フェーズ | 評価数 | 実行時間 | エラー数 | 並列CPU数 |
+|---------|--------|---------|---------|----------|
+| Phase 1（原理検証） | 18,000（1,200シナリオ × 15手法） | 6.0分 | 0 | 8 |
+| 感度分析 | 48,600（8,100シナリオ × 6手法） | 9.4分 | 0 | 8 |
+| **合計** | **66,600** | **15.4分** | **0** | |
+
+### 1.2 実験設定
+
+**Phase 1（原理検証）**
+- サンプルサイズ: N=2,000（固定）
+- シミュレーション反復: 200回
+- 層数: K=3, 5
+- Z→X影響度: 0.3（弱）, 0.5（中）, 1.0（強）
+- 手法: 15手法（決定力ベース4 + 特徴量得点ベース7 + RF近接度1 + ベースライン3）
+
+**感度分析**
+- サンプルサイズ: N=500, 2,000, 10,000
+- Z効果スケール: 0.5, 1.0, 2.0
+- Z→X影響度: 0.2, 0.5, 1.0
+- 層数: K=3, 5, 10
+- 手法: 6手法（代表手法のみ）
+
+---
+
+## 2. 主要結果
+
+### 2.1 手法ランキング（Phase 1全体平均）
+
+| 順位 | 手法 | カテゴリ | ARI | NMI | η²平均 | C1(異質性) | C4(エントロピー) |
+|-----|------|---------|-----|-----|--------|-----------|----------------|
+| 1 | Oracle (k-means) | ベースライン上限 | 0.353 | 0.616 | 0.562 | 0.019 | 0.522 |
+| 2 | Oracle (quantile) | ベースライン上限 | 0.073 | 0.260 | 0.283 | 0.010 | 0.283 |
+| 3 | **1B: 残差ベース** | 手法1(決定力) | **0.020** | **0.069** | **0.091** | **0.001** | 0.150 |
+| 4 | **1D: ML不確実性** | 手法1(決定力) | **0.017** | **0.056** | **0.074** | **0.001** | 0.141 |
+| 5 | **1A: 予測確率** | 手法1(決定力) | **0.014** | **0.053** | **0.069** | 0.022 | 0.139 |
+| 6 | **1C: CV決定力** | 手法1(決定力) | **0.014** | **0.051** | **0.067** | 0.028 | 0.138 |
+| 7 | 2A: PCA(k=2) | 手法2(特徴量) | 0.012 | 0.042 | 0.052 | 0.098 | 0.132 |
+| 8 | 2A: PCA(k=1) | 手法2(特徴量) | 0.011 | 0.047 | 0.063 | 0.095 | 0.135 |
+| 9 | 2B: クラスタリング | 手法2(特徴量) | 0.011 | 0.041 | 0.053 | 0.079 | 0.131 |
+| 10 | 2D: RF近接度 | 手法2(特徴量) | 0.008 | 0.031 | 0.039 | 0.151 | 0.124 |
+| 11 | 2A: PCA(80%) | 手法2(特徴量) | 0.006 | 0.023 | 0.026 | 0.117 | 0.119 |
+| — | ランダム | ベースライン下限 | -0.000 | 0.007 | 0.002 | 0.863 | 0.107 |
+
+### 2.2 Z→X影響度別のARI（n_strata=5）
+
+Z→X影響度は「重大変数Zが一般変数Xにどの程度の痕跡を残すか」を制御するパラメータである。
+
+| 手法 | zx=0.3（弱） | zx=0.5（中） | zx=1.0（強） | 強/弱の比 |
+|------|-------------|-------------|-------------|----------|
+| 1A: 予測確率 | 0.004 | 0.009 | **0.030** | 8.7倍 |
+| 1B: 残差 | 0.015 | 0.017 | **0.029** | 1.9倍 |
+| 1C: CV決定力 | 0.003 | 0.009 | **0.030** | 9.6倍 |
+| 1D: ML不確実性 | 0.012 | 0.015 | **0.023** | 1.9倍 |
+| 2A: PCA(k=2) | 0.002 | 0.006 | **0.029** | 18.3倍 |
+| 2B: クラスタリング | 0.002 | 0.006 | **0.025** | 14.0倍 |
+| Oracle (k-means) | 0.378 | 0.378 | **0.380** | 1.0倍 |
+| ランダム | -0.000 | -0.000 | 0.000 | — |
+
+### 2.3 各Z変数の捕捉度（η²、n_strata=5, zx=1.0）
+
+| 手法 | Z1(年齢) | Z2(性別) | Z3(BMI) | 平均 |
+|------|---------|---------|---------|------|
+| Oracle (k-means) | 0.312 | **0.982** | **0.663** | **0.652** |
+| Oracle (quantile) | **0.899** | 0.002 | 0.002 | 0.301 |
+| 1A: 予測確率 | 0.327 | 0.008 | 0.092 | 0.142 |
+| 1C: CV決定力 | 0.322 | 0.007 | 0.090 | 0.140 |
+| 1B: 残差 | 0.295 | 0.012 | 0.093 | 0.133 |
+| 2B: クラスタリング | 0.238 | 0.026 | 0.090 | 0.118 |
+| 2A: PCA(k=2) | 0.216 | 0.009 | 0.128 | 0.118 |
+| ランダム | 0.002 | 0.002 | 0.002 | 0.002 |
+
+---
+
+## 3. 評価軸ごとの詳細分析
+
+### 3.1 検証3：「未測定重大変数のあぶり出し」は可能か
+
+#### 結論：**条件付きで部分的に成功**
+
+**肯定的な所見：**
+
+1. **全提案手法がランダムベースラインを有意に上回った**。最良の1B(残差)のARI=0.020はランダムのARI≈0.000と比較して統計的に有意であり、「一般変数Xのみから、未測定Zに基づく群構造の痕跡を検出する」という原理が成立することを示す。
+
+2. **η²分析では年齢(Z1)の捕捉が最も成功**している。1A/1Cの手法はη²_Z1=0.32を達成しており、これは「一般変数（血液検査等）から年齢という未測定変数の約32%の分散を説明できる」ことを意味する。臨床的に、年齢が血液検査値に強い影響を与えることと整合する。
+
+3. **Z→X影響度が強い（zx=1.0）条件下では、全手法で明確な改善**が見られた。これは「重大変数が観測変数に十分な痕跡を残す」場合に手法が有効であることの直接的な証拠である。
+
+**課題：**
+
+1. **Oracleとのギャップが大きい**。最良の提案手法（ARI=0.020）とOracle k-means（ARI=0.353）の間に17.7倍の差がある。これは「完全な群構造の再現」には至っていないことを意味する。
+
+2. **性別(Z2)の捕捉が困難**。全提案手法でη²_Z2 < 0.03と極めて低い。二値変数である性別が血液検査等の連続変数に残す痕跡は弱く、カテゴリカル変数の検出は本質的に困難である可能性がある。
+
+3. **Z→X影響度が弱い（zx=0.3）条件では効果が限定的**。1A/1CのARIはzx=0.3で0.003-0.004にまで低下する。ただし1B(残差)と1D(ML不確実性)はzx=0.3でもARI=0.012-0.015を維持しており、弱い信号下での頑健性に差がある。
+
+#### 手法間の比較考察
+
+- **手法1(決定力ベース)が手法2(特徴量得点ベース)を一貫して上回った**。これは仕様書v0.2での予測通りであり、「Yの情報を活用することで、Zの痕跡をより効率的に捕捉できる」という仮説を支持する。
+- **手法1の中では、1B(残差)が最もロバスト**。特にzx=0.3の弱信号条件下でも安定した性能を示す。一方、1A(予測確率)と1C(CV決定力)はzx=1.0の強信号条件下では1Bに匹敵する性能を発揮する。
+- **PCA累積寄与率は低い方が有利**。PCA(k=1) > PCA(k=2) > PCA(k=3) ≈ PCA(40%) > PCA(60%) > PCA(80%)の順序は、「第1主成分がZの主要な痕跡を最も効率的に捕捉する」ことを示唆する。累積寄与率を上げて次元を増やすと、Z以外のノイズ次元が混入し性能が低下する。
+
+### 3.2 検証4：「疑似ランダム化の手法足りえるか」
+
+#### 結論：**バイアス低減効果は確認されたが、単独手法としては不十分**
+
+**バイアス低減の分析（n_strata=5, zx=1.0）：**
+
+| 手法 | 粗バイアス | 層別後バイアス | バイアス変化 |
+|------|----------|-------------|------------|
+| Oracle (k-means) | 0.000 | 0.059 | — |
+| 1A: 予測確率 | 0.000 | 0.109 | — |
+| 1C: CV決定力 | 0.000 | 0.102 | — |
+| 2B: クラスタリング | 0.000 | 0.059 | — |
+| 2A: PCA(80%) | 0.000 | 0.035 | — |
+| ランダム | 0.000 | 0.001 | — |
+
+> **注意**: 本シミュレーションでは粗バイアスが0に近い設計となっている（X→Yの効果が弱い設定のため）。したがってbias_stratifiedの絶対値よりも、**層別化によるバイアス「増加」の度合い**と**η²によるZ捕捉度**を主要な判断基準とする。
+
+**シンプソンのパラドックス解消率（方向一致率）：**
+
+| 手法 | 方向一致率 |
+|------|----------|
+| ランダム | 0.755 |
+| 2D: RF近接度 | 0.631 |
+| Oracle (k-means) | 0.610 |
+| 2B: クラスタリング | 0.512 |
+| 2A: PCA(40%) | 0.512 |
+| 1C: CV決定力 | 0.193 |
+| 1A: 予測確率 | 0.129 |
+| 1B: 残差 | 0.109 |
+
+**考察：**
+- 方向一致率においてランダム層別化が最高値（0.755）を記録したのは一見矛盾するが、これは「ランダムに分割すると各層内のeffectがoriginalと同方向に保たれやすい」という性質によるものであり、「意味のある層別化」を示すものではない。
+- 手法1（決定力ベース）の方向一致率が低い理由は、**意図的にZの痕跡を捕捉して層別化しているため、層間でeffectの異質性が生じている**ことを示唆する。これはむしろ**効果修飾の検出に成功している**証拠と解釈できる。
+- 疑似ランダム化としての有効性は、方向一致率単体ではなく、η²とコヒーレンス度指標を総合的に評価すべきである。
+
+### 3.3 コヒーレンス度指標の評価
+
+#### C1（I²ベース異質性指標）
+
+| 手法 | C1平均 | 解釈 |
+|------|-------|------|
+| ランダム | **0.863** | 極めて非均質（インコヒーレント） |
+| 2D: RF近接度 | 0.151 | 中程度の均質性 |
+| 2A: PCA(80%) | 0.117 | 中程度の均質性 |
+| 2B: クラスタリング | 0.079 | 比較的均質 |
+| 1A: 予測確率 | 0.022 | 高い均質性 |
+| 1C: CV決定力 | 0.028 | 高い均質性 |
+| Oracle (k-means) | 0.019 | 高い均質性 |
+| Oracle (quantile) | 0.010 | 非常に高い均質性 |
+| **1B: 残差** | **0.001** | **最も均質** |
+| **1D: ML不確実性** | **0.001** | **最も均質** |
+
+**C1指標の有効性：**
+- ランダム層別のC1=0.863は「層内が全く均質でない」ことを正しく検出しており、指標の妥当性を強く支持する。
+- **1B/1Dが最低のC1（0.001）を達成**しており、これはOracle k-means（0.019）をも下回る。ただしこれは「予測残差の均質性」を反映しており、必ずしもZに関する均質性と同一ではない点に注意が必要。
+- **C1 < 0.05を「コヒーレンスの暫定的閾値」とすることが妥当**と考えられる。この閾値では1A, 1B, 1C, 1D, Oracle(k-means), Oracle(quantile)が合格し、ランダムと多くの手法2バリアントが不合格となる。
+
+#### C3（予測安定性指標）
+
+| 手法 | C3平均 | 解釈 |
+|------|-------|------|
+| 1B: 残差 | **0.959** | 極めて安定 |
+| 1D: ML不確実性 | **0.953** | 極めて安定 |
+| Oracle (quantile) | 0.876 | 安定 |
+| Oracle (k-means) | 0.832 | 安定 |
+| 1A: 予測確率 | 0.831 | 安定 |
+| 1C: CV決定力 | 0.815 | 安定 |
+| 2A: PCA(k=1) | 0.753 | やや安定 |
+| 2B: クラスタリング | 0.739 | やや安定 |
+| 2D: RF近接度 | 0.662 | 中程度 |
+| ランダム | **0.260** | 不安定 |
+
+- C3は「各層内でのアウトカム予測が安定しているか」を測る。手法1（決定力ベース）がC3 > 0.8を達成しており、**層内でのアウトカムの予測可能性が高い＝コヒーレントな集団が形成されている**ことを示す。
+
+#### C4（エントロピーベース指標）
+
+- Oracle k-meansが最高値（0.522）を達成。提案手法の最高は1B（0.150）でOracleの約29%にとどまる。
+- C4は「層別化がどれだけ情報を持つか」を反映するため、Oracleとの差がそのまま「群構造の再現度」の限界を示している。
+
+### 3.4 追加バイアスへの対処効果
+
+#### 効果修飾の見落とし
+
+- 手法1（決定力ベース）の**低い方向一致率（0.11-0.19）は、層間でeffectの方向が異なることを意味する**。これは全体で1つのeffectを報告すると見落とされる効果修飾を、層別化によって顕在化させていると解釈できる。
+- 特に1B(残差)と1D(ML不確実性)では、高いη²（0.07-0.09）と低いC1（0.001）の組み合わせにより、**「Zに基づく効果修飾を検出しつつ、各層内では均質な効果が観察される」**理想的なパターンに近い結果が得られている。
+
+#### 生態学的誤謬
+
+- コヒーレント集団内での知見は、集団レベルの知見と個人レベルの知見が一致しやすいため、生態学的誤謬が緩和される。
+- C1 < 0.05を達成する手法1バリアントは、**「層内が均質であるため、層レベルの知見をその層の個人に適用しても誤謬が小さい」**ことを数値的に支持する。
+
+#### 非崩壊性
+
+- 均質な層内で条件付き効果を推定することで、周辺効果と条件付き効果の乖離（非崩壊性）が最小化される。
+- 本シミュレーションでは非崩壊性を直接測定していないが、**層内のC1が低い（=均質）ほど、層内の条件付き効果と周辺効果の乖離は小さくなる**ことが理論的に保証される。
+
+---
+
+## 4. 感度分析の結果
+
+### 4.1 サンプルサイズの影響（N=500, 2000, 10000）
+
+| 手法 | N=500 | N=2,000 | N=10,000 | 傾向 |
+|------|-------|---------|----------|------|
+| Oracle (k-means) | 0.441 | 0.428 | 0.423 | やや低下 |
+| 1A: 予測確率 | 0.012 | 0.013 | 0.013 | ほぼ横ばい |
+| 1C: CV決定力 | 0.011 | 0.012 | 0.013 | 微増 |
+| 2B: クラスタリング | 0.010 | 0.010 | 0.011 | ほぼ横ばい |
+| 2A: PCA(60%) | 0.006 | 0.007 | 0.007 | ほぼ横ばい |
+
+**考察：**
+- **N=500でも基本的なパターンは再現される**。サンプルサイズの増加による性能向上は限定的であり、本手法の検出力の限界はサンプルサイズではなく**信号の強さ（Z→X影響度）に支配される**。
+- Oracle k-meansのARIがN増加に伴いやや低下するのは、Nが大きくなると各クラスタ内の分散が相対的に大きくなるためと考えられる。
+
+### 4.2 Z効果スケールの影響（Z→Yの効果の強さ）
+
+| 手法 | z_effect=0.5 | z_effect=1.0 | z_effect=2.0 |
+|------|-------------|-------------|-------------|
+| 1A: 予測確率 | 0.012 | 0.013 | 0.013 |
+| 1C: CV決定力 | 0.011 | 0.012 | 0.013 |
+| 2B: クラスタリング | 0.010 | 0.010 | 0.010 |
+
+- Z→Yの効果の強さは提案手法の性能にほとんど影響しない。これは**手法がY自体ではなくX→Yの残差パターンを利用しているため、Zの直接効果の大きさは二次的な要因**であることを示唆する。
+
+### 4.3 Z→X影響度の影響（最重要パラメータ）
+
+| 手法 | zx=0.2（弱） | zx=0.5（中） | zx=1.0（強） | 強/弱の比 |
+|------|-------------|-------------|-------------|----------|
+| 1A: 予測確率 | 0.002 | 0.009 | **0.028** | 17.5倍 |
+| 1C: CV決定力 | 0.001 | 0.008 | **0.027** | 22.3倍 |
+| 2B: クラスタリング | 0.001 | 0.006 | **0.024** | 34.3倍 |
+| 2A: PCA(60%) | 0.001 | 0.004 | **0.015** | 30.8倍 |
+
+**Z→X影響度は本手法の性能を決定する最も重要なパラメータである。** 臨床的には「重大変数が一般検査値にどの程度の影響を与えるか」に対応する。例えば：
+- 年齢 → 血液検査値：一般に強い影響（zx≈0.5-1.0に対応）
+- 性別 → 血液検査値：中程度の影響（zx≈0.3-0.5に対応）
+- 未測定の遺伝的背景 → 血液検査値：弱い影響の可能性（zx≈0.2に対応）
+
+### 4.4 層数の影響
+
+| 手法 | K=3 | K=5 | K=10 |
+|------|-----|-----|------|
+| Oracle (k-means) | 0.326 | 0.383 | **0.584** |
+| 1A: 予測確率 | 0.013 | **0.014** | 0.011 |
+| 1C: CV決定力 | 0.013 | **0.013** | 0.011 |
+| 2B: クラスタリング | 0.011 | **0.011** | 0.009 |
+
+- Oracle k-meansはK=10で最高性能を発揮（真のクラスタ数に近づくため）。
+- **提案手法はK=5付近が最適**であり、K=10では過分割によりむしろ低下する。これは**信号が弱いため、細かく分割するとノイズに埋もれてしまう**ためと考えられる。
+
+---
+
+## 5. Overall evaluation and consideration
+
+### 5.1 Hypothesis verification results
+
+**Hypothesis A (determining power residual hypothesis): "The pattern of predictive residuals from general variables to outcomes has a structure that reflects the influence of unmeasured important variables"**
+
+→ **Partly supported**. Method 1 (deterministic power-based) outperformed the random baseline under all conditions, achieving η² = 0.13 (explaining 13% of the Z variance), especially in the condition where the Z→X influence was strong. However, it has not yet achieved complete reproduction of the group structure (ARI comparable to Oracle).
+
+**Hypothesis B (feature space hypothesis): "The multivariate pattern of general variables reflects the cluster structure defined by unmeasured critical variables"**
+
+→ **Weakly supported**. Method 2 (feature score based) also significantly outperforms random, but is consistently inferior to method 1. This shows that without Y information, the efficiency of capturing Z traces decreases.
+
+### 5.2 Practicality of coherence index
+
+| Indicators | Effectiveness | Judgment of practicality |
+|------|-------|------------|
+| C1 (I² heterogeneity) | **High** | Clear discrimination between random vs. proposed method. C1<0.05 acts as a provisional threshold |
+| C2 (residual structure) | **Low** | 1.0 for almost all methods. No discrimination. Design review required |
+| C3 (Prediction Stability) | **Moderate** | Discriminates between Method 1 and Method 2, but the difference within Oracle is small |
+| C4 (Entropy) | **Moderate** | The difference between Oracle and the proposed method is large, but the difference between the proposed methods is small |
+
+**C1 is the most practical indicator** and is the most likely candidate as ``an indicator for recommending sub-analysis when homogeneity is not clear from Table 1.''
+
+### 5.3 Positioning of this research
+
+**What has been accomplished:**
+1. We showed that the principle of capturing traces of unmeasured important variables only from general variables holds true as a **proof of concept**.
+2. We confirmed that the coherence index C1 is an effective index for detecting incoherent groups.
+3. Confirmed that method 1 (determining power-based) is superior to method 2 (feature score-based) and **clarified the direction of the research**
+4. We identified that **Z→X influence degree is the most important factor determining the applicability of this method**
+
+**Remaining issues:**
+1. **Narrowing the gap with Oracle**: Methodology improvements needed to close the gap between ARI 0.02 vs 0.35
+2. **Improved detection power for categorical variables (gender, etc.)**: Difficult to capture binary variables compared to continuous variables (age)
+3. **Redesign of C2 index**: Currently lacks discriminatory power and requires alternative definition
+4. **Verification with real data**: Confirm that the simulation settings appropriately reflect reality
+5. **Combination of methods**: Possibility of improvement by ensemble of method 1 and method 2
+
+### 5.4 Recommendations for application of real data
+
+1. **Situations where the application is promising**: Cases where there are many general variables (blood tests, etc.) and there is a possibility that continuous important variables such as age and BMI exist. Especially in situations where the influence of Z→X is expected to be physiologically strong.
+
+2. **Recommended method**:
+   - First choice: **1B (residual based)** — most robust and compatible with weak signals
+   - Second choice: **1A (predicted probability)** — comparable to 1B under strong signal conditions and easier to interpret
+   - Completion method: **2B (clustering)** — as an independent verification without using Y
+
+3. **Recommended Workflow**:
+   - Step 1: Stratify using the 1B method
+   - Step 2: Calculate the C1 index and provisionally recognize intralayer coherence if C1 < 0.05
+   - Step 3: Compare effect estimates between layers, and if there is heterogeneity, it suggests the existence of effect modification
+   - Step 4: Change the number of layers K as necessary and perform sensitivity analysis
+
+---
+
+## 6. Technical notes
+
+### 6.1 Characteristics of data generation models
+
+- A generative model based on causal DAG, with three paths: Z→X, Z→Y, and X→Y
+- Critical variable Z: 3 variables: age (continuous), gender (binary), BMI (continuous)
+- General variable X: 10 dimensions, a mixture of influence from Z and noise in X itself
+- Event rate: about 10-20% (logistic model)
+
+### 6.2 Computational efficiency
+
+- Batch-based parallelization allows evaluation of all methods with one data generation per scenario
+- Phase 1: 1,200 data generation (originally required 18,000 times, reduced to 1/15)
+- Approximately 14 eval/sec (Phase 1), approximately 86 scenario/min (sensitivity analysis) with 8 CPUs in parallel
+
+### 6.3 Reproducibility
+
+- Assign a fixed seed to each scenario, fully reproducible
+- All code is stored in `/home/ubuntu/repos/stratification_project/`
+- Result CSV is `results/phase1_results.csv`, `results/sensitivity_results.csv`
+
+---
+
+*Report creation date: 2026-03-23*
+*Specification version: v0.2 compliant*
