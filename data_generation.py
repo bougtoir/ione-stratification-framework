@@ -124,7 +124,7 @@ def generate_dataset(
     z_component += ze * 0.3 * Z1_std * Z2  # Z1 x Z2 interaction on Y
 
     if n_z_vars < 3:
-        z_component = ze * (0.9 * Z1_std + 0.6 * Z2 + ze * 0.3 * Z1_std * Z2)
+        z_component = ze * (0.9 * Z1_std + 0.6 * Z2) + ze * 0.3 * Z1_std * Z2
     if n_z_vars < 2:
         z_component = ze * 0.9 * Z1_std
 
