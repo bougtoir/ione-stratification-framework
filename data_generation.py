@@ -20,6 +20,7 @@ def generate_dataset(
     event_rate: float = 0.15,
     treatment_effect: float = 0.5,
     em_strength: float = 0.4,
+    nonlinear: bool = False,
     seed: int | None = None,
 ) -> dict:
     """
@@ -47,6 +48,12 @@ def generate_dataset(
     em_strength : float
         Strength of effect modification (Z x A interaction on Y).
         Default 0.4. Higher = stronger effect modification by Z.
+    nonlinear : bool
+        If True, the Z -> X pathway uses a mixture of non-linear function
+        forms (threshold/step, quadratic, and Z x Z interaction) instead of
+        the default purely linear mapping. Used to test robustness of the
+        framework when traces of Z are encoded non-linearly in X.
+        Default False (linear Z -> X).
     seed : int or None
         Random seed for reproducibility.
 
@@ -77,16 +84,43 @@ def generate_dataset(
     s = zx_influence_scale
     nl = noise_level
 
-    X1 = s * (0.5 * Z1_std + 0.5 * Z3_std) + rng.normal(0, nl, n)
-    X2 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
-    X3 = s * (0.5 * Z1_std) + rng.normal(0, nl, n)
-    X4 = s * (0.3 * Z3_std) + rng.normal(0, nl, n)
-    X5 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
-    X6 = s * (0.5 * Z2) + rng.normal(0, nl, n)
-    X7 = s * (0.15 * Z1_std) + rng.normal(0, nl, n)
-    X8 = s * (0.3 * Z1_std) + rng.normal(0, nl, n)
-    X9 = s * (0.15 * Z1_std + 0.15 * Z3_std) + rng.normal(0, nl, n)
-    X10 = s * (0.3 * Z2 + 0.15 * Z3_std) + rng.normal(0, nl, n)
+    if not nonlinear:
+        # Default: purely linear Z -> X mapping
+        X1 = s * (0.5 * Z1_std + 0.5 * Z3_std) + rng.normal(0, nl, n)
+        X2 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
+        X3 = s * (0.5 * Z1_std) + rng.normal(0, nl, n)
+        X4 = s * (0.3 * Z3_std) + rng.normal(0, nl, n)
+        X5 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
+        X6 = s * (0.5 * Z2) + rng.normal(0, nl, n)
+        X7 = s * (0.15 * Z1_std) + rng.normal(0, nl, n)
+        X8 = s * (0.3 * Z1_std) + rng.normal(0, nl, n)
+        X9 = s * (0.15 * Z1_std + 0.15 * Z3_std) + rng.normal(0, nl, n)
+        X10 = s * (0.3 * Z2 + 0.15 * Z3_std) + rng.normal(0, nl, n)
+    else:
+        # Non-linear Z -> X mapping: a mixture of function forms.
+        # Components are mean-centred so overall scale is comparable to the
+        # linear case while the dependence on Z is genuinely non-linear.
+        thr1 = (Z1 > 65).astype(float)          # age threshold (step)
+        thr1 -= thr1.mean()
+        thr3 = (Z3 >= 2).astype(float)          # high-BMI threshold (step)
+        thr3 -= thr3.mean()
+        quad1 = Z1_std ** 2 - 1.0                # U-shape in age
+        quad3 = Z3_std ** 2 - np.mean(Z3_std ** 2)  # U-shape in BMI
+        inter13 = Z1_std * Z3_std               # age x BMI interaction
+        inter13 -= inter13.mean()
+        inter12 = Z1_std * Z2                    # age x sex interaction
+        inter12 -= inter12.mean()
+
+        X1 = s * (0.7 * thr1 + 0.5 * quad3) + rng.normal(0, nl, n)
+        X2 = s * (0.5 * quad1 + 0.15 * Z2) + rng.normal(0, nl, n)
+        X3 = s * (0.7 * thr1) + rng.normal(0, nl, n)
+        X4 = s * (0.6 * thr3) + rng.normal(0, nl, n)
+        X5 = s * (0.5 * inter13 + 0.15 * Z2) + rng.normal(0, nl, n)
+        X6 = s * (0.5 * Z2 + 0.3 * inter12) + rng.normal(0, nl, n)
+        X7 = s * (0.3 * quad1) + rng.normal(0, nl, n)
+        X8 = s * (0.5 * thr1) + rng.normal(0, nl, n)
+        X9 = s * (0.3 * inter13 + 0.2 * quad3) + rng.normal(0, nl, n)
+        X10 = s * (0.3 * Z2 + 0.3 * thr3) + rng.normal(0, nl, n)
 
     X = np.column_stack([X1, X2, X3, X4, X5, X6, X7, X8, X9, X10])
 
@@ -191,6 +225,7 @@ def generate_dataset(
         'actual_event_rate': float(Y.mean()),
         'treatment_effect': treatment_effect,
         'em_strength': em_strength,
+        'nonlinear': nonlinear,
         'treatment_prevalence': float(A.mean()),
         'seed': seed,
     }

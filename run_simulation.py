@@ -44,6 +44,7 @@ def run_scenario(
     method_specs: list,
     treatment_effect: float = 0.5,
     em_strength: float = 0.4,
+    nonlinear: bool = False,
 ) -> list:
     """
     Run one scenario: generate data once, apply ALL methods, evaluate each.
@@ -58,6 +59,7 @@ def run_scenario(
         n_z_vars=n_z_vars,
         treatment_effect=treatment_effect,
         em_strength=em_strength,
+        nonlinear=nonlinear,
         seed=seed,
     )
 
@@ -76,6 +78,7 @@ def run_scenario(
         'n_z_vars': n_z_vars,
         'treatment_effect': treatment_effect,
         'em_strength': em_strength,
+        'nonlinear': nonlinear,
         'actual_event_rate': data['params']['actual_event_rate'],
         'treatment_prevalence': data['params']['treatment_prevalence'],
     }
@@ -143,6 +146,8 @@ def run_phase1_simulation(
     n_sims: int = 200,
     n_jobs: int = -1,
     output_dir: str = 'results',
+    nonlinear: bool = False,
+    output_name: str = 'phase1_results.csv',
 ) -> pd.DataFrame:
     """
     Phase 1: Proof of concept.
@@ -170,7 +175,7 @@ def run_phase1_simulation(
 
     n_scenarios = len(scenarios)
     n_methods = len(method_specs)
-    print(f"Phase 1: {n_scenarios} scenarios x {n_methods} methods "
+    print(f"Phase 1 (nonlinear={nonlinear}): {n_scenarios} scenarios x {n_methods} methods "
           f"= {n_scenarios * n_methods} evaluations")
     print(f"Using {n_jobs} parallel jobs")
 
@@ -182,7 +187,7 @@ def run_phase1_simulation(
             s['z_effect_scale'], s['zx_influence_scale'],
             s['x_effect_scale'], s['noise_level'],
             s['n_z_vars'], s['seed'], method_specs,
-            s['treatment_effect'], s['em_strength'],
+            s['treatment_effect'], s['em_strength'], nonlinear,
         )
         for s in scenarios
     )
@@ -193,8 +198,8 @@ def run_phase1_simulation(
     print(f"Completed in {elapsed:.1f}s ({elapsed / 60:.1f}min)")
 
     df = pd.DataFrame(flat_results)
-    df.to_csv(os.path.join(output_dir, 'phase1_results.csv'), index=False)
-    print(f"Saved to {output_dir}/phase1_results.csv ({len(df)} rows)")
+    df.to_csv(os.path.join(output_dir, output_name), index=False)
+    print(f"Saved to {output_dir}/{output_name} ({len(df)} rows)")
     return df
 
 
@@ -202,6 +207,8 @@ def run_sensitivity_simulation(
     n_sims: int = 100,
     n_jobs: int = -1,
     output_dir: str = 'results',
+    nonlinear: bool = False,
+    output_name: str = 'sensitivity_results.csv',
 ) -> pd.DataFrame:
     """
     Sensitivity analysis: vary Z effect, Z->X influence, sample size, EM strength.
@@ -256,7 +263,7 @@ def run_sensitivity_simulation(
 
     n_scenarios = len(scenarios)
     n_methods = len(method_specs)
-    print(f"Sensitivity: {n_scenarios} scenarios x {n_methods} methods "
+    print(f"Sensitivity (nonlinear={nonlinear}): {n_scenarios} scenarios x {n_methods} methods "
           f"= {n_scenarios * n_methods} evaluations")
 
     start = time.time()
@@ -267,7 +274,7 @@ def run_sensitivity_simulation(
             s['z_effect_scale'], s['zx_influence_scale'],
             s['x_effect_scale'], s['noise_level'],
             s['n_z_vars'], s['seed'], method_specs,
-            s['treatment_effect'], s['em_strength'],
+            s['treatment_effect'], s['em_strength'], nonlinear,
         )
         for s in scenarios
     )
@@ -278,8 +285,8 @@ def run_sensitivity_simulation(
     print(f"Completed in {elapsed:.1f}s ({elapsed / 60:.1f}min)")
 
     df = pd.DataFrame(flat_results)
-    df.to_csv(os.path.join(output_dir, 'sensitivity_results.csv'), index=False)
-    print(f"Saved to {output_dir}/sensitivity_results.csv ({len(df)} rows)")
+    df.to_csv(os.path.join(output_dir, output_name), index=False)
+    print(f"Saved to {output_dir}/{output_name} ({len(df)} rows)")
     return df
 
 
