@@ -16,7 +16,7 @@
 
 **Methods:** We conducted a Monte Carlo simulation study following the ADEMP framework. Data were generated from a causal directed acyclic graph with three unmeasured variables (age, sex, BMI) influencing ten measured variables, a binary treatment, and a binary outcome. The unmeasured variables acted as both confounders (Z→A, Z→Y) and effect modifiers (Z×A→Y). We evaluated six proposed stratification methods in two families, benchmarked against four active comparators (propensity score quintiles, Gaussian mixture model, prognostic score, k-means on covariates) and two baselines (random, oracle). Performance was assessed by the Adjusted Rand Index (ARI), treatment effect bias reduction, a between-stratum heterogeneity indicator (C1, derived from I²), and a within-stratum homogeneity indicator (W). All estimates carry Monte Carlo standard errors. Phase 1 comprised 21,600 evaluations; sensitivity analyses comprised 109,350 evaluations. We additionally applied IONE to five published instances of Simpson's paradox as semi-synthetic illustrations.
 
-**Results:** The best proposed method (1B: residual-based stratification) achieved ARI = 0.021 (SE 0.0002) vs. random 0.000, modestly outperforming all active comparators (prognostic score 0.014, PS quintiles 0.012, GMM 0.008). W (within-stratum homogeneity) effectively discriminated methods: W = 0.292 for Method 1B vs. 0.001 for random stratification. C1 (between-stratum heterogeneity) showed limited discriminating power (range 0.81–0.87 across all methods). Method 1B achieved the largest ATE bias reduction (7.4%, SE 0.0016). Performance depended strongly on Z→X influence strength (ARI ratio 1.9–16× from weak to strong signal). Binary unmeasured variables were poorly captured (η² < 0.02). In semi-synthetic illustrations, all methods achieved ARI > 0.7 when pseudo-general variables carried strong traces of the known confounder.
+**Results:** The best proposed method (1B: residual-based stratification) achieved ARI = 0.021 (SE 0.0002) vs. random 0.000, modestly outperforming all active comparators (prognostic score 0.014, PS quintiles 0.012, GMM 0.008). W (within-stratum homogeneity) effectively discriminated methods: W = 0.292 for Method 1B vs. 0.001 for random stratification. C1 (between-stratum heterogeneity) showed limited discriminating power (range 0.81–0.87 across all methods). Method 1B achieved the largest ATE bias reduction (7.4%, SE 0.0016). Performance depended strongly on Z→X influence strength (ARI ratio 19–34× from weak to strong signal in sensitivity analysis), while effect modification strength and sample size had minor effects. Binary unmeasured variables were poorly captured (η² < 0.02). In semi-synthetic illustrations, all methods achieved ARI > 0.7 when pseudo-general variables carried strong traces of the known confounder.
 
 **Conclusions:** IONE provides a two-tier diagnostic: C1 detects between-stratum heterogeneity in treatment effects, and W quantifies within-stratum effect homogeneity. Together, they offer an exploratory assessment of population incoherence. Stratification-based extraction is most effective when unmeasured effect modifiers leave strong traces in measured variables. These indicators are intended as exploratory diagnostics to complement, not replace, established confounding adjustment methods.
 
@@ -345,13 +345,27 @@ All methods reduced ATE bias relative to the crude estimate. Method 1B achieved 
 
 #### Sensitivity analyses
 
-[Sensitivity analysis results to be populated after simulation completes. Key factors: N (500/2,000/10,000), Z→Y effect (0.5/1.0/2.0), Z→X influence (0.2/0.5/1.0), K (3/5/10), EM strength (0.0/0.4/0.8).]
+The sensitivity analysis comprised 109,350 evaluations (9 methods × 243 parameter combinations × 50 replications). We varied five parameters: sample size N ∈ {500, 2,000, 10,000}, Z→Y effect scale ∈ {0.5, 1.0, 2.0}, Z→X influence ∈ {0.2, 0.5, 1.0}, number of strata K ∈ {3, 5, 10}, and effect modification strength ∈ {0.0, 0.4, 0.8}.
 
-**Table 7.** ARI (SE) by Z→X influence strength in sensitivity analysis.
+Z→X influence strength was the dominant determinant of performance (Table 7). ARI increased 19- to 34-fold from weak (zx = 0.2) to strong (zx = 1.0) signal conditions across all proposed methods. Method 1A (predicted probability) and 1C (CV decision power) achieved the highest ARI at strong signal (0.027, SE 0.0001), followed by prognostic score (0.026), 2B clustering (0.024), PS quintiles (0.023), and GMM (0.017). At weak signal, all methods converged toward the random baseline (ARI ≈ 0.001).
+
+**Table 7.** ARI (SE) by Z→X influence strength in sensitivity analysis (109,350 evaluations).
 
 | Method | zx = 0.2 (weak) | zx = 0.5 (moderate) | zx = 1.0 (strong) |
 |--------|-----------------|--------------------|--------------------|
-| [TBD — selected methods including comparators] ||||
+| 1A: Predicted probability | 0.001 (0.0000) | 0.008 (0.0000) | 0.027 (0.0001) |
+| 1C: CV decision power | 0.001 (0.0000) | 0.008 (0.0000) | 0.027 (0.0001) |
+| 2A: PCA (cum. 60%) | 0.001 (0.0000) | 0.004 (0.0000) | 0.015 (0.0001) |
+| 2B: Clustering | 0.001 (0.0000) | 0.006 (0.0000) | 0.024 (0.0001) |
+| PS quintiles | 0.001 (0.0000) | 0.007 (0.0000) | 0.023 (0.0001) |
+| GMM | 0.001 (0.0000) | 0.004 (0.0000) | 0.017 (0.0001) |
+| Prognostic score | 0.001 (0.0000) | 0.008 (0.0000) | 0.026 (0.0001) |
+| Oracle k-means | 0.431 (0.0020) | 0.430 (0.0019) | 0.429 (0.0020) |
+| Random baseline | −0.000 (0.0000) | 0.000 (0.0000) | −0.000 (0.0000) |
+
+Effect modification strength had negligible impact on ARI: pooling all proposed methods, ARI was 0.0101 (SE 0.00008) at em = 0.0 and 0.0103 (SE 0.00008) at em = 0.8. Sample size had a modest effect: ARI increased from 0.0094 (N = 500) to 0.0109 (N = 10,000) across proposed methods.
+
+W (within-stratum homogeneity) showed consistent sensitivity to Z→X influence: Method 1A achieved W = 0.059 (zx = 0.2), 0.166 (zx = 0.5), and 0.361 (zx = 1.0), vs. random baseline W ≈ 0.004 regardless of condition. Bias reduction followed a similar pattern: Method 1A achieved 0.8% (zx = 0.2), 2.2% (zx = 0.5), and 4.9% (zx = 1.0) reduction in ATE bias.
 
 ### Semi-synthetic illustrations
 
@@ -383,7 +397,7 @@ C1 was consistently low for the best methods (C1 < 0.04 in all examples), indica
 
 This study introduces IONE, a framework for detecting and extracting hidden population structure arising from unmeasured effect modification and confounding in observational studies. The evaluation comprised 130,950 Monte Carlo evaluations and five semi-synthetic illustrations from published Simpson's paradox examples.
 
-The principal findings are threefold. First, the within-stratum homogeneity indicator W effectively separated methods that captured hidden population structure (W ≈ 0.41 for best proposed methods) from random stratification (W ≈ 0.001), whilst C1 (between-stratum heterogeneity indicator based on stratum-specific log odds ratios) had limited discriminating power in this setting (C1 ≈ 0.77–0.88 across all methods). This suggests that W may be the more useful diagnostic in practice. Second, proposed IONE methods modestly outperformed active comparators: Method 1B (residual) achieved ARI = 0.021 vs. prognostic score (0.014), PS quintiles (0.012), and GMM (0.008). However, the gap between all methods and the oracle baseline (ARI = 0.353) remained substantial, and the practical significance of these ARI values is limited. Third, all methods reduced ATE bias, with Method 1B achieving the largest reduction (7.4%), bringing the stratified estimate close to the true value. The strength of the hidden variable's influence on measured variables (Z→X) was the primary determinant of performance, with ARI increasing 2-fold to 16-fold from weak to strong signal conditions.
+The principal findings are threefold. First, the within-stratum homogeneity indicator W effectively separated methods that captured hidden population structure (W ≈ 0.41 for best proposed methods) from random stratification (W ≈ 0.001), whilst C1 (between-stratum heterogeneity indicator based on stratum-specific log odds ratios) had limited discriminating power in this setting (C1 ≈ 0.77–0.88 across all methods). This suggests that W may be the more useful diagnostic in practice. Second, proposed IONE methods modestly outperformed active comparators: Method 1B (residual) achieved ARI = 0.021 vs. prognostic score (0.014), PS quintiles (0.012), and GMM (0.008). However, the gap between all methods and the oracle baseline (ARI = 0.353) remained substantial, and the practical significance of these ARI values is limited. Third, all methods reduced ATE bias, with Method 1B achieving the largest reduction (7.4%), bringing the stratified estimate close to the true value. The strength of the hidden variable's influence on measured variables (Z→X) was the primary determinant of performance. In the sensitivity analysis, ARI increased 19- to 34-fold from weak (zx = 0.2) to strong (zx = 1.0) signal conditions, while effect modification strength and sample size had comparatively minor effects.
 
 ### Two-tier diagnostic: C1 and W
 
