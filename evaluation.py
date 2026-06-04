@@ -170,37 +170,10 @@ def compute_within_stratum_homogeneity(Y: np.ndarray, A: np.ndarray,
         within_var /= total_n
         return float(1.0 - within_var / overall_var)
 
-    # Estimate from observed data: use stratum-specific risk differences
-    if A is None:
-        return np.nan
-
-    overall_rd = Y[A == 1].mean() - Y[A == 0].mean() if len(np.unique(A)) == 2 else 0
-    stratum_rds = []
-    stratum_ns = []
-    for s in unique_strata:
-        mask = strata == s
-        n_s = mask.sum()
-        if n_s < 10:
-            continue
-        A_s, Y_s = A[mask], Y[mask]
-        if len(np.unique(A_s)) < 2:
-            continue
-        rd = Y_s[A_s == 1].mean() - Y_s[A_s == 0].mean()
-        stratum_rds.append(rd)
-        stratum_ns.append(n_s)
-
-    if len(stratum_rds) < 2:
-        return 1.0
-
-    stratum_rds = np.array(stratum_rds)
-    stratum_ns = np.array(stratum_ns, dtype=float)
-    overall_rd_est = np.average(stratum_rds, weights=stratum_ns)
-
-    overall_var = np.average((stratum_rds - overall_rd_est) ** 2, weights=stratum_ns)
-    if overall_var < 1e-10:
-        return 1.0
-
-    return float(1.0 - overall_var / max(np.var(stratum_rds), 1e-10))
+    # Observed-data fallback: W requires individual-level CATE estimates.
+    # Without true_cate or a CATE estimation model, W is not computable.
+    # Return NaN to signal that the metric is unavailable.
+    return np.nan
 
 
 # ============================================================

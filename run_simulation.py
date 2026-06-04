@@ -229,14 +229,23 @@ def run_sensitivity_simulation(
     ]
 
     scenarios = []
+    n_idx = {v: i for i, v in enumerate(sample_sizes)}
+    ze_idx = {v: i for i, v in enumerate(z_effect_scales)}
+    zx_idx = {v: i for i, v in enumerate(zx_influence_scales)}
+    ns_idx = {v: i for i, v in enumerate(n_strata_list)}
+    em_idx = {v: i for i, v in enumerate(em_strengths)}
     for sim_id in range(n_sims):
         for n_val in sample_sizes:
             for ze in z_effect_scales:
                 for zx in zx_influence_scales:
                     for ns in n_strata_list:
                         for em in em_strengths:
-                            seed = (sim_id * 1000000 + n_val + int(ze * 10)
-                                    + int(zx * 100) + ns + int(em * 10))
+                            seed = (sim_id * 10**8
+                                    + n_idx[n_val] * 10**6
+                                    + ze_idx[ze] * 10**4
+                                    + zx_idx[zx] * 10**3
+                                    + ns_idx[ns] * 10**2
+                                    + em_idx[em] * 10)
                             scenarios.append({
                                 'sim_id': sim_id, 'n': n_val, 'n_strata': ns,
                                 'z_effect_scale': ze, 'zx_influence_scale': zx,
