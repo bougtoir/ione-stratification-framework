@@ -2,11 +2,11 @@
 
 ---
 
-**[Author names to be inserted]**
+**Tatsuki Onishi**
 
-**[Affiliations to be inserted]**
+**[Affiliation to be confirmed by author]**
 
-**Corresponding author:** [Name, email, address to be inserted]
+**Corresponding author:** Tatsuki Onishi (bougtoir@gmail.com)
 
 ---
 
@@ -223,7 +223,7 @@ It should be noted that these semi-synthetic illustrations use pseudo-general va
 
 ### Computational implementation
 
-All simulations were parallelised across 8 CPU cores using the joblib library. Phase 1 completed in 6.0 minutes; sensitivity analyses in 9.4 minutes. Each scenario was assigned a fixed random seed for reproducibility. Code is available at [repository URL to be inserted].
+All simulations were parallelised across 8 CPU cores using the joblib library. Phase 1 completed in 6.0 minutes; sensitivity analyses in 9.4 minutes. Each scenario was assigned a fixed random seed for reproducibility. Code is available at https://github.com/bougtoir/ione-stratification-framework.
 
 ---
 
@@ -315,7 +315,13 @@ Age (Z₁, continuous) was captured most effectively (η² up to 0.306 for Metho
 
 C1 values were similar across all methods, including random stratification (C1 ≈ 0.87), indicating that C1 based on stratum-specific log odds ratios has limited discriminating power in this setting. The exception was Method 1B (C1 = 0.771), which showed slightly more between-stratum heterogeneity. In contrast, W was highly discriminating: random stratification produced W = 0.002, whilst the best proposed methods achieved W ≈ 0.41, comparable to the oracle k-means baseline (W = 0.411). The oracle quantile-based stratification achieved the highest W = 0.557. This finding supports the value of W as a complementary diagnostic to C1.
 
-[Figure 1: W (within-stratum homogeneity) across methods. To be inserted.]
+**Figure 1.** ARI by Z→X influence strength for proposed methods and active comparators. Shaded bands represent 95% confidence intervals based on MC SEs. Method 1B (residual) showed the most robust performance under weak signal conditions.
+
+**Figure 2.** Within-stratum homogeneity indicator W by method (K = 5 strata, zx = 1.0). Error bars represent 95% confidence intervals. W effectively discriminated methods capturing hidden structure from random stratification.
+
+**Figure 3.** Treatment effect bias reduction by method (K = 5 strata, zx = 1.0). Error bars represent 95% confidence intervals. Method 1B achieved the largest ATE bias reduction.
+
+**Figure 4.** C1 (between-stratum heterogeneity) vs. W (within-stratum homogeneity) for all methods (K = 5 strata, zx = 1.0). The ideal position is low C1 (high between-stratum heterogeneity) and high W (high within-stratum homogeneity), corresponding to the lower-right quadrant.
 
 #### Treatment effect bias reduction
 
@@ -355,18 +361,19 @@ Table 8 summarises the performance of IONE and comparator methods across the fiv
 
 **Table 8.** Summary of semi-synthetic illustration results.
 
-| Example | Best IONE method | Best ARI | Best comparator ARI | Oracle ARI | C1 (best) | C1 (random) | W (best) |
-|---------|-----------------|----------|---------------------|------------|-----------|-------------|----------|
-| [TBD — to be updated with new results including comparators and W] ||||||||
+| Example | K | Best IONE method | Best ARI | Oracle ARI | C1 (best) | C1 (random) |
+|---------|---|-----------------|----------|------------|-----------|-------------|
+| Kidney stone [9] | 2 | 2B: Clustering | 0.851 | 1.000 | 0.034 | 0.391 |
+| Israel vaccine [12] | 2 | 2B: Clustering | 0.746 | 1.000 | 0.005 | 1.000 |
+| Smoking mortality [13] | 7 | 1A: Predicted prob. | 0.498 | 1.000 | 0.005 | 1.000 |
+| UC Berkeley [10] | 3 | 1A: Predicted prob. | 0.082 | 1.000 | 0.011 | 1.000 |
+| COVID-19 CFR [11] | 3 | 1B: Residual | 0.064 | 1.000 | 0.002 | 1.000 |
 
 #### Key findings from semi-synthetic illustrations
 
-[To be written after results are available. Key points to address:
-1. C1 detection of incoherence
-2. W as complementary diagnostic (between ≠ within distinction)
-3. Comparison of IONE vs. active comparators
-4. Subgroup structure complexity as determinant of accuracy
-5. Concordance with simulation findings]
+The semi-synthetic illustrations showed markedly higher subgroup recovery than the primary simulation: ARI ranged from 0.064 (COVID-19 CFR) to 0.851 (kidney stone), compared with ARI ≈ 0.021 in simulation. This discrepancy arises because the pseudo-general variables were engineered to carry strong traces of the known confounder, a condition that is optimistic relative to real clinical data.
+
+C1 was consistently low for the best methods (C1 < 0.04 in all examples), indicating strong between-stratum heterogeneity. In four of five examples, random stratification yielded C1 = 1.000, confirming that the low C1 values reflect genuine structure recovered by the methods rather than noise. The kidney stone example showed the strongest recovery (ARI = 0.851, C1 = 0.034), consistent with its simple binary confounder (stone size) and strong Z→X traces. The UC Berkeley and COVID-19 examples were harder due to multi-level confounders (6 departments, 9 age groups), yielding lower ARI values despite low C1. This pattern is concordant with the simulation finding that subgroup recovery depends on the complexity of the hidden structure.
 
 ---
 
