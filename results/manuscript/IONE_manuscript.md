@@ -280,6 +280,8 @@ Under strong Z→X influence (zx = 1.0), all proposed and comparator methods sho
 
 #### Capture of individual critical variables
 
+Table 4 shows the eta-squared (η²) values for each critical variable under strong Z→X influence.
+
 **Table 4.** Eta-squared (η²) for each critical variable (K = 5 strata, zx = 1.0). Mean values.
 
 | Method | Z₁ (age, cont.) | Z₂ (sex, binary) | Z₃ (BMI, ordinal) | Mean |
@@ -298,6 +300,8 @@ Under strong Z→X influence (zx = 1.0), all proposed and comparator methods sho
 Age (Z₁, continuous) was captured most effectively (η² up to 0.306 for Method 1C), followed by BMI (Z₃, ordinal; η² up to 0.088). Sex (Z₂, binary) was poorly captured by all proposed methods and comparators (η² < 0.02), confirming that binary variables leave weak traces in continuous measured covariates. This represents a fundamental limitation: IONE and comparator methods are more effective at detecting continuous or ordinal effect modifiers than binary ones.
 
 #### C1 and W indicators
+
+Table 5 presents C1 and W values by method. Figures 1–4 visualise the key patterns.
 
 **Table 5.** C1 and W by method (K = 5 strata, zx = 1.0). Mean (MC SE).
 
@@ -326,6 +330,8 @@ C1 values were similar across all methods, including random stratification (C1 �
 **Figure 4.** C1 (between-stratum heterogeneity) vs. W (within-stratum homogeneity) for all methods (K = 5 strata, zx = 1.0). The ideal position is low C1 (high between-stratum heterogeneity) and high W (high within-stratum homogeneity), corresponding to the lower-right quadrant.
 
 #### Treatment effect bias reduction
+
+Table 6 reports treatment effect bias metrics.
 
 **Table 6.** Treatment effect bias metrics by method (K = 5 strata, zx = 1.0). Log-OR scale.
 
@@ -554,12 +560,12 @@ Not applicable.
 13. Appleton DR, French JM, Vanderpump MPJ. Ignoring a covariate: an example of Simpson's paradox. *Am Stat*. 1996;50(4):340–1.
 14. Rosenbaum PR, Rubin DB. The central role of the propensity score in observational studies for causal effects. *Biometrika*. 1983;70(1):41–55.
 15. Hansen BB. The prognostic analogue of the propensity score. *Biometrika*. 2008;95(2):481–8.
-16. Aikens RC, Greaves D, Baiocchi M. A pilot design for observational studies: using abundant data thoughtfully. *Stat Med*. 2020;39(29):4349–69.
+16. Aikens RC, Greaves D, Baiocchi M. A pilot design for observational studies: using abundant data thoughtfully. *Stat Med*. 2020;39(30):4821–40.
 17. Miettinen OS. Stratification by a multivariate confounder score. *Am J Epidemiol*. 1976;104(6):609–20.
 18. Angrist JD, Imbens GW, Rubin DB. Identification of causal effects using instrumental variables. *J Am Stat Assoc*. 1996;91(434):444–55.
 19. Schneeweiss S, Rassen JA, Glynn RJ, Avorn J, Mogun H, Brookhart MA. High-dimensional propensity score adjustment in studies of treatment effects using health care claims data. *Epidemiology*. 2009;20(4):512–22.
 20. Rassen JA, Schneeweiss S. Using high-dimensional propensity scores to automate confounding control in a distributed medical product safety surveillance system. *Pharmacoepidemiol Drug Saf*. 2012;21(S1):41–9.
-21. Wyss R, Schneeweiss S, van der Laan M, Lendle SD, Ju C, Franklin JM. Machine learning for improving high-dimensional proxy confounder adjustment in healthcare database studies. *Stat Med*. 2018;37(8):1310–24.
+21. Wyss R, Schneeweiss S, van der Laan M, Lendle SD, Ju C, Franklin JM. Using Super Learner prediction modeling to improve high-dimensional propensity score estimation. *Epidemiology*. 2018;29(1):96–106.
 22. Tchetgen Tchetgen EJ, Ying A, Cui Y, Shi X, Miao W. An introduction to proximal causal inference. *Stat Sci*. 2024;39(3):375–90.
 23. McLachlan GJ, Peel D. *Finite Mixture Models*. New York: Wiley; 2000.
 24. Hayes-Larson E, Kezios KL, Mooney SJ, Lovasi G. Who is in this study, anyway? Guidelines for a useful Table 1. *J Clin Epidemiol*. 2019;114:125–32.
