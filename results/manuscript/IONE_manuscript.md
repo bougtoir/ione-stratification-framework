@@ -14,9 +14,9 @@
 
 **Background:** Observational studies are susceptible to bias from unmeasured effect modification and confounding. When an unmeasured variable modifies the treatment effect, marginal estimates may misrepresent the treatment's impact on specific subpopulations. Existing adjustment methods address measured confounders but provide no mechanism for detecting subgroup structure driven by unmeasured effect modifiers. We propose IONE (Incoherence-Oriented Neutralisation and Extraction), an exploratory framework that detects population incoherence—heterogeneity in subgroup-specific treatment effects—and extracts coherent subpopulations using routinely measured variables.
 
-**Methods:** We conducted a Monte Carlo simulation study following the ADEMP framework. Data were generated from a causal directed acyclic graph with three unmeasured variables (age, sex, BMI) influencing ten measured variables, a binary treatment, and a binary outcome. The unmeasured variables acted as both confounders (Z→A, Z→Y) and effect modifiers (Z×A→Y). We evaluated six proposed stratification methods in two families, benchmarked against four active comparators (propensity score quintiles, Gaussian mixture model, prognostic score, k-means on covariates) and two baselines (random, oracle). Performance was assessed by the Adjusted Rand Index (ARI), treatment effect bias reduction, a between-stratum heterogeneity indicator (C1, derived from I²), and a within-stratum homogeneity indicator (W). All estimates carry Monte Carlo standard errors. Phase 1 comprised 21,600 evaluations; sensitivity analyses comprised 109,350 evaluations. We additionally applied IONE to five published instances of Simpson's paradox as semi-synthetic illustrations.
+**Methods:** We conducted a Monte Carlo simulation study following the ADEMP framework. Data were generated from a causal directed acyclic graph with three unmeasured variables (age, sex, BMI) influencing ten measured variables, a binary treatment, and a binary outcome. The unmeasured variables acted as both confounders (Z→A, Z→Y) and effect modifiers (Z×A→Y). We evaluated six proposed stratification methods in two families, benchmarked against four active comparators (propensity score quintiles, Gaussian mixture model, prognostic score, k-means on covariates) and two baselines (random, oracle). Performance was assessed by the Adjusted Rand Index (ARI), treatment effect bias reduction, a between-stratum heterogeneity indicator (C1, derived from I²), and a within-stratum homogeneity indicator (W). All estimates carry Monte Carlo standard errors. Phase 1 comprised 21,600 evaluations; sensitivity analyses comprised 109,350 evaluations; robustness to non-linear Z→X relationships was assessed with an additional 109,350 evaluations. We additionally applied IONE to five published instances of Simpson's paradox as semi-synthetic illustrations.
 
-**Results:** The best proposed method (1B: residual-based stratification) achieved ARI = 0.021 (SE 0.0002) vs. random 0.000, modestly outperforming all active comparators (prognostic score 0.014, PS quintiles 0.012, GMM 0.008). W (within-stratum homogeneity) effectively discriminated methods: W = 0.292 for Method 1B vs. 0.001 for random stratification. C1 (between-stratum heterogeneity) showed limited discriminating power (range 0.81–0.87 across all methods). Method 1B achieved the largest ATE bias reduction (7.4%, SE 0.0016). Performance depended strongly on Z→X influence strength (ARI ratio 19–34× from weak to strong signal in sensitivity analysis), while effect modification strength and sample size had minor effects. Binary unmeasured variables were poorly captured (η² < 0.02). In semi-synthetic illustrations, all methods achieved ARI > 0.7 when pseudo-general variables carried strong traces of the known confounder.
+**Results:** The best proposed method (1B: residual-based stratification) achieved ARI = 0.021 (SE 0.0002) vs. random 0.000, modestly outperforming all active comparators (prognostic score 0.014, PS quintiles 0.012, GMM 0.008). W (within-stratum homogeneity) effectively discriminated methods: W = 0.292 for Method 1B vs. 0.001 for random stratification. C1 (between-stratum heterogeneity) showed limited discriminating power (range 0.81–0.87 across all methods). Method 1B achieved the largest ATE bias reduction (7.4%, SE 0.0016). Performance depended strongly on Z→X influence strength (ARI ratio 19–34× from weak to strong signal in sensitivity analysis), while effect modification strength and sample size had minor effects. Under non-linear Z→X, linear-projection methods degraded moderately (ARI −29%), but mixture/clustering methods improved (+29% to +53%), indicating complementary robustness properties. Binary unmeasured variables were poorly captured (η² < 0.02). In semi-synthetic illustrations, all methods achieved ARI > 0.7 when pseudo-general variables carried strong traces of the known confounder.
 
 **Conclusions:** IONE provides a two-tier diagnostic: C1 detects between-stratum heterogeneity in treatment effects, and W quantifies within-stratum effect homogeneity. Together, they offer an exploratory assessment of population incoherence. Stratification-based extraction is most effective when unmeasured effect modifiers leave strong traces in measured variables. These indicators are intended as exploratory diagnostics to complement, not replace, established confounding adjustment methods.
 
@@ -72,6 +72,8 @@ $$X_j = \sum_{l=1}^{3} \alpha_{jl} \cdot Z_l + \epsilon_j, \quad \epsilon_j \sim
 
 where αⱼₗ represents the influence of critical variable Zₗ on general variable Xⱼ. The influence coefficients were varied systematically (see Scenarios below).
 
+To assess robustness to non-linear relationships, we additionally implemented a non-linear Z→X variant in which the linear mapping was replaced by a mixture of threshold functions (e.g. 1(Z₁ > 65)), quadratic terms (Z₁², Z₃²), and Z×Z interactions (Z₁ × Z₃). All non-linear components were mean-centred to maintain comparable distributions of X across the two variants. The non-linear variant was evaluated independently in a dedicated robustness analysis (see Results).
+
 #### Treatment model
 
 A binary treatment A was generated from a logistic model incorporating both confounding and measured covariate effects:
@@ -121,7 +123,7 @@ This yielded 1,200 data-generating scenarios. Each scenario was evaluated with 1
 
 This yielded 12,150 scenarios with 9 representative methods (4 proposed + 3 comparators + 2 baselines), producing 109,350 evaluations.
 
-The total number of evaluations across both phases was 130,950. All estimates are reported with Monte Carlo standard errors (SE = SD/√n_reps).
+An additional non-linear robustness analysis replicated the sensitivity grid (109,350 evaluations) under the non-linear Z→X variant. The total number of evaluations across all phases was 240,300. All estimates are reported with Monte Carlo standard errors (SE = SD/√n_reps).
 
 ### Estimands
 
@@ -367,13 +369,37 @@ Effect modification strength had negligible impact on ARI: pooling all proposed 
 
 W (within-stratum homogeneity) showed consistent sensitivity to Z→X influence: Method 1A achieved W = 0.059 (zx = 0.2), 0.166 (zx = 0.5), and 0.361 (zx = 1.0), vs. random baseline W ≈ 0.004 regardless of condition. Bias reduction followed a similar pattern: Method 1A achieved 0.8% (zx = 0.2), 2.2% (zx = 0.5), and 4.9% (zx = 1.0) reduction in ATE bias.
 
+#### Robustness to non-linear Z→X relationships
+
+To assess whether the proposed methods depend on the linearity of the Z→X mapping, we repeated the full simulation under a non-linear data-generating mechanism (threshold + quadratic + interaction terms; see Methods). The non-linear variant reduced the linear R² of X regressed on Z from 0.098 to 0.029, confirming that the standard linear trace was substantially disrupted whilst maintaining comparable event rates, treatment prevalence, and true CATE distributions.
+
+Table 8 summarises the comparison. Under strong Z→X influence (zx = 1.0), the linear-projection methods (1A, 1C, prognostic score, PS quintiles) showed moderate degradation in ARI (−29% to −41%), whereas the mixture/clustering methods (2B clustering, GMM) showed improved performance (+29% and +53%, respectively). This pattern was consistent across Phase 1 (21,600 evaluations per arm) and sensitivity (109,350 evaluations per arm) analyses.
+
+**Table 8.** ARI (SE) under linear vs. non-linear Z→X at strong signal (zx = 1.0) in sensitivity analysis (109,350 evaluations per arm).
+
+| Method | Linear | Non-linear | Δ (%) |
+|--------|--------|-----------|-------|
+| 1A: Predicted probability | 0.027 (0.0001) | 0.019 (0.0001) | −29% |
+| 1C: CV decision power | 0.027 (0.0001) | 0.019 (0.0001) | −29% |
+| 2A: PCA (cum. 60%) | 0.015 (0.0001) | 0.014 (0.0001) | −10% |
+| 2B: Clustering | 0.024 (0.0001) | 0.031 (0.0002) | **+29%** |
+| PS quintiles | 0.024 (0.0001) | 0.014 (0.0001) | −41% |
+| GMM | 0.017 (0.0001) | 0.027 (0.0002) | **+53%** |
+| Prognostic score | 0.026 (0.0001) | 0.017 (0.0001) | −33% |
+| Oracle k-means | 0.429 (0.0020) | 0.429 (0.0020) | 0% |
+| Random baseline | −0.000 (0.0000) | −0.000 (0.0000) | — |
+
+W (within-stratum homogeneity) was the metric most affected by non-linearity: for Method 1A, W decreased from 0.195 to 0.073 (−63%). Bias reduction showed similar degradation for linear-projection methods (1A: 2.7% → 1.1%) but was preserved for mixture methods (GMM: 1.1% → 0.3%). C1 was stable across both variants (range 0.80–0.88), indicating that between-stratum heterogeneity detection is insensitive to the functional form of Z→X.
+
+The key finding is that the optimal stratification method depends on the functional form of the latent trace: linear-projection methods (Family 1) perform best when Z→X is approximately linear, whilst mixture/clustering methods (Family 2 and GMM) are more robust to non-linear encodings. This supports the use of both method families as a complement, as their relative performance provides indirect evidence about the nature of the underlying Z→X relationship.
+
 ### Semi-synthetic illustrations
 
 #### Overview of results
 
-Table 8 summarises the performance of IONE and comparator methods across the five published Simpson's paradox examples.
+Table 9 summarises the performance of IONE and comparator methods across the five published Simpson's paradox examples.
 
-**Table 8.** Summary of semi-synthetic illustration results.
+**Table 9.** Summary of semi-synthetic illustration results.
 
 | Example | K | Best IONE method | Best ARI | Oracle ARI | C1 (best) | C1 (random) |
 |---------|---|-----------------|----------|------------|-----------|-------------|
@@ -423,11 +449,11 @@ This narrower framing aligns the Background motivation with the evaluation desig
 
 ### Strengths and limitations
 
-**Strengths.** This study employed a comprehensive simulation design with 130,950 evaluations spanning a wide range of data-generating conditions, including systematic variation of the key parameters (Z→X influence strength, effect modification strength, sample size, number of strata). The ADEMP framework ensured transparent reporting of all design choices. Active comparators (propensity score quintiles, GMM, prognostic score) were included to benchmark IONE against established methods. Monte Carlo standard errors accompany all point estimates, enabling assessment of estimation precision. The data-generating mechanism includes both a treatment variable and effect modification, aligning the evaluation with the causal-inference framing. Semi-synthetic illustrations on five published Simpson's paradox examples provided additional context, with appropriate caveats about their engineered nature.
+**Strengths.** This study employed a comprehensive simulation design with 240,300 evaluations spanning a wide range of data-generating conditions, including systematic variation of the key parameters (Z→X influence strength, effect modification strength, sample size, number of strata). The ADEMP framework ensured transparent reporting of all design choices. Active comparators (propensity score quintiles, GMM, prognostic score) were included to benchmark IONE against established methods. Monte Carlo standard errors accompany all point estimates, enabling assessment of estimation precision. The data-generating mechanism includes both a treatment variable and effect modification, aligning the evaluation with the causal-inference framing. Semi-synthetic illustrations on five published Simpson's paradox examples provided additional context, with appropriate caveats about their engineered nature.
 
 **Limitations.** Several limitations should be acknowledged. First, the semi-synthetic illustrations used pseudo-general variables generated from published aggregate data, rather than genuine clinical measurements. The encouraging ARI values from these illustrations cannot be read as evidence of out-of-the-box performance on real clinical data. Validation on clinical databases with individual-level data (e.g. MIMIC-IV, UK Biobank) where a known confounder is intentionally withheld is an important next step.
 
-Second, the simulation employed a relatively simple data-generating mechanism with three critical variables, ten general variables, linear Z→X relationships, and a logistic outcome model. Real clinical data may involve more complex causal structures, non-linear relationships, interactions among measured variables, missing data, and measurement error. The sensitivity of IONE to these complications requires further investigation.
+Second, the simulation employed a relatively simple data-generating mechanism with three critical variables, ten general variables, and a logistic outcome model. Whilst we assessed robustness to non-linear Z→X relationships (Table 8), finding that mixture/clustering methods are robust to non-linearity whilst linear-projection methods degrade moderately, the DGM does not incorporate missing data, measurement error, or complex interactions among measured variables. The sensitivity of IONE to these additional complications requires further investigation.
 
 Third, the number of strata K was set exogenously rather than estimated from the data. In practice, the number of hidden subgroups is unknown. Future work should explore data-driven approaches for selecting K (e.g. based on information criteria or stability analysis), and the sensitivity of results to misspecification of K should be characterised.
 

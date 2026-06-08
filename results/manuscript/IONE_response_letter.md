@@ -74,7 +74,7 @@ We acknowledge this limitation explicitly in the revised Discussion (§Strengths
 
 **7. Simplistic data-generating mechanism.**
 
-We acknowledge this limitation. The sensitivity analyses now include variation of the effect modification strength (δ = 0.0, 0.4, 0.8) as an additional dimension, but the DGM remains linear. We have added a new paragraph to the limitations section noting the absence of non-linear Z→X relationships, interactions among measured variables, missing data, and measurement error, and identifying these as priorities for future research.
+We have addressed this by implementing a non-linear Z→X variant and conducting a full robustness analysis (109,350 additional evaluations). The non-linear variant replaces the linear Z→X mapping with a mixture of threshold functions, quadratic terms, and Z×Z interactions. Under non-linear encoding, linear-projection methods (1A, 1C, PS, prognostic score) degraded moderately (ARI −29% to −41% at strong signal), but mixture/clustering methods (2B clustering, GMM) improved (+29% to +53%), revealing complementary robustness properties across the two method families. This finding strengthens the paper's practical recommendation to apply both families jointly. Results are presented in Table 8 and a new Results subsection (§Robustness to non-linear Z→X relationships). We acknowledge that the DGM still does not incorporate missing data, measurement error, or complex interactions among measured variables, which remain priorities for future research (see §Limitations, second paragraph).
 
 **8. Distinct phenomena are conflated under a single "incoherence" label.**
 
