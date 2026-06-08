@@ -367,6 +367,7 @@ def evaluate_stratification(X: np.ndarray, Y: np.ndarray, Z: np.ndarray,
 
     # C1 (using treatment variable if available)
     results['C1'] = compute_coherence_c1(X, Y, strata, A=A)
+    results['C1_heterogeneity'] = results['C1']  # backward compat
 
     # W (within-stratum homogeneity)
     if A is not None:

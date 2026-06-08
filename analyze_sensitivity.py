@@ -15,7 +15,7 @@ def analyze_sensitivity(csv_path='results/sensitivity_results.csv'):
     # Check columns available
     has_W = 'W' in df_clean.columns
     has_bias = 'bias_reduction' in df_clean.columns
-    has_C1 = 'C1_heterogeneity' in df_clean.columns
+    has_C1 = 'C1' in df_clean.columns or 'C1_heterogeneity' in df_clean.columns
     
     print(f"\nColumns: W={has_W}, bias_reduction={has_bias}, C1={has_C1}")
     print(f"Methods: {sorted(df_clean['method'].unique())}")
