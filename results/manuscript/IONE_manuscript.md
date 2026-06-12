@@ -254,7 +254,9 @@ Table 2 summarises the performance of all methods averaged across Phase 1 scenar
 | 11 | GMM | Comparator | 0.008 (0.0002) | 0.851 (0.0065) | 0.093 (0.0023) | 0.011 (0.0003) |
 | 12 | Random | Baseline (lower) | −0.000 (0.0000) | 0.863 (0.0062) | 0.001 (0.0000) | −0.000 (0.0000) |
 
-The best proposed IONE method (1B: Residual, ARI = 0.021) modestly outperformed all active comparators (prognostic score ARI = 0.014, PS quintiles ARI = 0.012, GMM ARI = 0.008). However, the gap between all proposed and comparator methods and the oracle baseline (ARI = 0.353) remained substantial. W (within-stratum homogeneity) was more discriminating than C1 (between-stratum heterogeneity) in this setting: Random stratification produced W ≈ 0.001, whilst Method 1B achieved W = 0.292 and the oracle quantile-based stratification achieved the highest W = 0.549. C1 values were similar across all methods (range 0.805–0.867), suggesting that C1 based on stratum-specific log odds ratios is a noisier diagnostic than C1 computed from stratum-specific outcome means. Method 1D achieved the highest bias reduction among proposed methods (0.045), followed by 1B (0.052).
+The best proposed IONE method (1B: Residual, ARI = 0.021) modestly outperformed all active comparators (prognostic score ARI = 0.014, PS quintiles ARI = 0.012, GMM ARI = 0.008). However, the gap between all proposed and comparator methods and the oracle baseline (ARI = 0.353) remained substantial. Figure 1 provides an overview of ARI and NMI across all methods. W (within-stratum homogeneity) was more discriminating than C1 (between-stratum heterogeneity) in this setting: Random stratification produced W ≈ 0.001, whilst Method 1B achieved W = 0.292 and the oracle quantile-based stratification achieved the highest W = 0.549. C1 values were similar across all methods (range 0.805–0.867), suggesting that C1 based on stratum-specific log odds ratios is a noisier diagnostic than C1 computed from stratum-specific outcome means. Method 1D achieved the highest bias reduction among proposed methods (0.045), followed by 1B (0.052).
+
+**Figure 1.** ARI and NMI by method (K = 5 strata, zx = 1.0). All proposed methods significantly outperformed the random baseline (p < 0.001 for all comparisons).
 
 #### Effect of Z→X influence strength
 
@@ -274,7 +276,9 @@ The strength of the hidden variable's influence on measured variables was expect
 | Oracle (k-means on Z) | 0.352 (0.0016) | 0.353 (0.0015) | 0.354 (0.0015) | 1.0 |
 | Random | 0.000 (0.0000) | −0.000 (0.0000) | 0.000 (0.0000) | — |
 
-Under strong Z→X influence (zx = 1.0), all proposed and comparator methods showed substantial improvement. Method 1B (residual) was the most robust under weak signal conditions (ARI = 0.015 at zx = 0.3 vs. 0.002–0.003 for other methods), consistent with its partial use of outcome information. The improvement ratio from weak to strong signal ranged from 1.9× (1B) to 15.7× (2B clustering), confirming that Z→X influence strength remains the primary determinant of extraction performance.
+Under strong Z→X influence (zx = 1.0), all proposed and comparator methods showed substantial improvement (Figure 2). Method 1B (residual) was the most robust under weak signal conditions (ARI = 0.015 at zx = 0.3 vs. 0.002–0.003 for other methods), consistent with its partial use of outcome information. The improvement ratio from weak to strong signal ranged from 1.9× (1B) to 15.7× (2B clustering), confirming that Z→X influence strength remains the primary determinant of extraction performance.
+
+**Figure 2.** ARI by Z→X influence strength for proposed methods and active comparators. Shaded bands represent 95% confidence intervals based on MC SEs. Method 1B (residual) showed the most robust performance under weak signal conditions.
 
 #### Capture of individual critical variables
 
@@ -293,7 +297,9 @@ Under strong Z→X influence (zx = 1.0), all proposed and comparator methods sho
 | **1D: ML uncertainty** | 0.179 | 0.005 | 0.058 | 0.081 |
 | Random | 0.001 | 0.002 | 0.002 | 0.002 |
 
-Age (Z₁, continuous) was captured most effectively (η² up to 0.306 for Method 1C), followed by BMI (Z₃, ordinal; η² up to 0.088). Sex (Z₂, binary) was poorly captured by all proposed methods and comparators (η² < 0.02), confirming that binary variables leave weak traces in continuous measured covariates. This represents a fundamental limitation: IONE and comparator methods are more effective at detecting continuous or ordinal effect modifiers than binary ones.
+Age (Z₁, continuous) was captured most effectively (η² up to 0.306 for Method 1C), followed by BMI (Z₃, ordinal; η² up to 0.088). Sex (Z₂, binary) was poorly captured by all proposed methods and comparators (η² < 0.02), confirming that binary variables leave weak traces in continuous measured covariates (Figure 3). This represents a fundamental limitation: IONE and comparator methods are more effective at detecting continuous or ordinal effect modifiers than binary ones.
+
+**Figure 3.** Eta-squared (η²) values showing capture of individual critical variables by each method (K = 5 strata, zx = 1.0). Binary variables (Z₂: sex) were poorly captured by all methods.
 
 #### C1 and W indicators
 
@@ -313,15 +319,13 @@ Age (Z₁, continuous) was captured most effectively (η² up to 0.306 for Metho
 | GMM | 0.860 (0.0150) | 0.174 (0.0026) | 0.174 |
 | Random | 0.872 (0.0140) | 0.002 (0.0001) | 0.002 |
 
-C1 values were similar across all methods, including random stratification (C1 ≈ 0.87), indicating that C1 based on stratum-specific log odds ratios has limited discriminating power in this setting. The exception was Method 1B (C1 = 0.771), which showed slightly more between-stratum heterogeneity. In contrast, W was highly discriminating: random stratification produced W = 0.002, whilst the best proposed methods achieved W ≈ 0.41, comparable to the oracle k-means baseline (W = 0.411). The oracle quantile-based stratification achieved the highest W = 0.557. This finding supports the value of W as a complementary diagnostic to C1.
+C1 values were similar across all methods, including random stratification (C1 ≈ 0.87), indicating that C1 based on stratum-specific log odds ratios has limited discriminating power in this setting (Figure 4). The exception was Method 1B (C1 = 0.771), which showed slightly more between-stratum heterogeneity. In contrast, W was highly discriminating (Figure 5): random stratification produced W = 0.002, whilst the best proposed methods achieved W ≈ 0.41, comparable to the oracle k-means baseline (W = 0.411). The oracle quantile-based stratification achieved the highest W = 0.557. Figure 6 plots C1 against W for all methods, showing that the combination of these two indicators separates effective stratification methods (lower-right quadrant: high between-stratum heterogeneity and high within-stratum homogeneity) from random stratification. This finding supports the value of W as a complementary diagnostic to C1.
 
-**Figure 1.** ARI by Z→X influence strength for proposed methods and active comparators. Shaded bands represent 95% confidence intervals based on MC SEs. Method 1B (residual) showed the most robust performance under weak signal conditions.
+**Figure 4.** Coherence indicator C1 across methods (K = 5 strata, zx = 1.0). Lower C1 indicates more between-stratum heterogeneity. Error bars represent 95% confidence intervals.
 
-**Figure 2.** Within-stratum homogeneity indicator W by method (K = 5 strata, zx = 1.0). Error bars represent 95% confidence intervals. W effectively discriminated methods capturing hidden structure from random stratification.
+**Figure 5.** Within-stratum homogeneity indicator W by method (K = 5 strata, zx = 1.0). Error bars represent 95% confidence intervals. W effectively discriminated methods capturing hidden structure from random stratification.
 
-**Figure 3.** Treatment effect bias reduction by method (K = 5 strata, zx = 1.0). Error bars represent 95% confidence intervals. Method 1B achieved the largest ATE bias reduction.
-
-**Figure 4.** C1 (between-stratum heterogeneity) vs. W (within-stratum homogeneity) for all methods (K = 5 strata, zx = 1.0). The ideal position is low C1 (high between-stratum heterogeneity) and high W (high within-stratum homogeneity), corresponding to the lower-right quadrant.
+**Figure 6.** C1 (between-stratum heterogeneity) vs. W (within-stratum homogeneity) for all methods (K = 5 strata, zx = 1.0). The ideal position is low C1 and high W, corresponding to the lower-right quadrant.
 
 #### Treatment effect bias reduction
 
@@ -341,7 +345,9 @@ C1 values were similar across all methods, including random stratification (C1 �
 | GMM | 0.156 | 0.135 | 0.069 | 0.087 | 0.066 | 0.021 (0.0004) |
 | Random | 0.156 | 0.156 | 0.069 | 0.087 | 0.087 | 0.000 (0.0001) |
 
-All methods reduced ATE bias relative to the crude estimate. Method 1B achieved the largest bias reduction (7.4%), bringing the stratified ATE (0.064) closest to the true ATE (0.069). Notably, the oracle k-means baseline, which optimises for Z-recovery (highest ARI), did not achieve the largest bias reduction; the oracle quantile-based stratification (5.5%) and several proposed methods outperformed it, suggesting that ARI and bias reduction capture different aspects of stratification quality. Among active comparators, PS quintiles (5.1%) and prognostic score (4.9%) performed comparably to proposed IONE methods, whilst GMM (2.1%) was less effective.
+All methods reduced ATE bias relative to the crude estimate (Figure 7). Method 1B achieved the largest bias reduction (7.4%), bringing the stratified ATE (0.064) closest to the true ATE (0.069). Notably, the oracle k-means baseline, which optimises for Z-recovery (highest ARI), did not achieve the largest bias reduction; the oracle quantile-based stratification (5.5%) and several proposed methods outperformed it, suggesting that ARI and bias reduction capture different aspects of stratification quality. Among active comparators, PS quintiles (5.1%) and prognostic score (4.9%) performed comparably to proposed IONE methods, whilst GMM (2.1%) was less effective.
+
+**Figure 7.** Treatment effect bias reduction by method (K = 5 strata, zx = 1.0). Error bars represent 95% confidence intervals. Method 1B achieved the largest ATE bias reduction.
 
 #### Sensitivity analyses
 
@@ -363,9 +369,17 @@ Z→X influence strength was the dominant determinant of performance (Table 7). 
 | Oracle k-means | 0.431 (0.0020) | 0.430 (0.0019) | 0.429 (0.0020) |
 | Random baseline | −0.000 (0.0000) | 0.000 (0.0000) | −0.000 (0.0000) |
 
-Effect modification strength had negligible impact on ARI: pooling all proposed methods, ARI was 0.0101 (SE 0.00008) at em = 0.0 and 0.0103 (SE 0.00008) at em = 0.8. Sample size had a modest effect: ARI increased from 0.0094 (N = 500) to 0.0109 (N = 10,000) across proposed methods.
+Effect modification strength had negligible impact on ARI: pooling all proposed methods, ARI was 0.0101 (SE 0.00008) at em = 0.0 and 0.0103 (SE 0.00008) at em = 0.8. Sample size had a modest effect (Figure 8): ARI increased from 0.0094 (N = 500) to 0.0109 (N = 10,000) across proposed methods.
 
-W (within-stratum homogeneity) showed consistent sensitivity to Z→X influence: Method 1A achieved W = 0.059 (zx = 0.2), 0.166 (zx = 0.5), and 0.361 (zx = 1.0), vs. random baseline W ≈ 0.004 regardless of condition. Bias reduction followed a similar pattern: Method 1A achieved 0.8% (zx = 0.2), 2.2% (zx = 0.5), and 4.9% (zx = 1.0) reduction in ATE bias.
+**Figure 8.** Effect of sample size on method performance in sensitivity analysis. Performance was largely insensitive to sample size.
+
+Figure 9 further illustrates the dominant role of Z→X influence in the sensitivity analysis.
+
+**Figure 9.** Z→X influence strength vs. ARI in sensitivity analysis across methods. Z→X influence was the dominant determinant of performance.
+
+W (within-stratum homogeneity) showed consistent sensitivity to Z→X influence: Method 1A achieved W = 0.059 (zx = 0.2), 0.166 (zx = 0.5), and 0.361 (zx = 1.0), vs. random baseline W ≈ 0.004 regardless of condition. Bias reduction followed a similar pattern: Method 1A achieved 0.8% (zx = 0.2), 2.2% (zx = 0.5), and 4.9% (zx = 1.0) reduction in ATE bias. Figure 10 provides a summary dashboard of all Phase 1 simulation results.
+
+**Figure 10.** Summary dashboard of simulation results across all Phase 1 conditions (K = 5, zx = 1.0). Four panels: ARI, W, bias reduction, and C1.
 
 ### Semi-synthetic illustrations
 
@@ -385,9 +399,21 @@ Table 8 summarises the performance of IONE and comparator methods across the fiv
 
 #### Key findings from semi-synthetic illustrations
 
-The semi-synthetic illustrations showed markedly higher subgroup recovery than the primary simulation: ARI ranged from 0.064 (COVID-19 CFR) to 0.851 (kidney stone), compared with ARI ≈ 0.021 in simulation. This discrepancy arises because the pseudo-general variables were engineered to carry strong traces of the known confounder, a condition that is optimistic relative to real clinical data.
+The semi-synthetic illustrations showed markedly higher subgroup recovery than the primary simulation: ARI ranged from 0.064 (COVID-19 CFR) to 0.851 (kidney stone), compared with ARI ≈ 0.021 in simulation (Figure 11). This discrepancy arises because the pseudo-general variables were engineered to carry strong traces of the known confounder, a condition that is optimistic relative to real clinical data.
 
-C1 was consistently low for the best methods (C1 < 0.04 in all examples), indicating strong between-stratum heterogeneity. In four of five examples, random stratification yielded C1 = 1.000, confirming that the low C1 values reflect genuine structure recovered by the methods rather than noise. The kidney stone example showed the strongest recovery (ARI = 0.851, C1 = 0.034), consistent with its simple binary confounder (stone size) and strong Z→X traces. The UC Berkeley and COVID-19 examples were harder due to multi-level confounders (6 departments, 9 age groups), yielding lower ARI values despite low C1. This pattern is concordant with the simulation finding that subgroup recovery depends on the complexity of the hidden structure.
+**Figure 11.** Subgroup recovery (ARI) across the five semi-synthetic Simpson’s paradox examples by method.
+
+C1 was consistently low for the best methods (C1 < 0.04 in all examples), indicating strong between-stratum heterogeneity (Figure 12). In four of five examples, random stratification yielded C1 = 1.000, confirming that the low C1 values reflect genuine structure recovered by the methods rather than noise. The kidney stone example showed the strongest recovery (ARI = 0.851, C1 = 0.034), consistent with its simple binary confounder (stone size) and strong Z→X traces. The UC Berkeley and COVID-19 examples were harder due to multi-level confounders (6 departments, 9 age groups), yielding lower ARI values despite low C1 (Figure 13). The relationship between η² and ARI across the five examples is shown in Figure 14. Direction consistency across examples is presented in Figure 15. Figure 16 provides a summary dashboard of all semi-synthetic illustration results. This pattern is concordant with the simulation finding that subgroup recovery depends on the complexity of the hidden structure.
+
+**Figure 12.** C1 values across the five semi-synthetic illustrations: proposed methods vs. random baseline.
+
+**Figure 13.** Method comparison across the five semi-synthetic examples (mean ARI by method).
+
+**Figure 14.** Eta-squared (η²) heatmap across semi-synthetic examples and methods.
+
+**Figure 15.** Direction consistency analysis across the five semi-synthetic examples.
+
+**Figure 16.** Summary dashboard of semi-synthetic illustration results across all five examples.
 
 ---
 
