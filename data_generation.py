@@ -51,6 +51,7 @@ def generate_dataset(
     n_z_vars: int = 3,
     event_rate: float = 0.15,
     treatment_prevalence: float = 0.5,
+    nonlinear: bool = False,
     tau: float | None = None,
     delta: list[float] | None = None,
     gamma_z: list[float] | None = None,
@@ -87,16 +88,29 @@ def generate_dataset(
     s = zx_influence_scale
     nl = noise_level
 
-    X1 = s * (0.5 * Z1_std + 0.5 * Z3_std) + rng.normal(0, nl, n)
-    X2 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
-    X3 = s * (0.5 * Z1_std) + rng.normal(0, nl, n)
-    X4 = s * (0.3 * Z3_std) + rng.normal(0, nl, n)
-    X5 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
-    X6 = s * (0.5 * Z2) + rng.normal(0, nl, n)
-    X7 = s * (0.15 * Z1_std) + rng.normal(0, nl, n)
-    X8 = s * (0.3 * Z1_std) + rng.normal(0, nl, n)
-    X9 = s * (0.15 * Z1_std + 0.15 * Z3_std) + rng.normal(0, nl, n)
-    X10 = s * (0.3 * Z2 + 0.15 * Z3_std) + rng.normal(0, nl, n)
+    if nonlinear:
+        # Non-linear Z->X mappings: squares and interactions
+        X1 = s * (0.5 * Z1_std**2 + 0.5 * Z3_std) + rng.normal(0, nl, n)
+        X2 = s * (0.3 * Z1_std * Z2 + 0.15 * Z2) + rng.normal(0, nl, n)
+        X3 = s * (0.5 * Z1_std + 0.2 * Z3_std**2) + rng.normal(0, nl, n)
+        X4 = s * (0.3 * Z3_std * Z1_std) + rng.normal(0, nl, n)
+        X5 = s * (0.3 * Z1_std + 0.15 * Z2 * Z3_std) + rng.normal(0, nl, n)
+        X6 = s * (0.5 * Z2 + 0.2 * Z1_std**2) + rng.normal(0, nl, n)
+        X7 = s * (0.15 * Z1_std * Z3_std) + rng.normal(0, nl, n)
+        X8 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
+        X9 = s * (0.15 * Z1_std**2 + 0.15 * Z3_std) + rng.normal(0, nl, n)
+        X10 = s * (0.3 * Z2 + 0.15 * Z3_std**2) + rng.normal(0, nl, n)
+    else:
+        X1 = s * (0.5 * Z1_std + 0.5 * Z3_std) + rng.normal(0, nl, n)
+        X2 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
+        X3 = s * (0.5 * Z1_std) + rng.normal(0, nl, n)
+        X4 = s * (0.3 * Z3_std) + rng.normal(0, nl, n)
+        X5 = s * (0.3 * Z1_std + 0.15 * Z2) + rng.normal(0, nl, n)
+        X6 = s * (0.5 * Z2) + rng.normal(0, nl, n)
+        X7 = s * (0.15 * Z1_std) + rng.normal(0, nl, n)
+        X8 = s * (0.3 * Z1_std) + rng.normal(0, nl, n)
+        X9 = s * (0.15 * Z1_std + 0.15 * Z3_std) + rng.normal(0, nl, n)
+        X10 = s * (0.3 * Z2 + 0.15 * Z3_std) + rng.normal(0, nl, n)
 
     X = np.column_stack([X1, X2, X3, X4, X5, X6, X7, X8, X9, X10])
 
@@ -185,6 +199,7 @@ def generate_dataset(
         'x_effect_scale': x_effect_scale,
         'noise_level': noise_level,
         'n_z_vars': n_z_vars,
+        'nonlinear': nonlinear,
         'event_rate': event_rate,
         'treatment_prevalence': treatment_prevalence,
         'actual_event_rate': float(Y.mean()),

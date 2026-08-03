@@ -68,9 +68,10 @@ def compute_eta_squared(Z: np.ndarray, strata: np.ndarray) -> dict:
     z_names = ['Z1_age', 'Z2_sex', 'Z3_bmi']
     for j in range(Z.shape[1]):
         z_col = Z[:, j]
+        name = z_names[j] if j < len(z_names) else f'Z{j+1}'
         ss_total = np.sum((z_col - z_col.mean()) ** 2)
         if ss_total == 0:
-            results[f'eta2_{z_names[j]}'] = 0.0
+            results[f'eta2_{name}'] = 0.0
             continue
         ss_between = 0
         for s in np.unique(strata):
@@ -78,23 +79,31 @@ def compute_eta_squared(Z: np.ndarray, strata: np.ndarray) -> dict:
             n_s = mask.sum()
             if n_s > 0:
                 ss_between += n_s * (z_col[mask].mean() - z_col.mean()) ** 2
-        results[f'eta2_{z_names[j]}'] = float(ss_between / ss_total)
+        results[f'eta2_{name}'] = float(ss_between / ss_total)
     results['eta2_mean'] = float(np.mean(list(results.values())))
     return results
 
 
 def compute_within_strata_entropy(Z: np.ndarray, strata: np.ndarray) -> dict:
-    """Compute entropy of Z2 (sex) within each stratum."""
+    """Compute entropy of Z2 (binary second confounder) within each stratum, if available."""
+    if Z.shape[1] < 2:
+        return {'weighted_entropy_Z2': float(np.nan), 'entropy_reduction_Z2': float(np.nan)}
+
     unique_strata = np.unique(strata)
     entropies = []
     for s in unique_strata:
         mask = strata == s
         z2_in_stratum = Z[mask, 1]
+        if len(z2_in_stratum) == 0:
+            continue
         p = z2_in_stratum.mean()
         if p == 0 or p == 1:
             entropies.append(0.0)
         else:
             entropies.append(-p * np.log2(p) - (1 - p) * np.log2(1 - p))
+
+    if len(entropies) == 0:
+        return {'weighted_entropy_Z2': float(np.nan), 'entropy_reduction_Z2': float(np.nan)}
 
     weights = np.array([np.sum(strata == s) for s in unique_strata]) / len(strata)
     weighted_entropy = float(np.sum(np.array(entropies) * weights))

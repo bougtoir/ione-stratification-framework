@@ -10,7 +10,7 @@ import os
 from joblib import Parallel, delayed
 import warnings
 
-from data_generation import generate_dataset, define_true_strata
+from data_generation import generate_dataset
 from methods import (
     method_1a_predicted_probability,
     method_1b_residual,
@@ -41,6 +41,7 @@ def run_scenario(
     n_z_vars: int,
     seed: int,
     method_specs: list,
+    nonlinear: bool = False,
 ) -> list:
     """
     Run one scenario: generate data once, apply ALL methods, evaluate each.
@@ -53,6 +54,7 @@ def run_scenario(
         x_effect_scale=x_effect_scale,
         noise_level=noise_level,
         n_z_vars=n_z_vars,
+        nonlinear=nonlinear,
         seed=seed,
     )
 
@@ -70,6 +72,7 @@ def run_scenario(
         'x_effect_scale': x_effect_scale,
         'noise_level': noise_level,
         'n_z_vars': n_z_vars,
+        'nonlinear': nonlinear,
         'actual_event_rate': data['params']['actual_event_rate'],
         'actual_treatment_prevalence': data['params']['actual_treatment_prevalence'],
         'true_ate_riskdiff': true_ate_riskdiff,
@@ -149,7 +152,7 @@ def build_method_specs(include_slow: bool = False) -> list:
 
 
 def run_phase1_simulation(
-    n_sims: int = 200,
+    n_sims: int = 50,
     n_jobs: int = -1,
     output_dir: str = 'results',
 ) -> pd.DataFrame:
@@ -161,14 +164,14 @@ def run_phase1_simulation(
     n = 2000
     n_strata_list = [3, 5]
     zx_scales = [0.3, 0.5, 1.0]
-    method_specs = build_method_specs(include_slow=True)
+    method_specs = build_method_specs(include_slow=False)
 
     scenarios = []
     for sim_id in range(n_sims):
         for n_strata in n_strata_list:
             for zx_scale in zx_scales:
                 seed = sim_id * 10000 + int(zx_scale * 100) + n_strata
-                scenarios.append((sim_id, n, n_strata, 1.0, zx_scale, 1.0, 1.0, 3, seed))
+                scenarios.append((sim_id, n, n_strata, 1.0, zx_scale, 1.0, 1.0, 3, seed, False))
 
     n_scenarios = len(scenarios)
     n_methods = len(method_specs)
@@ -196,7 +199,7 @@ def run_phase1_simulation(
 
 
 def run_sensitivity_simulation(
-    n_sims: int = 100,
+    n_sims: int = 30,
     n_jobs: int = -1,
     output_dir: str = 'results',
 ) -> pd.DataFrame:
@@ -231,7 +234,7 @@ def run_sensitivity_simulation(
                 for zx in zx_influence_scales:
                     for ns in n_strata_list:
                         seed = sim_id * 100000 + n_val + int(ze * 10) + int(zx * 100) + ns
-                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed))
+                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed, False))
 
     n_scenarios = len(scenarios)
     n_methods = len(method_specs)
@@ -258,7 +261,7 @@ def run_sensitivity_simulation(
 
 
 def run_nonlinearity_simulation(
-    n_sims: int = 100,
+    n_sims: int = 30,
     n_jobs: int = -1,
     output_dir: str = 'results',
 ) -> pd.DataFrame:
@@ -293,7 +296,7 @@ def run_nonlinearity_simulation(
                 for zx in zx_influence_scales:
                     for ns in n_strata_list:
                         seed = sim_id * 100000 + 1 + n_val + int(ze * 10) + int(zx * 100) + ns
-                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed))
+                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed, True))
 
     n_scenarios = len(scenarios)
     n_methods = len(method_specs)
@@ -325,9 +328,12 @@ if __name__ == '__main__':
     print(f"Available CPUs: {n_cpus}")
 
     print("\n=== Phase 1: Proof of Concept ===")
-    df1 = run_phase1_simulation(n_sims=200, n_jobs=n_cpus, output_dir='results')
+    df1 = run_phase1_simulation(n_sims=50, n_jobs=n_cpus, output_dir='results')
 
     print("\n=== Sensitivity Analysis ===")
-    df2 = run_sensitivity_simulation(n_sims=100, n_jobs=n_cpus, output_dir='results')
+    df2 = run_sensitivity_simulation(n_sims=30, n_jobs=n_cpus, output_dir='results')
+
+    print("\n=== Non-linearity Robustness ===")
+    df3 = run_nonlinearity_simulation(n_sims=30, n_jobs=n_cpus, output_dir='results')
 
     print("\nAll simulations complete!")
