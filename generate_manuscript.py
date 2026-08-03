@@ -155,6 +155,7 @@ def generate_figures(phase1_primary, real_data):
         fig.tight_layout()
         png = os.path.join(FIG_DIR, 'fig1_phase1_primary.png')
         fig.savefig(png, dpi=300)
+        fig.savefig(os.path.join(FIG_DIR, 'fig1_phase1_primary.eps'), format='eps', bbox_inches='tight')
         plt.close(fig)
         figs.append(('Figure 1', 'Phase 1 primary metrics across methods.', png))
 
@@ -181,6 +182,7 @@ def generate_figures(phase1_primary, real_data):
             fig.tight_layout()
             png = os.path.join(FIG_DIR, 'fig2_sensitivity_bias.png')
             fig.savefig(png, dpi=300)
+            fig.savefig(os.path.join(FIG_DIR, 'fig2_sensitivity_bias.eps'), format='eps', bbox_inches='tight')
             plt.close(fig)
             figs.append(('Figure 2', 'Sensitivity of bias reduction to Z→X influence.', png))
 
@@ -198,6 +200,7 @@ def generate_figures(phase1_primary, real_data):
             fig.tight_layout()
             png = os.path.join(FIG_DIR, 'fig3_real_data_ari.png')
             fig.savefig(png, dpi=300)
+            fig.savefig(os.path.join(FIG_DIR, 'fig3_real_data_ari.eps'), format='eps', bbox_inches='tight')
             plt.close(fig)
             figs.append(('Figure 3', 'Real-data ARI by dataset and method.', png))
 
