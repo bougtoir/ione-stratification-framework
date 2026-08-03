@@ -8,9 +8,9 @@
 
 Dear Dr Lan,
 
-Thank you and the reviewers for the time spent evaluating our manuscript.
+Thank you and the reviewers for the time spent evaluating the revised manuscript during the second round of review.
 
-We have read the editorial assessment and the four sets of reviewer comments carefully. The reviewers identified several core issues that we agree need to be addressed before the work is suitable for publication:
+We have read the final editorial assessment and the four sets of reviewer comments carefully. The reviewers identified several core issues that we agree need to be addressed before the work is suitable for publication:
 
 - The reported bias-reduction values are internally inconsistent and the formula must be reconciled with the tables and text.
 - The ground-truth subgroup structure and oracle baselines need a clearer definition that matches the reported ARI values.

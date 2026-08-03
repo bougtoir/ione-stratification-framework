@@ -1,8 +1,14 @@
-# IONE revision plan after BMC Medical Research Methodology rejection
+# IONE revision plan after BMC Medical Research Methodology final rejection
 
 ## Overall direction
 
-Reframe the paper as a **proof-of-concept diagnostic framework** rather than a mature two-tier workflow. The strongest, best-supported contribution is the C1 coherence indicator as an exploratory warning tool. Claims about extracting/recovering hidden subgroups and reducing bias must be matched to the actual ARI and bias-reduction values.
+This is a **post-revise-and-resubmit final rejection** (3/30 submission → 6/3 R&R → 8/3 reject). The editor judged the concerns as **not addressable through further revision at BMC MRM**. Therefore the next version must be a **major reframing**, not merely a point-by-point response.
+
+Reframe the paper as an **exploratory diagnostic sensitivity study** rather than a mature two-tier workflow. The strongest, best-supported contribution is the **C1 coherence indicator as an exploratory warning tool**. Claims about extracting/recovering hidden subgroups and reducing bias must be matched to the actual ARI and bias-reduction values. The target journal is **Statistics in Medicine** (primary) or **Statistical Methods in Medical Research** (backup); the revised framing should suit a biostatistics/methods audience.
+
+## What changed after finding the R2 manuscript
+
+The R2 manuscript (`IONE_manuscript_r2_cleaned.docx`) already contains W, Tables 8–11, MC SEs, active comparators, and ADEMP framing. The base for the next submission is this R2 version, not the original repo branch. The main work is therefore **(a) fix the remaining substantive problems** identified by the final reviewers, and **(b) reframe the narrative** from a two-tier workflow to a diagnostic sensitivity study.
 
 ---
 
@@ -79,6 +85,11 @@ See `next_journal_proposal.md` for candidates and the recommended order.
 
 ---
 
-## Files needed before editing
+## Files to work from
 
-- The current repository branch (`IONE-stratification-framework`) contains the first-round manuscript. The reviewer comments reference a later version (e.g. W metric, Tables 8–11). Before applying the plan, obtain or confirm the latest submitted version so revisions are made on the correct base.
+- **Base manuscript:** `IONE_manuscript_r2_cleaned.docx` (BMC MRM R2 version; contains W, Tables 8–11, MC SEs, active comparators, ADEMP).
+- **Repository branch:** `IONE-stratification-framework` in `bougtoir/wip`.
+- **Response-to-reviewers for R2:** `IONE_response_to_reviewers_v2.docx`.
+- **Figure legends:** `IONE_figure_legends.docx`.
+
+These files have been downloaded and extracted. Revisions should start from the R2 manuscript, not the original first-round version in the repo.
