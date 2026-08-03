@@ -240,14 +240,11 @@ def generate_manuscript():
     style.font.name = 'Times New Roman'
     style.font.size = Pt(11)
 
-    # Title
+    # Title (blinded main manuscript; author details are on a separate title page)
     title = doc.add_heading('A coherence diagnostic for hidden population structure in observational studies:', level=0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     subtitle = doc.add_heading('a simulation study of stratification-based extraction', level=0)
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    auth = doc.add_paragraph()
-    auth.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    auth.add_run('Onishi Tatsuki').bold = True
     doc.add_paragraph()
 
     # Abstract
@@ -400,7 +397,26 @@ def generate_manuscript():
 
     docx_path = os.path.join(DOCX_DIR, 'IONE_revised_manuscript.docx')
     doc.save(docx_path)
+
+    # Separate title page for blinded peer review
+    tp = Document()
+    tp.style = doc.styles['Normal']
+    tp_title = tp.add_heading('A coherence diagnostic for hidden population structure in observational studies:', level=0)
+    tp_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    tp_sub = tp.add_heading('a simulation study of stratification-based extraction', level=0)
+    tp_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    tp.add_paragraph()
+    tp_auth = tp.add_paragraph()
+    tp_auth.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    tp_auth.add_run('Onishi Tatsuki').bold = True
+    tp.add_paragraph()
+    tp_note = tp.add_paragraph('Corresponding author: Onishi Tatsuki')
+    tp_note.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    tp_path = os.path.join(DOCX_DIR, 'title_page.docx')
+    tp.save(tp_path)
+
     print(f'[generate_manuscript] manuscript written to {docx_path}')
+    print(f'[generate_manuscript] title page written to {tp_path}')
     print(f'[generate_manuscript] figures written to {FIG_DIR}; pptx at {pptx_path}')
     return docx_path
 
