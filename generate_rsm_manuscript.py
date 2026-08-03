@@ -242,7 +242,10 @@ def _build_table_1(ipd_primary, study_summary):
 
 
 def _scenario_params():
-    """Read the scenario descriptor from the raw IPD results."""
+    """Read the scenario descriptor from the raw IPD results.
+
+    The primary RSM scenario is hard-coded to K=5 to match summarise_rsm_ipd().
+    """
     path = os.path.join(RESULTS_DIR, 'rsm_ipd_results.csv')
     if not os.path.exists(path):
         return 2000, 10, 0.6, 5
@@ -250,7 +253,8 @@ def _scenario_params():
     n = int(df.get('n', 2000).iloc[0])
     n_studies = int(df.get('n_studies', 10).iloc[0])
     study_effect = float(df.get('study_effect_scale', 0.6).iloc[0])
-    n_strata = int(df.get('n_strata', 5).iloc[0])
+    # Primary reporting uses K=5 (the middle of n_strata_list=[3,5,10]).
+    n_strata = 5
     return n, n_studies, study_effect, n_strata
 
 
