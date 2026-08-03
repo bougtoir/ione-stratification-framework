@@ -19,6 +19,9 @@ from methods import (
     method_2a_pca,
     method_2b_clustering,
     method_2d_rf_proximity,
+    method_ps_propensity_score,
+    method_gmm,
+    method_prognostic_score,
     get_pca_variants,
     get_baseline_methods,
 )
@@ -53,8 +56,10 @@ def run_scenario(
         seed=seed,
     )
 
-    X, Y, Z = data['X'], data['Y'], data['Z']
+    X, A, Y, Z = data['X'], data['A'], data['Y'], data['Z']
     Z_clusters = data['Z_clusters']
+    true_cate = data['true_cate']
+    true_ate_riskdiff = data['true_ate_riskdiff']
 
     base_info = {
         'sim_id': sim_id,
@@ -66,22 +71,41 @@ def run_scenario(
         'noise_level': noise_level,
         'n_z_vars': n_z_vars,
         'actual_event_rate': data['params']['actual_event_rate'],
+        'actual_treatment_prevalence': data['params']['actual_treatment_prevalence'],
+        'true_ate_riskdiff': true_ate_riskdiff,
     }
+
+    # Discovery/evaluation split (fixed per scenario) to prevent outcome-informed overfitting
+    rng = np.random.default_rng(seed)
+    perm = rng.permutation(n)
+    split = n // 2
+    discovery_idx = perm[:split]
+    eval_idx = perm[split:]
 
     baseline_funcs = get_baseline_methods()
     results = []
 
+    # Methods that use the outcome Y for stratification: apply discovery/evaluation split
+    outcome_informed_prefixes = ('1A_', '1B_', '1C_', '1D_', 'Prognostic_')
+
     for method_name, method_func, method_kwargs in method_specs:
         try:
-            if 'baseline' in method_name:
+            if method_name.startswith('baseline_'):
                 bname = method_name.replace('baseline_', '')
-                strata = baseline_funcs[bname](X, Y, Z, n_strata, seed=seed)
-            elif method_name.startswith('2A_'):
-                strata = method_func(X, Y, n_strata, **method_kwargs)
+                strata = baseline_funcs[bname](X, A, Y, Z, n_strata, seed=seed)
             else:
-                strata = method_func(X, Y, n_strata)
+                if method_name.startswith(outcome_informed_prefixes):
+                    kwargs = {**method_kwargs, 'discovery_idx': discovery_idx}
+                else:
+                    kwargs = method_kwargs
+                strata = method_func(X, A, Y, n_strata, **kwargs)
 
-            metrics = evaluate_stratification(X, Y, Z, Z_clusters, strata)
+            metrics = evaluate_stratification(
+                X, A, Y, Z, Z_clusters, strata,
+                true_cate=true_cate,
+                true_ate_riskdiff=true_ate_riskdiff,
+                eval_idx=eval_idx,
+            )
             result = {**base_info, 'method': method_name, 'error': None}
             result.update(metrics)
         except Exception as e:
@@ -99,6 +123,9 @@ def build_method_specs(include_slow: bool = False) -> list:
         ('1B_residual', method_1b_residual, {}),
         ('1C_cv_decision', method_1c_cv_decision, {}),
         ('1D_ml_uncertainty', method_1d_ml_uncertainty, {}),
+        ('PS_propensity_score', method_ps_propensity_score, {}),
+        ('GMM', method_gmm, {}),
+        ('Prognostic_score', method_prognostic_score, {}),
         ('2B_clustering', method_2b_clustering, {}),
     ]
 
@@ -127,8 +154,7 @@ def run_phase1_simulation(
     output_dir: str = 'results',
 ) -> pd.DataFrame:
     """
-    Phase 1: Proof of concept (N=2000, all methods + PCA variants + baselines).
-    Optimized: one data generation per scenario, all methods evaluated on same data.
+    Phase 1: Proof of concept (N=2000, all methods + PCA variants + baselines + comparators).
     """
     os.makedirs(output_dir, exist_ok=True)
 
@@ -137,7 +163,6 @@ def run_phase1_simulation(
     zx_scales = [0.3, 0.5, 1.0]
     method_specs = build_method_specs(include_slow=True)
 
-    # Build scenario list (each = one data generation + all methods)
     scenarios = []
     for sim_id in range(n_sims):
         for n_strata in n_strata_list:
@@ -159,7 +184,6 @@ def run_phase1_simulation(
         for s in scenarios
     )
 
-    # Flatten list of lists
     flat_results = [r for batch in all_results for r in batch]
 
     elapsed = time.time() - start
@@ -178,7 +202,7 @@ def run_sensitivity_simulation(
 ) -> pd.DataFrame:
     """
     Sensitivity analysis: vary Z effect, Z->X influence, sample size.
-    Uses top methods only for speed.
+    Uses top methods + comparators for speed.
     """
     os.makedirs(output_dir, exist_ok=True)
 
@@ -189,7 +213,11 @@ def run_sensitivity_simulation(
 
     method_specs = [
         ('1A_predicted_prob', method_1a_predicted_probability, {}),
+        ('1B_residual', method_1b_residual, {}),
         ('1C_cv_decision', method_1c_cv_decision, {}),
+        ('PS_propensity_score', method_ps_propensity_score, {}),
+        ('GMM', method_gmm, {}),
+        ('Prognostic_score', method_prognostic_score, {}),
         ('2A_PCA_cum60', method_2a_pca, {'cumulative_threshold': 0.6, 'fixed_k': None}),
         ('2B_clustering', method_2b_clustering, {}),
         ('baseline_oracle_kmeans', None, {}),
@@ -226,6 +254,68 @@ def run_sensitivity_simulation(
     df = pd.DataFrame(flat_results)
     df.to_csv(os.path.join(output_dir, 'sensitivity_results.csv'), index=False)
     print(f"Saved to {output_dir}/sensitivity_results.csv ({len(df)} rows)")
+    return df
+
+
+def run_nonlinearity_simulation(
+    n_sims: int = 100,
+    n_jobs: int = -1,
+    output_dir: str = 'results',
+) -> pd.DataFrame:
+    """
+    Non-linear robustness analysis: use non-linear Z->X mappings.
+    Same grid as sensitivity but with data generated using squared Z terms.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    sample_sizes = [500, 2000, 10000]
+    z_effect_scales = [0.5, 1.0, 2.0]
+    zx_influence_scales = [0.2, 0.5, 1.0]
+    n_strata_list = [3, 5, 10]
+
+    method_specs = [
+        ('1A_predicted_prob', method_1a_predicted_probability, {}),
+        ('1B_residual', method_1b_residual, {}),
+        ('1C_cv_decision', method_1c_cv_decision, {}),
+        ('PS_propensity_score', method_ps_propensity_score, {}),
+        ('GMM', method_gmm, {}),
+        ('Prognostic_score', method_prognostic_score, {}),
+        ('2A_PCA_cum60', method_2a_pca, {'cumulative_threshold': 0.6, 'fixed_k': None}),
+        ('2B_clustering', method_2b_clustering, {}),
+        ('baseline_oracle_kmeans', None, {}),
+        ('baseline_random', None, {}),
+    ]
+
+    scenarios = []
+    for sim_id in range(n_sims):
+        for n_val in sample_sizes:
+            for ze in z_effect_scales:
+                for zx in zx_influence_scales:
+                    for ns in n_strata_list:
+                        seed = sim_id * 100000 + 1 + n_val + int(ze * 10) + int(zx * 100) + ns
+                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed))
+
+    n_scenarios = len(scenarios)
+    n_methods = len(method_specs)
+    print(f"Non-linearity: {n_scenarios} scenarios x {n_methods} methods = {n_scenarios * n_methods} evaluations")
+
+    start = time.time()
+
+    all_results = Parallel(n_jobs=n_jobs, verbose=10)(
+        delayed(run_scenario)(
+            *s, method_specs=method_specs,
+        )
+        for s in scenarios
+    )
+
+    flat_results = [r for batch in all_results for r in batch]
+
+    elapsed = time.time() - start
+    print(f"Completed in {elapsed:.1f}s ({elapsed / 60:.1f}min)")
+
+    df = pd.DataFrame(flat_results)
+    df.to_csv(os.path.join(output_dir, 'nonlinearity_results.csv'), index=False)
+    print(f"Saved to {output_dir}/nonlinearity_results.csv ({len(df)} rows)")
     return df
 
 

@@ -1,22 +1,52 @@
 """
-Evaluation module: All metrics for assessing stratification quality.
-- Cluster agreement (ARI, NMI, V-measure)
-- Z distribution homogeneity (eta-squared, entropy)
-- Simpson's paradox resolution
-- Coherence degree indicators (C1-C4)
-- Pseudo-randomization metrics (SMD, bias, RMSE, coverage)
+Evaluation module: metrics for assessing stratification quality.
 """
 
 import numpy as np
 from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score, v_measure_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 from scipy import stats
 import warnings
 
 warnings.filterwarnings('ignore')
 
 
+def _safe_logit(p: float) -> float:
+    """Bounded logit to avoid infinities."""
+    p = np.clip(p, 1e-10, 1 - 1e-10)
+    return np.log(p / (1.0 - p))
+
+
+def _compute_log_or(A: np.ndarray, Y: np.ndarray) -> tuple[float, float]:
+    """
+    Compute log odds ratio of Y on A from a 2x2 table.
+    Uses Haldane-Anscombe (+0.5) continuity correction for empty cells.
+    Returns (logOR, standard_error).
+    """
+    a = ((A == 1) & (Y == 1)).sum()
+    b = ((A == 0) & (Y == 1)).sum()
+    c = ((A == 1) & (Y == 0)).sum()
+    d = ((A == 0) & (Y == 0)).sum()
+
+    # Haldane-Anscombe correction
+    a, b, c, d = a + 0.5, b + 0.5, c + 0.5, d + 0.5
+
+    log_or = np.log(a / c) - np.log(b / d)
+    se = np.sqrt(1.0 / a + 1.0 / b + 1.0 / c + 1.0 / d)
+    return float(log_or), float(se)
+
+
+def _subset(*arrays, idx):
+    """Index a sequence of arrays by idx (or return arrays if idx is None)."""
+    if idx is None:
+        return arrays
+    idx = np.asarray(idx)
+    return tuple(a[idx] for a in arrays)
+
+
 # ============================================================
-# 1. Cluster Agreement Metrics (Section 5.3a)
+# 1. Cluster agreement
 # ============================================================
 
 def compute_cluster_agreement(true_labels: np.ndarray, pred_labels: np.ndarray) -> dict:
@@ -29,14 +59,11 @@ def compute_cluster_agreement(true_labels: np.ndarray, pred_labels: np.ndarray) 
 
 
 # ============================================================
-# 2. Z Distribution Homogeneity (Section 5.3b)
+# 2. Z distribution homogeneity
 # ============================================================
 
 def compute_eta_squared(Z: np.ndarray, strata: np.ndarray) -> dict:
-    """
-    Compute eta-squared for each Z variable across strata.
-    eta² = SS_between / SS_total
-    """
+    """Compute eta-squared for each Z variable across strata."""
     results = {}
     z_names = ['Z1_age', 'Z2_sex', 'Z3_bmi']
     for j in range(Z.shape[1]):
@@ -57,10 +84,7 @@ def compute_eta_squared(Z: np.ndarray, strata: np.ndarray) -> dict:
 
 
 def compute_within_strata_entropy(Z: np.ndarray, strata: np.ndarray) -> dict:
-    """
-    Compute entropy of Z2 (sex) within each stratum.
-    Lower entropy = better capture of sex distribution.
-    """
+    """Compute entropy of Z2 (sex) within each stratum."""
     unique_strata = np.unique(strata)
     entropies = []
     for s in unique_strata:
@@ -74,7 +98,7 @@ def compute_within_strata_entropy(Z: np.ndarray, strata: np.ndarray) -> dict:
 
     weights = np.array([np.sum(strata == s) for s in unique_strata]) / len(strata)
     weighted_entropy = float(np.sum(np.array(entropies) * weights))
-    max_entropy = 1.0  # max binary entropy
+    max_entropy = 1.0
 
     return {
         'weighted_entropy_Z2': weighted_entropy,
@@ -83,96 +107,44 @@ def compute_within_strata_entropy(Z: np.ndarray, strata: np.ndarray) -> dict:
 
 
 # ============================================================
-# 3. Simpson's Paradox Resolution (Section 5.3c)
+# 3. Coherence indicators
 # ============================================================
 
-def compute_simpson_resolution(X: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> dict:
+def compute_coherence_c1(A: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> float:
     """
-    Check if Simpson's paradox is resolved by stratification.
-    Compare overall X->Y direction with within-strata directions.
-    """
-    n_vars = X.shape[1]
-    overall_directions = []
-    strata_consistent = []
-
-    unique_strata = np.unique(strata)
-
-    for j in range(n_vars):
-        # Overall correlation direction
-        if np.std(X[:, j]) > 0 and np.std(Y) > 0:
-            overall_corr = np.corrcoef(X[:, j], Y)[0, 1]
-        else:
-            overall_corr = 0.0
-        overall_dir = np.sign(overall_corr)
-        overall_directions.append(overall_dir)
-
-        # Within-strata directions
-        within_dirs = []
-        for s in unique_strata:
-            mask = strata == s
-            if mask.sum() < 10:
-                continue
-            x_s = X[mask, j]
-            y_s = Y[mask]
-            if np.std(x_s) > 0 and np.std(y_s) > 0:
-                corr_s = np.corrcoef(x_s, y_s)[0, 1]
-                within_dirs.append(np.sign(corr_s))
-
-        if len(within_dirs) > 0:
-            # All strata agree with overall?
-            all_same = all(d == overall_dir for d in within_dirs)
-            strata_consistent.append(all_same)
-
-    direction_consistency = float(np.mean(strata_consistent)) if strata_consistent else 1.0
-
-    return {
-        'direction_consistency_rate': direction_consistency,
-        'n_variables_checked': len(strata_consistent),
-    }
-
-
-# ============================================================
-# 4. Coherence Degree Indicators (Section 5.5b)
-# ============================================================
-
-def compute_coherence_c1(X: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> float:
-    """
-    C1 (heterogeneity-based): 1 - I²(between strata).
-    Treats each stratum as a "sub-study" in meta-analysis.
+    C1 (between-stratum heterogeneity of treatment effects):
+    1 - I^2 computed from stratum-specific log odds ratios of A -> Y.
     """
     unique_strata = np.unique(strata)
     if len(unique_strata) < 2:
         return 1.0
 
-    # Compute effect (mean Y) in each stratum
-    effects = []
-    variances = []
+    log_ors, variances = [], []
     for s in unique_strata:
         mask = strata == s
         n_s = mask.sum()
         if n_s < 2:
             continue
-        y_s = Y[mask]
-        mean_y = y_s.mean()
-        var_y = y_s.var(ddof=1) / n_s  # variance of the mean
-        effects.append(mean_y)
-        variances.append(max(var_y, 1e-10))
+        a_s, y_s = A[mask], Y[mask]
+        if len(np.unique(a_s)) < 2 or len(np.unique(y_s)) < 2:
+            continue
+        log_or_s, se_s = _compute_log_or(a_s, y_s)
+        if not np.isfinite(log_or_s):
+            continue
+        log_ors.append(log_or_s)
+        variances.append(max(se_s ** 2, 1e-10))
 
-    if len(effects) < 2:
+    if len(log_ors) < 2:
         return 1.0
 
-    effects = np.array(effects)
+    log_ors = np.array(log_ors)
     variances = np.array(variances)
     weights = 1.0 / variances
 
-    # Fixed-effects pooled estimate
-    pooled = np.sum(weights * effects) / np.sum(weights)
+    pooled = np.sum(weights * log_ors) / np.sum(weights)
+    Q = np.sum(weights * (log_ors - pooled) ** 2)
+    df = len(log_ors) - 1
 
-    # Cochran's Q
-    Q = np.sum(weights * (effects - pooled) ** 2)
-    df = len(effects) - 1
-
-    # I²
     if Q > df:
         I_squared = (Q - df) / Q
     else:
@@ -181,269 +153,198 @@ def compute_coherence_c1(X: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> fl
     return float(1.0 - I_squared)
 
 
-def compute_coherence_c2(X: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> float:
+def compute_w_true(strata: np.ndarray, true_cate: np.ndarray) -> float:
     """
-    C2 (residual structure-based): 1 - (systematic residual / total variance).
-    Checks if within-strata residuals show systematic patterns.
+    W_true: within-stratum homogeneity of the true individual-level CATE.
+    W = 1 - (weighted within-stratum CATE variance) / (overall CATE variance).
     """
-    from sklearn.linear_model import LogisticRegression
+    overall_var = np.var(true_cate, ddof=0)
+    if overall_var == 0:
+        return 1.0
 
     unique_strata = np.unique(strata)
-    total_residual_var = 0.0
-    systematic_component = 0.0
-    total_n = 0
-
+    n = len(true_cate)
+    weighted_within_var = 0.0
     for s in unique_strata:
         mask = strata == s
         n_s = mask.sum()
-        if n_s < 20:
+        if n_s < 2:
             continue
+        weighted_within_var += n_s * np.var(true_cate[mask], ddof=0)
 
-        X_s = X[mask]
-        Y_s = Y[mask]
+    return float(1.0 - (weighted_within_var / n) / overall_var)
 
-        # Fit model within stratum
-        if len(np.unique(Y_s)) < 2:
-            continue
 
-        model = LogisticRegression(max_iter=500, penalty='l2', C=1.0, solver='lbfgs')
-        try:
-            model.fit(X_s, Y_s)
-            p_hat = model.predict_proba(X_s)[:, 1]
-        except Exception:
-            continue
-
-        residuals = Y_s - p_hat
-        total_var_s = np.var(residuals)
-        total_residual_var += total_var_s * n_s
-
-        # Systematic component: check if residuals correlate with X
-        systematic_var = 0.0
-        for j in range(X_s.shape[1]):
-            if np.std(X_s[:, j]) > 0:
-                corr = np.corrcoef(X_s[:, j], residuals)[0, 1]
-                systematic_var += corr ** 2
-        systematic_var /= X_s.shape[1]
-        systematic_component += systematic_var * n_s
-        total_n += n_s
-
-    if total_n == 0 or total_residual_var == 0:
+def compute_w_est(A: np.ndarray, X: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> float:
+    """
+    W_est: within-stratum homogeneity of an estimated CATE.
+    Fit a flexible outcome model (X + A + X*A), predict potential outcomes under A=0 and A=1,
+    and compute CATE estimates. Then compute W as for W_true.
+    """
+    n = X.shape[0]
+    if n < 20:
         return 1.0
 
-    ratio = systematic_component / total_n
-    return float(1.0 - min(ratio, 1.0))
+    # Build design matrix with main effects and A*X interactions
+    X_std = StandardScaler().fit_transform(X)
+    A_col = A.reshape(-1, 1)
+    AX = X_std * A_col
+    design = np.hstack([X_std, A_col, AX])
 
-
-def compute_coherence_c3(X: np.ndarray, Y: np.ndarray, strata: np.ndarray,
-                         n_bootstrap: int = 100) -> float:
-    """
-    C3 (prediction stability-based): 1 - CV(bootstrap variance of stratified effects).
-    """
-    unique_strata = np.unique(strata)
-    n = len(Y)
-    rng = np.random.default_rng(42)
-
-    bootstrap_effects = []
-    for _ in range(n_bootstrap):
-        idx = rng.choice(n, n, replace=True)
-        strata_b = strata[idx]
-        Y_b = Y[idx]
-
-        stratum_effects = []
-        for s in unique_strata:
-            mask = strata_b == s
-            if mask.sum() > 5:
-                stratum_effects.append(Y_b[mask].mean())
-
-        if len(stratum_effects) > 1:
-            bootstrap_effects.append(np.var(stratum_effects))
-
-    if len(bootstrap_effects) < 2:
+    try:
+        model = LogisticRegression(max_iter=1000, penalty='l2', C=0.5, solver='lbfgs')
+        model.fit(design, Y)
+        # Predict under A=0 and A=1: set A_col and interactions to 0 or replicate X
+        design_a0 = np.hstack([X_std, np.zeros((n, 1)), np.zeros((n, X.shape[1]))])
+        design_a1 = np.hstack([X_std, np.ones((n, 1)), X_std])
+        p0 = model.predict_proba(design_a0)[:, 1]
+        p1 = model.predict_proba(design_a1)[:, 1]
+    except Exception:
         return 1.0
 
-    mean_var = np.mean(bootstrap_effects)
-    std_var = np.std(bootstrap_effects)
-    cv = std_var / mean_var if mean_var > 0 else 0.0
+    cate_est = p1 - p0
+    overall_var = np.var(cate_est, ddof=0)
+    if overall_var == 0:
+        return 1.0
 
-    return float(1.0 - min(cv, 1.0))
-
-
-def compute_coherence_c4(Z: np.ndarray, strata: np.ndarray) -> float:
-    """
-    C4 (entropy-based): 1 - H(within-strata Z distribution) / H_max.
-    Simulation-only metric (requires Z knowledge).
-    """
     unique_strata = np.unique(strata)
-    n = len(strata)
-
-    # Discretize Z for entropy calculation
-    Z1_cat = np.digitize(Z[:, 0], bins=[45, 70])  # 3 categories
-    Z2_cat = Z[:, 1].astype(int)  # 2 categories
-    Z3_cat = Z[:, 2].astype(int)  # 3 categories
-
-    # Combined category
-    Z_combined = Z1_cat * 6 + Z2_cat * 3 + Z3_cat
-
-    # Maximum entropy (uniform distribution over all Z categories)
-    n_categories = len(np.unique(Z_combined))
-    H_max = np.log2(n_categories) if n_categories > 1 else 1.0
-
-    # Weighted within-strata entropy
-    H_within = 0.0
+    weighted_within_var = 0.0
     for s in unique_strata:
         mask = strata == s
         n_s = mask.sum()
-        if n_s == 0:
+        if n_s < 2:
             continue
+        weighted_within_var += n_s * np.var(cate_est[mask], ddof=0)
 
-        z_s = Z_combined[mask]
-        _, counts = np.unique(z_s, return_counts=True)
-        probs = counts / n_s
-        entropy_s = -np.sum(probs * np.log2(probs + 1e-10))
-        H_within += (n_s / n) * entropy_s
-
-    return float(1.0 - H_within / H_max) if H_max > 0 else 1.0
-
-
-def compute_all_coherence(X: np.ndarray, Y: np.ndarray, Z: np.ndarray,
-                          strata: np.ndarray) -> dict:
-    """Compute all coherence indicators."""
-    return {
-        'C1_heterogeneity': compute_coherence_c1(X, Y, strata),
-        'C2_residual_structure': compute_coherence_c2(X, Y, strata),
-        'C3_prediction_stability': compute_coherence_c3(X, Y, strata),
-        'C4_entropy': compute_coherence_c4(Z, strata),
-    }
+    return float(1.0 - (weighted_within_var / n) / overall_var)
 
 
 # ============================================================
-# 5. Pseudo-randomization Metrics (Section 6.2)
+# 4. Effect estimation bias
 # ============================================================
 
-def compute_smd(Z: np.ndarray, strata: np.ndarray) -> dict:
-    """
-    Compute standardized mean differences of Z across strata.
-    For each stratum pair, compute SMD for each Z variable.
-    """
+def _pooled_log_or(A: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> float | None:
+    """Inverse-variance weighted pooled log-OR across strata."""
     unique_strata = np.unique(strata)
-    z_names = ['Z1_age', 'Z2_sex', 'Z3_bmi']
-    max_smds = {}
+    log_ors, variances = [], []
+    for s in unique_strata:
+        mask = strata == s
+        if mask.sum() < 2:
+            continue
+        a_s, y_s = A[mask], Y[mask]
+        if len(np.unique(a_s)) < 2 or len(np.unique(y_s)) < 2:
+            continue
+        log_or_s, se_s = _compute_log_or(a_s, y_s)
+        if not np.isfinite(log_or_s):
+            continue
+        log_ors.append(log_or_s)
+        variances.append(max(se_s ** 2, 1e-10))
 
-    for j in range(Z.shape[1]):
-        smds = []
-        for i, s1 in enumerate(unique_strata):
-            for s2 in unique_strata[i + 1:]:
-                z1 = Z[strata == s1, j]
-                z2 = Z[strata == s2, j]
-                if len(z1) < 2 or len(z2) < 2:
-                    continue
-                pooled_std = np.sqrt((np.var(z1, ddof=1) + np.var(z2, ddof=1)) / 2)
-                if pooled_std > 0:
-                    smd = abs(z1.mean() - z2.mean()) / pooled_std
-                    smds.append(smd)
-        max_smds[f'max_SMD_{z_names[j]}'] = float(max(smds)) if smds else 0.0
+    if len(log_ors) == 0:
+        return None
+    if len(log_ors) == 1:
+        return float(log_ors[0])
 
-    max_smds['mean_max_SMD'] = float(np.mean(list(max_smds.values())))
-    return max_smds
+    log_ors = np.array(log_ors)
+    variances = np.array(variances)
+    weights = 1.0 / variances
+    pooled = np.sum(weights * log_ors) / np.sum(weights)
+    return float(pooled)
 
 
-def compute_effect_estimation_bias(Y: np.ndarray, Z: np.ndarray, strata: np.ndarray,
-                                   true_effect: float | None = None) -> dict:
-    """
-    Compute bias in effect estimation.
-    Uses Z1 (age) median split as "treatment" for evaluation.
-    """
-    # Define "treatment" as above-median age
-    treatment = (Z[:, 0] > np.median(Z[:, 0])).astype(float)
+def _risk_difference(A: np.ndarray, Y: np.ndarray, mask: np.ndarray | None = None) -> float:
+    """Risk difference P(Y=1|A=1) - P(Y=1|A=0) for a subgroup."""
+    if mask is not None:
+        A = A[mask]
+        Y = Y[mask]
+    treated = A == 1
+    control = A == 0
+    if treated.sum() == 0 or control.sum() == 0:
+        return 0.0
+    return float(Y[treated].mean() - Y[control].mean())
 
-    # Crude (unstratified) effect
-    y_treated = Y[treatment == 1].mean()
-    y_control = Y[treatment == 0].mean()
-    crude_effect = y_treated - y_control
 
-    # Stratified effect (Mantel-Haenszel style weighted average)
+def _pooled_risk_difference(A: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> float | None:
+    """Inverse-variance (sample-size) weighted average of stratum-specific risk differences."""
     unique_strata = np.unique(strata)
-    weighted_effects = []
-    weights = []
+    effects, weights = [], []
     for s in unique_strata:
         mask = strata == s
         n_s = mask.sum()
-        if n_s < 10:
+        if n_s < 2:
             continue
-        t_mask = mask & (treatment == 1)
-        c_mask = mask & (treatment == 0)
-        if t_mask.sum() < 2 or c_mask.sum() < 2:
+        a_s, y_s = A[mask], Y[mask]
+        if len(np.unique(a_s)) < 2:
             continue
-        effect_s = Y[t_mask].mean() - Y[c_mask].mean()
-        weighted_effects.append(effect_s)
+        rd_s = _risk_difference(a_s, y_s)
+        effects.append(rd_s)
         weights.append(n_s)
 
-    if len(weighted_effects) > 0:
-        weights = np.array(weights, dtype=float)
-        weights /= weights.sum()
-        stratified_effect = float(np.sum(np.array(weighted_effects) * weights))
-    else:
+    if len(effects) == 0:
+        return None
+    weights = np.array(weights, dtype=float)
+    weights /= weights.sum()
+    return float(np.sum(np.array(effects) * weights))
+
+
+def compute_effect_estimation_bias(
+    A: np.ndarray,
+    Y: np.ndarray,
+    strata: np.ndarray,
+    true_ate_riskdiff: float,
+) -> dict:
+    """
+    Compute crude and stratified risk-difference effect estimates and their bias
+    relative to the true ATE (population risk difference). Returns absolute and relative bias reduction.
+    """
+    crude_effect = _risk_difference(A, Y)
+    stratified_effect = _pooled_risk_difference(A, Y, strata)
+    if stratified_effect is None:
         stratified_effect = crude_effect
 
-    # True effect (oracle: stratify by Z itself)
-    if true_effect is None:
-        # Compute oracle effect using Z-based stratification
-        z_strata = np.digitize(Z[:, 0], bins=np.percentile(Z[:, 0], [25, 50, 75]))
-        oracle_effects = []
-        oracle_weights = []
-        for s in np.unique(z_strata):
-            mask = z_strata == s
-            t_mask = mask & (treatment == 1)
-            c_mask = mask & (treatment == 0)
-            if t_mask.sum() < 2 or c_mask.sum() < 2:
-                continue
-            oracle_effects.append(Y[t_mask].mean() - Y[c_mask].mean())
-            oracle_weights.append(mask.sum())
-        if oracle_effects:
-            oracle_weights = np.array(oracle_weights, dtype=float)
-            oracle_weights /= oracle_weights.sum()
-            true_effect = float(np.sum(np.array(oracle_effects) * oracle_weights))
-        else:
-            true_effect = crude_effect
+    bias_crude = abs(crude_effect - true_ate_riskdiff)
+    bias_stratified = abs(stratified_effect - true_ate_riskdiff)
+
+    abs_reduction = bias_crude - bias_stratified
+    rel_reduction = (1.0 - bias_stratified / bias_crude) if bias_crude > 1e-12 else 0.0
 
     return {
         'crude_effect': float(crude_effect),
-        'stratified_effect': stratified_effect,
-        'oracle_effect': true_effect,
-        'bias_crude': float(abs(crude_effect - true_effect)),
-        'bias_stratified': float(abs(stratified_effect - true_effect)),
-        'bias_reduction': float(abs(crude_effect - true_effect) - abs(stratified_effect - true_effect)),
+        'stratified_effect': float(stratified_effect),
+        'true_ate': float(true_ate_riskdiff),
+        'bias_crude': float(bias_crude),
+        'bias_stratified': float(bias_stratified),
+        'bias_reduction': float(abs_reduction),
+        'bias_reduction_relative': float(rel_reduction),
     }
 
 
 # ============================================================
-# 6. Combined evaluation
+# 5. Combined evaluation
 # ============================================================
 
-def evaluate_stratification(X: np.ndarray, Y: np.ndarray, Z: np.ndarray,
-                            Z_clusters: np.ndarray, strata: np.ndarray) -> dict:
+def evaluate_stratification(
+    X: np.ndarray,
+    A: np.ndarray,
+    Y: np.ndarray,
+    Z: np.ndarray,
+    Z_clusters: np.ndarray,
+    strata: np.ndarray,
+    true_cate: np.ndarray,
+    true_ate_riskdiff: float,
+    eval_idx: np.ndarray | None = None,
+) -> dict:
     """Run all evaluation metrics on a single stratification result."""
+    X, A, Y, Z, Z_clusters, strata, true_cate = _subset(
+        X, A, Y, Z, Z_clusters, strata, true_cate, idx=eval_idx
+    )
+
     results = {}
-
-    # Cluster agreement
     results.update(compute_cluster_agreement(Z_clusters, strata))
-
-    # Z distribution homogeneity
     results.update(compute_eta_squared(Z, strata))
-
-    # Within-strata entropy
     results.update(compute_within_strata_entropy(Z, strata))
-
-    # Simpson's paradox resolution
-    results.update(compute_simpson_resolution(X, Y, strata))
-
-    # Coherence indicators
-    results.update(compute_all_coherence(X, Y, Z, strata))
-
-    # SMD
-    results.update(compute_smd(Z, strata))
-
-    # Effect estimation bias
-    results.update(compute_effect_estimation_bias(Y, Z, strata))
-
+    results['C1_heterogeneity'] = compute_coherence_c1(A, Y, strata)
+    results['W_true'] = compute_w_true(strata, true_cate)
+    results['W_est'] = compute_w_est(A, X, Y, strata)
+    results.update(compute_effect_estimation_bias(A, Y, strata, true_ate_riskdiff))
     return results
