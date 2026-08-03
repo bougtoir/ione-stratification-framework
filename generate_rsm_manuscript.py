@@ -343,7 +343,7 @@ def generate_rsm_manuscript():
         "Yet these methods do not in themselves reveal whether an unmeasured effect modifier is present or whether the estimated average effect is robust across clinically meaningful subgroups."
     ))
     _add_paragraph(doc, (
-        "We extend the IONE (Identifying hidden population structure and extracting it by stratification) framework to the IPD meta-analysis setting. "
+        "We develop IONE (Identifying hidden population structure and extracting it by stratification) for the IPD meta-analysis setting. "
         "We ask whether routine measured covariates can be used to stratify a pooled IPD so that within-stratum treatment effects are more homogeneous and the pooled estimate is less biased. "
         "We evaluate the proposal in a simulation study with explicit between-study heterogeneity and hidden effect modification, and illustrate behaviour with well-known Simpson-paradox examples."
     ))
@@ -447,7 +447,7 @@ def generate_rsm_manuscript():
     # Discussion
     doc.add_heading('4. Discussion', level=1)
     _add_paragraph(doc, (
-        "We extended IONE from a single-observation setting to an IPD meta-analysis setting and evaluated it as a diagnostic for hidden effect modification. "
+        "We framed IONE within an IPD meta-analysis setting and evaluated it as a diagnostic for hidden effect modification. "
         "In the simulation, data-driven stratification sometimes reduced ATE bias on the risk-difference scale, and random-effects pooling across discovered strata often improved on a simple two-stage stratified estimate. "
         "However, the strata only partially captured the true hidden Z structure, as shown by low ARI and moderate W values. "
         "Success was conditional on the confounder/effect-modifier leaving strong traces in the measured covariates and on a simple low-dimensional structure."
