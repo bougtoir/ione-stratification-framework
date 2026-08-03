@@ -235,6 +235,13 @@ def generate_manuscript():
 
     figs, pptx_path = generate_figures(phase1_primary, real_data)
 
+    # Aggregate summary numbers for the text (all drawn from CSVs, not hard-coded)
+    if phase1_primary is not None and not phase1_primary.empty:
+        w_true_overall = _fmt(phase1_primary['W_true_mean'].mean(), 3)
+        w_est_overall = _fmt(phase1_primary['W_est_mean'].mean(), 3)
+    else:
+        w_true_overall = w_est_overall = '—'
+
     doc = Document()
     style = doc.styles['Normal']
     style.font.name = 'Times New Roman'
@@ -318,7 +325,8 @@ def generate_manuscript():
     cm.add_paragraph(doc, (
         "Table 1 summarises the primary phase-1 scenario (n=2000, K=5, strong Z→X trace). "
         "Extraction performance, as measured by ARI with the constructed true-Z partition, was modest for all methods. "
-        "C1 values were high for most methods, reflecting between-stratum heterogeneity in observed log odds ratios, but this did not always translate into strong ATE bias reduction. "
+        "C1 values were high for most methods, reflecting between-stratum heterogeneity in observed log odds ratios, but this did not always translate into strong ATE bias reduction on the risk-difference scale. "
+        f"Average within-stratum homogeneity was also low (mean W_true = {w_true_overall}, mean W_est = {w_est_overall}), indicating that the strata still contained considerable CATE variation. "
         "Figure 1 shows the same metrics graphically."
     ))
     if phase1_primary is not None:
@@ -340,7 +348,8 @@ def generate_manuscript():
 
     doc.add_heading('3.2 Sensitivity and non-linearity analyses', level=2)
     cm.add_paragraph(doc, (
-        "Bias reduction increased with stronger Z→X traces and larger sample sizes, but remained modest overall. "
+        "Bias reduction on the risk-difference scale increased with stronger Z→X traces and larger sample sizes, but remained modest overall. "
+        "Effect modification by Z was therefore only partially captured by the measured proxies. "
         "Non-linear Z→X mappings reduced PCA-based performance but had less impact on clustering-based methods. "
         "Figure 2 illustrates the dependence of bias reduction on Z→X influence for selected methods (n=2000, K=5). Supplementary Tables S1–S4 give the full numerical results."
     ))
@@ -378,9 +387,9 @@ def generate_manuscript():
     doc.add_heading('4. Discussion', level=1)
     cm.add_paragraph(doc, (
         "We position IONE as an exploratory diagnostic-sensitivity tool, not as a complete causal-inference workflow. "
-        "The simulations show that hidden population structure can sometimes be detected and that stratified estimates can have smaller ATE bias in some scenarios, but success is strongly conditional on the confounder leaving strong traces in measured variables and on a simple, low-dimensional hidden structure. "
+        "The simulations show that hidden population structure—driven here by both confounding and effect modification—can sometimes be detected and that stratified estimates can have smaller ATE bias on the risk-difference scale in some scenarios, but success is strongly conditional on the confounder leaving strong traces in measured variables and on a simple, low-dimensional hidden structure. "
         "Outcome-informed methods can draw on outcome heterogeneity but require sample splitting to avoid overfitting and induced bias; outcome-free methods are more robust but lack the outcome signal. "
-        "C1 and W provide transparent diagnostics, but they are not calibrated decision rules and should not replace propensity-score or regression adjustment or more comprehensive causal-inference methods{hernan2020}. "
+        "C1 and W quantify heterogeneity that underpins Simpson-type reversals, but they are not calibrated decision rules and should not replace propensity-score or regression adjustment or more comprehensive causal-inference methods{hernan2020}. "
         "Limitations include the stylised DGM, the constructed nature of the true-Z partition, and the absence of a real individual-level cohort. Future work should calibrate C1/W thresholds on individual-level clinical data and compare IONE with latent-class and mixture-model approaches."
     ))
 
