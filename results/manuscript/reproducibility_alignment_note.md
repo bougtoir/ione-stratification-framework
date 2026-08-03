@@ -45,4 +45,4 @@ python3 generate_manuscript.py             # produces results/manuscript/IONE_re
 
 ## Verification
 
-To verify, run the pipeline and compare the regenerated `results/manuscript/IONE_revised_manuscript.docx` with the submitted version. The document properties and table values should match exactly up to floating-point rounding.
+A clean clone of the public repository was used to regenerate the summary tables and manuscript from the committed results CSVs. The regenerated Word document has identical paragraph text to the version in the working repository. To verify from scratch, run the full pipeline and compare the regenerated `results/manuscript/IONE_revised_manuscript.docx` with the submitted version. The text and table values should match exactly up to floating-point rounding.
