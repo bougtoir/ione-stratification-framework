@@ -52,6 +52,13 @@ def _summarise(df: pd.DataFrame, group_cols: list, metric_cols: list) -> pd.Data
                 row['bias_reduction_relative_mean'] = float(1.0 - abs_strat / abs_crude)
             else:
                 row['bias_reduction_relative_mean'] = float(np.nan)
+            if 'bias_re' in metric_cols:
+                abs_re = sub['bias_re'].abs().mean()
+                row['abs_bias_re_mean'] = float(abs_re)
+                if abs_crude > 0:
+                    row['bias_reduction_relative_re_mean'] = float(1.0 - abs_re / abs_crude)
+                else:
+                    row['bias_reduction_relative_re_mean'] = float(np.nan)
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -115,11 +122,58 @@ def summarise_real_data():
     print(f'[generate_summary] real data summary: {len(summary)} rows')
 
 
+def summarise_rsm_ipd():
+    path = os.path.join(RESULTS_DIR, 'rsm_ipd_results.csv')
+    if not os.path.exists(path):
+        print(f'[generate_summary] {path} not found; skipping rsm_ipd summary')
+        return
+
+    df = pd.read_csv(path)
+    df = df[df['error'].isna()].copy()
+    metric_cols = ['ARI', 'C1_heterogeneity', 'W_true', 'W_est',
+                   'bias_crude', 'bias_stratified', 'bias_re',
+                   'bias_reduction', 'bias_reduction_relative',
+                   'bias_reduction_re', 'bias_reduction_relative_re',
+                   're_tau2', 're_I2']
+
+    # Primary IPD scenario: n=2000, 10 studies, moderate study heterogeneity, K=5
+    primary = df[(df['n'] == 2000) & (df['n_studies'] == 10) &
+                 (df['study_effect_scale'] == 0.6) & (df['n_strata'] == 5) &
+                 (df['z_effect_scale'] == 1.0) & (df['zx_influence_scale'] == 1.0)]
+    primary_summary = _summarise(primary, ['method'], metric_cols)
+    primary_summary.to_csv(os.path.join(OUT_DIR, 'rsm_ipd_primary_summary.csv'), index=False)
+
+    # Study-stratified oracle: true study IDs are the same for every method, so collapse to one row
+    study_metric_cols = ['study_bias_crude', 'study_bias_stratified', 'study_bias_re',
+                         'study_bias_reduction', 'study_bias_reduction_relative',
+                         'study_bias_reduction_re', 'study_bias_reduction_relative_re',
+                         'study_re_tau2', 'study_re_I2']
+    primary_study = primary.drop_duplicates(subset=['sim_id', 'n_strata'])
+    available_study_cols = [m for m in study_metric_cols if m in primary_study.columns]
+    if available_study_cols:
+        row = {'method': 'Study_stratified'}
+        for m in available_study_cols:
+            row[f'{m}_mean'] = float(primary_study[m].mean())
+        study_summary = pd.DataFrame([row])
+    else:
+        study_summary = pd.DataFrame()
+    study_summary.to_csv(os.path.join(OUT_DIR, 'rsm_ipd_study_summary.csv'), index=False)
+
+    # Full grid across strata counts
+    full_summary = _summarise(df, ['method', 'n_strata'], metric_cols)
+    full_summary.to_csv(os.path.join(OUT_DIR, 'rsm_ipd_full_summary.csv'), index=False)
+
+    print(f'[generate_summary] rsm_ipd primary: {len(primary_summary)} methods, '
+          f'based on {len(primary)} evaluations')
+    print(f'[generate_summary] rsm_ipd study summary: {len(study_summary)} rows')
+
+
 def main():
     summarise_phase1()
     summarise_sensitivity('sensitivity')
     summarise_sensitivity('nonlinearity')
     summarise_real_data()
+    summarise_rsm_ipd()
     print('[generate_summary] all summaries written to', OUT_DIR)
 
 

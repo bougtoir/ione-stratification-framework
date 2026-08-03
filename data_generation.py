@@ -57,9 +57,14 @@ def generate_dataset(
     gamma_z: list[float] | None = None,
     gamma_x: list[float] | None = None,
     seed: int | None = None,
+    n_studies: int = 1,
+    study_effect_scale: float = 0.0,
 ) -> dict:
     """
     Generate a simulated dataset with known causal structure including a binary treatment A.
+
+    Optional IPD meta-analysis structure: when n_studies > 1, subjects are assigned to
+    distinct studies with study-specific distributions of Z and baseline risks/prevalences.
 
     Causal pathways:
       Z -> X (trace in measured variables)
@@ -69,15 +74,34 @@ def generate_dataset(
       Z -> Y (direct confounding)
       Z*A -> Y (effect modification)
       X -> Y (weak direct effects)
+      study -> Z, A, Y (study-level heterogeneity in IPD meta-analysis)
 
     Returns dict with keys:
-        'X', 'Z', 'A', 'Y', 'Z_clusters', 'true_cate', 'true_ate_riskdiff', 'true_ate_logor', 'p_y_a1', 'p_y_a0', 'params'
+        'X', 'Z', 'A', 'Y', 'study_id', 'Z_clusters', 'true_cate', 'true_ate_riskdiff', 'true_ate_logor', 'p_y_a1', 'p_y_a0', 'params'
     """
     rng = np.random.default_rng(seed)
 
+    # --- Study assignment (IPD meta-analysis) ---
+    n_studies = max(1, int(n_studies))
+    if n_studies > n:
+        n_studies = n
+
+    study_sizes = np.full(n_studies, n // n_studies)
+    remainder = n - study_sizes.sum()
+    if remainder > 0:
+        study_sizes[:remainder] += 1
+    study_id = np.repeat(np.arange(n_studies), study_sizes)
+
+    # Study-specific baseline shifts
+    study_z1_shift = rng.normal(0, study_effect_scale * 5.0, n_studies)
+    study_z2_prob = 0.5 + rng.normal(0, study_effect_scale * 0.1, n_studies)
+    study_z2_prob = np.clip(study_z2_prob, 0.1, 0.9)
+    study_treat_intercept = rng.normal(0, study_effect_scale * 0.5, n_studies)
+    study_outcome_intercept = rng.normal(0, study_effect_scale * 0.5, n_studies)
+
     # --- Critical variables Z ---
-    Z1 = np.clip(rng.normal(60, 12, n), 20, 95)
-    Z2 = rng.binomial(1, 0.5, n).astype(float)
+    Z1 = np.clip(rng.normal(60 + study_z1_shift[study_id], 12, n), 20, 95)
+    Z2 = rng.binomial(1, study_z2_prob[study_id], n).astype(float)
     Z3 = rng.choice([0, 1, 2], size=n, p=[0.3, 0.4, 0.3]).astype(float)
     Z = np.column_stack([Z1, Z2, Z3])
 
@@ -114,6 +138,11 @@ def generate_dataset(
 
     X = np.column_stack([X1, X2, X3, X4, X5, X6, X7, X8, X9, X10])
 
+    # Append study identifier as a measured covariate when IPD meta-analysis structure is used
+    if n_studies > 1:
+        study_cov = (study_id - study_id.mean()) / (study_id.std() + 1e-10)
+        X = np.column_stack([X, study_cov])
+
     # --- Binary treatment A ---
     ze = z_effect_scale
     if gamma_z is None:
@@ -121,14 +150,28 @@ def generate_dataset(
     else:
         gamma_z = np.asarray(gamma_z, dtype=float)
     if gamma_x is None:
-        gamma_x = x_effect_scale * np.array([0.01] * 10)
+        gamma_x = x_effect_scale * np.zeros(X.shape[1])
     else:
         gamma_x = np.asarray(gamma_x, dtype=float)
-    logit_a = gamma_z[0] * Z1_std + gamma_z[1] * Z2 + gamma_z[2] * Z3_std + X @ gamma_x
+        if len(gamma_x) < X.shape[1]:
+            gamma_x = np.concatenate([gamma_x, np.zeros(X.shape[1] - len(gamma_x))])
+    logit_a = (
+        gamma_z[0] * Z1_std + gamma_z[1] * Z2 + gamma_z[2] * Z3_std
+        + X @ gamma_x
+        + study_treat_intercept[study_id]
+    )
     if n_z_vars < 3:
-        logit_a = gamma_z[0] * Z1_std + gamma_z[1] * Z2 + X @ gamma_x
+        logit_a = (
+            gamma_z[0] * Z1_std + gamma_z[1] * Z2
+            + X @ gamma_x
+            + study_treat_intercept[study_id]
+        )
     if n_z_vars < 2:
-        logit_a = gamma_z[0] * Z1_std + X @ gamma_x
+        logit_a = (
+            gamma_z[0] * Z1_std
+            + X @ gamma_x
+            + study_treat_intercept[study_id]
+        )
     gamma_0 = _solve_treatment_intercept(logit_a, target_rate=treatment_prevalence)
     prob_a = expit(gamma_0 + logit_a)
     A = rng.binomial(1, prob_a, n).astype(float)
@@ -141,15 +184,25 @@ def generate_dataset(
     logit_y0 = (
         ze * (0.9 * Z1_std + 0.6 * Z2 + 0.7 * Z3_std)
         + ze * 0.3 * Z1_std * Z2
+        + study_outcome_intercept[study_id]
     )
 
     if n_z_vars < 3:
-        logit_y0 = ze * (0.9 * Z1_std + 0.6 * Z2 + 0.3 * Z1_std * Z2)
+        logit_y0 = (
+            ze * (0.9 * Z1_std + 0.6 * Z2 + 0.3 * Z1_std * Z2)
+            + study_outcome_intercept[study_id]
+        )
     if n_z_vars < 2:
-        logit_y0 = ze * 0.9 * Z1_std
+        logit_y0 = (
+            ze * 0.9 * Z1_std
+            + study_outcome_intercept[study_id]
+        )
 
     # Weak X -> Y direct effects
-    x_betas = xe * np.array([0.15, 0.10, 0.12, 0.08, 0.10, 0.05, 0.05, 0.08, 0.06, 0.07])
+    x_betas_base = np.array([0.15, 0.10, 0.12, 0.08, 0.10, 0.05, 0.05, 0.08, 0.06, 0.07])
+    if X.shape[1] > len(x_betas_base):
+        x_betas_base = np.concatenate([x_betas_base, np.zeros(X.shape[1] - len(x_betas_base))])
+    x_betas = xe * x_betas_base
     logit_y0 += X @ x_betas
 
     # Treatment effect and effect modification
@@ -202,6 +255,8 @@ def generate_dataset(
         'nonlinear': nonlinear,
         'event_rate': event_rate,
         'treatment_prevalence': treatment_prevalence,
+        'n_studies': n_studies,
+        'study_effect_scale': float(study_effect_scale),
         'actual_event_rate': float(Y.mean()),
         'actual_treatment_prevalence': float(A.mean()),
         'true_ate_riskdiff': float(true_ate_riskdiff),
@@ -218,6 +273,7 @@ def generate_dataset(
         'Z': Z,
         'A': A,
         'Y': Y,
+        'study_id': study_id.astype(int),
         'Z_clusters': Z_clusters.astype(int),
         'true_cate': true_cate,
         'true_ate_riskdiff': true_ate_riskdiff,

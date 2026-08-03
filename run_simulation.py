@@ -40,13 +40,17 @@ def run_scenario(
     noise_level: float,
     n_z_vars: int,
     seed: int,
-    method_specs: list,
+    n_studies: int = 1,
+    study_effect_scale: float = 0.0,
+    method_specs: list = None,
     nonlinear: bool = False,
 ) -> list:
     """
     Run one scenario: generate data once, apply ALL methods, evaluate each.
     Returns list of result dicts (one per method).
     """
+    if method_specs is None:
+        method_specs = []
     data = generate_dataset(
         n=n,
         z_effect_scale=z_effect_scale,
@@ -56,9 +60,12 @@ def run_scenario(
         n_z_vars=n_z_vars,
         nonlinear=nonlinear,
         seed=seed,
+        n_studies=n_studies,
+        study_effect_scale=study_effect_scale,
     )
 
     X, A, Y, Z = data['X'], data['A'], data['Y'], data['Z']
+    study_id = data.get('study_id')
     Z_clusters = data['Z_clusters']
     true_cate = data['true_cate']
     true_ate_riskdiff = data['true_ate_riskdiff']
@@ -73,6 +80,8 @@ def run_scenario(
         'noise_level': noise_level,
         'n_z_vars': n_z_vars,
         'nonlinear': nonlinear,
+        'n_studies': data['params'].get('n_studies', 1),
+        'study_effect_scale': data['params'].get('study_effect_scale', 0.0),
         'actual_event_rate': data['params']['actual_event_rate'],
         'actual_treatment_prevalence': data['params']['actual_treatment_prevalence'],
         'true_ate_riskdiff': true_ate_riskdiff,
@@ -108,6 +117,7 @@ def run_scenario(
                 true_cate=true_cate,
                 true_ate_riskdiff=true_ate_riskdiff,
                 eval_idx=eval_idx,
+                study_id=study_id,
             )
             result = {**base_info, 'method': method_name, 'error': None}
             result.update(metrics)
@@ -117,6 +127,74 @@ def run_scenario(
         results.append(result)
 
     return results
+
+
+def run_rsm_ipd_simulation(
+    n_sims: int = 50,
+    n_jobs: int = -1,
+    output_dir: str = 'results',
+) -> pd.DataFrame:
+    """
+    IPD meta-analysis scenario for Research Synthesis Methods.
+    n=2000 subjects distributed across 10 studies; study-level heterogeneity in
+    baseline risk, treatment prevalence and Z distribution.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    n = 2000
+    n_studies = 10
+    study_effect_scale = 0.6
+    z_effect_scale = 1.0
+    zx_influence_scale = 1.0
+    x_effect_scale = 1.0
+    noise_level = 1.0
+    n_z_vars = 3
+    n_strata_list = [3, 5, 10]
+
+    method_specs = [
+        ('1A_predicted_prob', method_1a_predicted_probability, {}),
+        ('1B_residual', method_1b_residual, {}),
+        ('1C_cv_decision', method_1c_cv_decision, {}),
+        ('PS_propensity_score', method_ps_propensity_score, {}),
+        ('GMM', method_gmm, {}),
+        ('Prognostic_score', method_prognostic_score, {}),
+        ('2A_PCA_cum60', method_2a_pca, {'cumulative_threshold': 0.6, 'fixed_k': None}),
+        ('2B_clustering', method_2b_clustering, {}),
+        ('baseline_random', None, {}),
+        ('baseline_oracle_kmeans', None, {}),
+        ('baseline_oracle_quantile', None, {}),
+    ]
+
+    scenarios = []
+    for sim_id in range(n_sims):
+        for n_strata in n_strata_list:
+            seed = sim_id * 10000 + 777 + n_strata
+            scenarios.append((
+                sim_id, n, n_strata, z_effect_scale, zx_influence_scale,
+                x_effect_scale, noise_level, n_z_vars, seed,
+                n_studies, study_effect_scale,
+            ))
+
+    n_scenarios = len(scenarios)
+    n_methods = len(method_specs)
+    print(f'RSM IPD: {n_scenarios} scenarios x {n_methods} methods = {n_scenarios * n_methods} evaluations')
+    print(f'Using {n_jobs} parallel jobs')
+
+    start = time.time()
+    all_results = Parallel(n_jobs=n_jobs, verbose=10)(
+        delayed(run_scenario)(
+            *s, method_specs=method_specs, nonlinear=False,
+        )
+        for s in scenarios
+    )
+    flat_results = [r for batch in all_results for r in batch]
+    elapsed = time.time() - start
+    print(f'Completed in {elapsed:.1f}s ({elapsed / 60:.1f}min)')
+
+    df = pd.DataFrame(flat_results)
+    df.to_csv(os.path.join(output_dir, 'rsm_ipd_results.csv'), index=False)
+    print(f'Saved to {output_dir}/rsm_ipd_results.csv ({len(df)} rows)')
+    return df
 
 
 def build_method_specs(include_slow: bool = False) -> list:

@@ -300,36 +300,105 @@ def _pooled_risk_difference(A: np.ndarray, Y: np.ndarray, strata: np.ndarray) ->
     return float(np.sum(np.array(effects) * weights))
 
 
+def _random_effects_risk_difference(A: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> tuple[float, float, float] | None:
+    """
+    DerSimonian-Laird random-effects meta-analysis of stratum-specific risk differences.
+    Returns (pooled RE risk difference, tau^2, I^2). Returns None if no stratum is estimable.
+    """
+    unique_strata = np.unique(strata)
+    rd_list, var_list = [], []
+    for s in unique_strata:
+        mask = strata == s
+        a_s, y_s = A[mask], Y[mask]
+        treated = a_s == 1
+        control = a_s == 0
+        n1 = treated.sum()
+        n0 = control.sum()
+        if n1 == 0 or n0 == 0:
+            continue
+        # Haldane-Anscombe correction for variance
+        y1 = y_s[treated].sum() + 0.5
+        n1c = n1 + 1.0
+        y0 = y_s[control].sum() + 0.5
+        n0c = n0 + 1.0
+        p1 = y1 / n1c
+        p0 = y0 / n0c
+        rd_s = p1 - p0
+        var_s = p1 * (1 - p1) / n1c + p0 * (1 - p0) / n0c
+        if np.isfinite(rd_s) and var_s > 0:
+            rd_list.append(rd_s)
+            var_list.append(var_s)
+
+    k = len(rd_list)
+    if k == 0:
+        return None
+    if k == 1:
+        return float(rd_list[0]), 0.0, 0.0
+
+    rd = np.array(rd_list)
+    var = np.array(var_list)
+    w = 1.0 / var
+    pooled_fe = np.sum(w * rd) / np.sum(w)
+    Q = np.sum(w * (rd - pooled_fe) ** 2)
+    df = k - 1
+    C = np.sum(w) - np.sum(w ** 2) / np.sum(w)
+    tau2 = max(0.0, (Q - df) / C) if C > 0 else 0.0
+    w_re = 1.0 / (var + tau2)
+    pooled_re = np.sum(w_re * rd) / np.sum(w_re)
+    I2 = max(0.0, (Q - df) / Q) if Q > 0 else 0.0
+    return float(pooled_re), float(tau2), float(I2)
+
+
 def compute_effect_estimation_bias(
     A: np.ndarray,
     Y: np.ndarray,
     strata: np.ndarray,
     true_ate_riskdiff: float,
+    prefix: str = '',
 ) -> dict:
     """
-    Compute crude and stratified risk-difference effect estimates and their bias
+    Compute crude, stratified and random-effects risk-difference estimates and their bias
     relative to the true ATE (population risk difference). Returns absolute and relative bias reduction.
+    Optional `prefix` is prepended to all returned keys.
     """
     crude_effect = _risk_difference(A, Y)
     stratified_effect = _pooled_risk_difference(A, Y, strata)
     if stratified_effect is None:
         stratified_effect = crude_effect
 
+    re_result = _random_effects_risk_difference(A, Y, strata)
+    if re_result is None:
+        re_effect, re_tau2, re_I2 = stratified_effect, 0.0, 0.0
+    else:
+        re_effect, re_tau2, re_I2 = re_result
+
     bias_crude = abs(crude_effect - true_ate_riskdiff)
     bias_stratified = abs(stratified_effect - true_ate_riskdiff)
+    bias_re = abs(re_effect - true_ate_riskdiff)
 
     abs_reduction = bias_crude - bias_stratified
     rel_reduction = (1.0 - bias_stratified / bias_crude) if bias_crude > 1e-12 else 0.0
+    abs_reduction_re = bias_crude - bias_re
+    rel_reduction_re = (1.0 - bias_re / bias_crude) if bias_crude > 1e-12 else 0.0
 
-    return {
+    keys = {
         'crude_effect': float(crude_effect),
         'stratified_effect': float(stratified_effect),
+        're_effect': float(re_effect),
+        're_tau2': float(re_tau2),
+        're_I2': float(re_I2),
         'true_ate': float(true_ate_riskdiff),
         'bias_crude': float(bias_crude),
         'bias_stratified': float(bias_stratified),
+        'bias_re': float(bias_re),
         'bias_reduction': float(abs_reduction),
         'bias_reduction_relative': float(rel_reduction),
+        'bias_reduction_re': float(abs_reduction_re),
+        'bias_reduction_relative_re': float(rel_reduction_re),
     }
+    if prefix:
+        return {f'{prefix}{k}': v for k, v in keys.items()}
+    return keys
 
 
 # ============================================================
@@ -346,11 +415,17 @@ def evaluate_stratification(
     true_cate: np.ndarray,
     true_ate_riskdiff: float,
     eval_idx: np.ndarray | None = None,
+    study_id: np.ndarray | None = None,
 ) -> dict:
     """Run all evaluation metrics on a single stratification result."""
-    X, A, Y, Z, Z_clusters, strata, true_cate = _subset(
-        X, A, Y, Z, Z_clusters, strata, true_cate, idx=eval_idx
-    )
+    arrays = [X, A, Y, Z, Z_clusters, strata, true_cate]
+    if study_id is not None:
+        arrays.append(study_id)
+    arrays = _subset(*arrays, idx=eval_idx)
+    if study_id is not None:
+        X, A, Y, Z, Z_clusters, strata, true_cate, study_id = arrays
+    else:
+        X, A, Y, Z, Z_clusters, strata, true_cate = arrays
 
     results = {}
     results.update(compute_cluster_agreement(Z_clusters, strata))
@@ -360,4 +435,6 @@ def evaluate_stratification(
     results['W_true'] = compute_w_true(strata, true_cate)
     results['W_est'] = compute_w_est(A, X, Y, strata)
     results.update(compute_effect_estimation_bias(A, Y, strata, true_ate_riskdiff))
+    if study_id is not None and len(np.unique(study_id)) > 1:
+        results.update(compute_effect_estimation_bias(A, Y, study_id, true_ate_riskdiff, prefix='study_'))
     return results
