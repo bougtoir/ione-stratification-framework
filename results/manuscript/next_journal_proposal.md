@@ -1,127 +1,127 @@
-# Next-journal proposal for IONE after BMC MRM rejection
+# BMC MRM 最終拒否後の IONE 投稿先案
 
-## State of the manuscript
+## 原稿の現状
 
-- **Current status:** **Final rejection from BMC Medical Research Methodology after a revise-and-resubmit (3/30 submission → 6/3 revision requested → 8/3 reject).** The editor explicitly stated that the identified concerns are not viewed as addressable through further revision at BMC MRM, so a simple resubmission is not viable.
-- **Core reviewer message:** The diagnostic idea (C1) is interesting, but the extraction claims are overstated, the metrics (especially C1 and W) need empirical grounding, and the oracle/ground-truth definitions remain unclear.
-- **Required action before resubmission:** A **major reframing**, not just a point-by-point response. The paper should be repositioned as an **exploratory diagnostic sensitivity study** rather than a mature two-tier workflow. Concrete fixes include: reconciling the bias-reduction formula, resolving the W-oracle problem, recalibrating C1, redefining the ground truth, and adding a code archive.
-
----
-
-## Recommended next targets (in order)
-
-### 1. Statistics in Medicine (primary recommendation)
-
-| Item | Detail |
-|------|--------|
-| Publisher | Wiley |
-| Scope | Biostatistics and epidemiological methods; simulation studies and method comparison are central to the journal. |
-| IF | ~1.6–2.0 (2024) |
-| Peer review | Yes |
-| OA | Hybrid |
-| APC | **$0 if you choose subscription publication**; ~$4,200 USD if OA |
-| Fit | **Strong.** The revised manuscript is a simulation-based method-development study with active comparators, sensitivity analyses, and empirical illustrations—exactly the content Stat Med publishes. The ADEMP structure, MC SE reporting, and systematic variation of Z→X influence all align with Stat Med expectations. |
-
-**Framing for Stat Med**
-- Title idea: *"A coherence diagnostic for hidden population structure in observational studies: a simulation study of stratification-based extraction"*
-- Lead with **C1 as an exploratory diagnostic**; present extraction as a secondary, conditionally successful proof-of-concept.
-- Emphasise the ADEMP-compliant simulation design and the systematic variation of Z→X influence.
-- Keep the semi-synthetic examples but clearly label them as **illustrations**, not validation.
-- **Do not claim** that C1 or W are ready for clinical use; instead, frame them as sensitivity diagnostics that need further calibration.
-
-**Why first:** It is the most natural peer-reviewed venue for the current evidence base, has no APC under subscription publication, and is less risky than higher-IF epidemiology journals for a simulation-only proof-of-concept.
+- **現状**: BMC Medical Research Methodology から **修正依頼後の最終拒否**を受領（3/30 投稿 → 6/3 修正依頼 → 8/3 拒否）。編集者は「これ以上の修正では対応できない」旨を明記しているため、BMC MRM への再投稿は不可能です。
+- **レビュアーの核心的指摘**: C1 という診断アイデアは興味深いが、抽出に関する主張が過大であり、指標（特に C1 と W）の裏付けが不十分で、オラクル・真の構造の定義が不明確である。
+- **再投稿前に必要な対応**: ポイントごとの返答では不十分な **大幅な再構成**が必要です。論文を「成熟した2段階ワークフロー」ではなく「探索的診断感度研究」として再位置づけ、バイアス削減の式を整合させ、W のオラクル問題を解決し、C1 を再校正し、真の構造を再定義し、コードアーカイブを追加する必要があります。
 
 ---
 
-### 2. Statistical Methods in Medical Research (SAGE)
+## 推奨する次の投稿先（優先順）
 
-| Item | Detail |
-|------|--------|
-| Publisher | SAGE |
-| Scope | Statistical methodology in medical research. |
-| IF | ~1.5–2.0 (2024) |
-| Peer review | Yes |
-| OA | Hybrid |
-| APC | $0 if subscription; ~$3,900 USD if OA |
-| Fit | Strong. Publishes simulation studies and methodological development. |
+### 1. Statistics in Medicine（第一推奨）
 
-**Framing:** Similar to Stat Med, but with more focus on the formal definition of the coherence metric and the method comparison.
+| 項目 | 内容 |
+|------|------|
+| 出版社 | Wiley |
+| スコープ | 生物統計学・疫学的方法論。シミュレーション研究と方法比較が中核となる内容です。 |
+| インパクトファクター | ~1.6–2.0（2024） |
+| 査読 | あり |
+| OA 形態 | ハイブリッド |
+| APC | **購読型出版を選べば $0**；OA 選択時は約 $4,200 USD |
+| 適合度 | **強い。** 修正稿は、シミュレーションに基づく方法開発研究であり、能動的比較対象、感度分析、実例提示を含む。ADEMP 遵守、モンテカルロ標準誤差の報告、Z→X 影響の体系的な変動は Stat Med の期待に合致します。 |
 
-**Why second:** Good fallback if Stat Med desk-rejects or reviewers ask for even stronger theory.
+**Statistics in Medicine 向けのフレーミング**
+- タイトル案：*「A coherence diagnostic for hidden population structure in observational studies: a simulation study of stratification-based extraction」*
+- **C1 を探索的診断ツール**として前面に出し、抽出は「条件付きで部分的に成功する概念実証」として扱う。
+- ADEMP 遵守のシミュレーション設計と Z→X 影響の体系的な変動を強調する。
+- 半合成例は残すが、**イラストレーション**であり検証ではないことを明記する。
+- C1 や W が臨床現場でそのまま使えるとは主張せず、さらなる校正が必要な感度診断として位置づける。
 
----
-
-### 3. Epidemiology (Lippincott Williams & Wilkins)
-
-| Item | Detail |
-|------|--------|
-| Publisher | LWW |
-| Scope | Epidemiologic methods; short methods papers are welcome. |
-| IF | ~4.4–4.7 |
-| Peer review | Yes |
-| OA | Subscription-only (no OA option, **$0**) |
-| Fit | Moderate. The journal values concise, high-impact methods papers. The current manuscript is too long and too exploratory as written, but a sharply shortened version focused on C1 could fit the "Methods" section. |
-
-**Framing:**
-- Title idea: *"C1: an I²-based diagnostic for hidden subgroup structure in observational studies"*
-- Reduce to ~3,500 words; one main figure (C1 calibration), one table (simulation summary), one empirical illustration.
-- De-emphasise extraction; position IONE as a pre-analysis diagnostic.
-
-**Why third:** Higher IF and visibility, but the paper would need substantial shortening and a stronger single message.
+**第一推奨の理由**: 現在の証拠基盤に最も自然に合う査読付きの学会誌です。購読型出版なら APC がかからず、シミュレーションのみの概念実証にとって高 IF 疫学誌よりリスクが低いです。
 
 ---
 
-### 4. Journal of Causal Inference (De Gruyter)
+### 2. Statistical Methods in Medical Research（SAGE）
 
-| Item | Detail |
-|------|--------|
-| Publisher | De Gruyter |
-| Scope | Causal inference methodology across disciplines. |
-| IF | ~1.0–1.5 (lower visibility) |
-| Peer review | Yes |
-| OA | Hybrid |
-| Fit | Good if the paper is framed around causal assumptions, unmeasured confounding, and the diagnostic role of coherence. Less suitable for purely empirical simulation illustration. |
+| 項目 | 内容 |
+|------|------|
+| 出版社 | SAGE |
+| スコープ | 医学研究における統計的方法論 |
+| インパクトファクター | ~1.5–2.0（2024） |
+| 査読 | あり |
+| OA 形態 | ハイブリッド |
+| APC | 購読型で $0；OA 選択時は約 $3,900 USD |
+| 適合度 | 強い。シミュレーション研究と方法論開発を掲載しています。 |
 
-**Framing:** Focus on the causal motivation (unmeasured confounding, effect modification, non-collapsibility) and the distinction from propensity-score and proximal-causal-inference approaches.
+**フレーミング**: Statistics in Medicine と同様ですが、整合性指標の形式的な定義と方法比較により焦点を当てます。
 
-**Why fourth:** Good scope match but lower IF; consider only if the first three are unsuccessful.
-
----
-
-## Higher-tier options (only if major additions are made)
-
-- **American Journal of Epidemiology / International Journal of Epidemiology:** IF ~4.8–6.4. Simulation-only papers are harder to place here. A real individual-level clinical data application (e.g. MIMIC-IV, UK Biobank, or a large claims database) would substantially strengthen the case.
-- **Biometrics:** IF ~1.5–2.0. Would require formal theoretical guarantees (consistency, asymptotic behaviour of C1) beyond the current simulation design.
+**第二候補の理由**: Statistics in Medicine がデスクリジェクトした場合、または査読者がさらに理論的厳密性を求めた場合のフォールバックです。
 
 ---
 
-## Proposed decision
+### 3. Epidemiology（Lippincott Williams & Wilkins）
 
-1. **Primary target:** *Statistics in Medicine* after the major revision.
-2. **Backup target:** *Statistical Methods in Medical Research*.
-3. **Consider Epidemiology** only if the revision can be condensed into a tight 3,500-word methods paper with C1 as the single main message.
+| 項目 | 内容 |
+|------|------|
+| 出版社 | LWW |
+| スコープ | 疫学的方法論。短い方法論論文も歓迎されています。 |
+| インパクトファクター | ~4.4–4.7 |
+| 査読 | あり |
+| OA 形態 | 購読型のみ（OA オプションなし、**$0**） |
+| 適合度 | 中程度。簡潔で高い影響力を持つ方法論論文を重視します。現稿は長く探索的すぎるが、C1 に焦点を絞った短縮版なら「Methods」セクションに合う可能性があります。 |
 
-The revision should be completed before any submission, because the same reviewer concerns will be raised at these journals.
+**フレーミング**
+- タイトル案：*「C1: an I²-based diagnostic for hidden subgroup structure in observational studies」*
+- 3,500 語程度に短縮。主図は C1 の校正曲線、表はシミュレーション概要、実例は 1 つに絞る。
+- 抽出は軽くし、IONE を前解析診断として位置づける。
+
+**第三候補の理由**: IF と可視性は高いが、大幅な短縮と単一で強いメッセージが必要です。
 
 ---
 
-## ONISHI framework coordination
+### 4. Journal of Causal Inference（De Gruyter）
 
-The final goal is to publish **LINKO**, **IONE**, **KOTHA** as component papers and then a unifying **ONISHI** paper. Given the BMC MRM rejections of IONE and KOTHA, the current best allocation is:
+| 項目 | 内容 |
+|------|------|
+| 出版社 | De Gruyter |
+| スコープ | 分野を横断した因果推論方法論 |
+| インパクトファクター | ~1.0–1.5（可視性は低め） |
+| 査読 | あり |
+| OA 形態 | ハイブリッド |
+| 適合度 | 因果的仮定、未観測交絡、整合性の診断的役割を中心に据えるなら良い。純粋なシミュレーション実例重視の場合はやや不向き。 |
 
-| Paper | Suggested next target | Rationale | APC (subscription) |
-|-------|----------------------|-----------|-------------------|
-| **LINKO** | **BMC MRM regular issue** or **Research Synthesis Methods** | Meta-analysis methodology; BMC MRM regular is lower risk, but if already rejected, use RSM / *Systematic Reviews*. | $3,090 if BMC MRM; $0 if RSM |
-| **IONE** | **Statistics in Medicine** | Observational/simulation methods; strong fit after reframing. | $0 |
-| **KOTHA** | **Research Synthesis Methods** | Meta-analysis/RCT integration; already prepared for RSM and is the first choice in the KOTHA session. | $0 |
-| **ONISHI** | **Research Synthesis Methods** (submitted 7/31 after AJE rejection 7/30) | Unifying framework; RSM is the current venue. Preprint citations to LINKO/IONE/KOTHA should be in the cover letter and updated if needed. | $0 |
+**フレーミング**: 未観測交絡、効果修飾、非崩壊性の動機付け、傾向スコアや近接因果推論アプローチとの違いを強調する。
 
-**Practical sequencing for citations (as of 2026-08-03):**
-1. **ONISHI is already under review at RSM** (submitted 7/31). It currently cites the component papers via their **Research Square** preprint URLs/DOIs.
-2. Update all three component papers to **Research Square v2** as soon as the revised versions are ready, so ONISHI can cite stable, versioned preprint DOIs.
-3. Submit **KOTHA** to RSM first (already prepared; addresses KOTHA-specific reviewer concerns).
-4. Submit **IONE** to *Statistics in Medicine* after the major reframing/revision, and upload the revised version to Research Square v2.
-5. Decide **LINKO** target (BMC MRM regular or RSM) and publish/update the Research Square preprint immediately.
-6. If RSM asks for revisions on ONISHI, update the Research Square v2 DOIs in the response.
+**第四候補の理由**: スコープは合うが IF が低い。上位 3 誌が不採択の場合に検討する。
 
-**Risk note:** BMC MRM has now rejected both IONE and KOTHA after peer review. If LINKO is also rejected by BMC MRM, the fallback is **Research Synthesis Methods** for LINKO (if methodological innovation can be sharpened) or **Systematic Reviews** (BMC series, full OA).
+---
+
+## 上位誌（大幅な追加が必要な場合のみ）
+
+- **American Journal of Epidemiology / International Journal of Epidemiology**: IF ~4.8–6.4。シミュレーションのみの論文はここに載せるのは難しい。MIMIC-IV、UK Biobank、大規模クレームデータベースなどの実際の個人レベルデータを追加すれば強くなる。
+- **Biometrics**: IF ~1.5–2.0。C1 の一致性や漸近挙動など、形式的な理論保証が必要になる。
+
+---
+
+## 提案する決定
+
+1. **第一ターゲット**: 大幅改稿後に **Statistics in Medicine** へ投稿。
+2. **バックアップ**: **Statistical Methods in Medical Research**。
+3. **Epidemiology** は、C1 を唯一の主題とした 3,500 語のタイトな方法論論文に短縮できた場合のみ検討する。
+
+同じレビュアー指摘はこれらの誌でも出るため、投稿前に改稿を完了させる必要があります。
+
+---
+
+## ONISHI フレームワークとの連携
+
+最終的には **LINKO**、**IONE**、**KOTHA** をコンポーネント論文として出版し、それらを統合する **ONISHI** 論文を出版したいと考えています。BMC MRM から IONE と KOTHA が拒否された現状では、以下の割り当てが最善です。
+
+| 論文 | 推奨する次の投稿先 | 根拠 | APC（購読型） |
+|------|-------------------|------|--------------|
+| **LINKO** | **BMC MRM 通常号** または **Research Synthesis Methods** | メタ解析方法論。BMC MRM 通常号はリスクが低いが、すでに拒否されている場合は RSM / *Systematic Reviews* を検討。 | BMC MRM は $3,090；RSM は $0 |
+| **IONE** | **Statistics in Medicine** | 観察研究・シミュレーション方法論。再構成後に強く合致。 | $0 |
+| **KOTHA** | **Research Synthesis Methods** | メタ解析/RCT 統合。KOTHA セッションでも第一推奨で、RSM 向け準備が進んでいる。 | $0 |
+| **ONISHI** | **Research Synthesis Methods**（AJE 拒否後、7/31 投稿済み） | 統合フレームワーク。RSM が現在の投稿先。必要に応じてカバーレターや引用を更新。 | $0 |
+
+**2026-08-03 時点での引用スケジュール**
+1. **ONISHI はすでに RSM に投稿済み**（7/31）。現在は 3 コンポーネントを **Research Square** のプレプリント DOI/URL で参照している。
+2. 改訂版ができ次第、3 コンポーネントを **Research Square v2** に早めに公開し、ONISHI が安定したプレプリント引用先を持てるようにする。
+3. **KOTHA** を最初に RSM へ投稿（準備済み；KOTHA 特有のレビュアー指摘に対応後）。
+4. **IONE** を大幅改稿・再構成後に *Statistics in Medicine* へ投稿し、改訂版を Research Square v2 にもアップロードする。
+5. **LINKO** のターゲット（BMC MRM 通常号か RSM）を決定し、すぐに Research Square プレプリントを公開/更新する。
+6. RSM から ONISHI の修正依頼があれば、回答時に Research Square v2 の DOI を更新する。
+
+**リスク注記**: BMC MRM は IONE と KOTHA を査読後に拒否しました。LINKO も BMC MRM で拒否された場合、フォールバックは **Research Synthesis Methods**（方法論的革新性をさらに磨いた上で）または **Systematic Reviews**（BMC 系列、フル OA）です。

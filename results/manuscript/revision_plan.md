@@ -1,95 +1,95 @@
-# IONE revision plan after BMC Medical Research Methodology final rejection
+# BMC Medical Research Methodology 最終拒否後の IONE 修正計画
 
-## Overall direction
+## 全体の方向性
 
-This is a **post-revise-and-resubmit final rejection** (3/30 submission → 6/3 R&R → 8/3 reject). The editor judged the concerns as **not addressable through further revision at BMC MRM**. Therefore the next version must be a **major reframing**, not merely a point-by-point response.
+今回は **修正依頼後の最終拒否**（3/30 投稿 → 6/3 修正依頼 → 8/3 拒否）です。編集者は、指摘された問題を BMC MRM でさらに修正することは困しいと判断しました。そのため、次のバージョンは **ポイントごとの返答では不十分な大幅な再構成**が必要です。
 
-Reframe the paper as an **exploratory diagnostic sensitivity study** rather than a mature two-tier workflow. The strongest, best-supported contribution is the **C1 coherence indicator as an exploratory warning tool**. Claims about extracting/recovering hidden subgroups and reducing bias must be matched to the actual ARI and bias-reduction values. The target journal is **Statistics in Medicine** (primary) or **Statistical Methods in Medical Research** (backup); the revised framing should suit a biostatistics/methods audience.
+論文を「成熟した2段階ワークフロー」ではなく「**探索的診断感度研究**」として再位置づけます。最も裏付けが強く、最も重要な貢献は「**探索的警告ツールとしての C1 整合性指標**」です。隠れた部分集団の抽出・回収やバイアス削減に関する主張は、実際の ARI 値やバイアス削減値に見合ったものにする必要があります。目標誌は **Statistics in Medicine**（第一）、**Statistical Methods in Medical Research**（第二）です。修正後のフレーミングは、生物統計学・方法論読者に適したものにします。
 
-## What changed after finding the R2 manuscript
+## R2 原稿を発見したことによる変更
 
-The R2 manuscript (`IONE_manuscript_r2_cleaned.docx`) already contains W, Tables 8–11, MC SEs, active comparators, and ADEMP framing. The base for the next submission is this R2 version, not the original repo branch. The main work is therefore **(a) fix the remaining substantive problems** identified by the final reviewers, and **(b) reframe the narrative** from a two-tier workflow to a diagnostic sensitivity study.
-
----
-
-## 1. Internal consistency and metrics
-
-### 1.1 Bias reduction
-
-| Issue | Action |
-|-------|--------|
-| Reviewer 1/2: reported bias-reduction value is inconsistent with the formula. | Reconcile the formula with the reported numbers. Either use the relative reduction \(1 - \|bias_stratified\| / \|bias_crude\|\) consistently **or** use the absolute reduction and label it correctly. Update the formula, all tables, figure captions, abstract, and discussion. |
-| Reviewer 2: methods 1B outperforms oracle baselines on this metric. | Add a short explanation: outcome-informed stratification can condition on the observed outcome in a way that oracle k-means on Z does not, so the metric is not an upper-bound reference for outcome-informed methods. |
-
-### 1.2 W metric
-
-| Issue | Action |
-|-------|--------|
-| Reviewer 1: W is computed from the true CATE and is an oracle metric. | Either (a) implement and evaluate an estimated-CATE version of W using only observable data, **or** (b) remove practical diagnostic language, relabel W as a simulation-only performance metric, and move it to a supplementary metric section. |
-
-### 1.3 C1 coherence indicator
-
-| Issue | Action |
-|-------|--------|
-| Reviewer 1/2: C1 values overlap heavily between proposed methods and random stratification in the primary simulation. | Present C1 as an **exploratory, not yet calibrated** diagnostic. Report calibration curves across regimes (random stratification, weak/strong Z→X, discrete/continuous Z, finite sample) instead of a fixed threshold. Remove claims that C1 "reliably detects" incoherence. |
-| Provisional threshold C1 < 0.05 is unsupported. | Replace the threshold with a sensitivity-based interpretation. State that the threshold is provisional and requires external calibration. |
+R2 原稿（`IONE_manuscript_r2_cleaned.docx`）には、すでに W、表 8–11、モンテカルロ標準誤差、能動的比較対象、ADEMP フレーミングが含まれています。次の投稿のベースは、オリジナルのリポジトリブランチではなくこの R2 版です。したがって、主な作業は **(a) 最終レビュアーが指摘した本質的な問題を修正し、(b) 物語の流れを「2段階ワークフロー」から「診断感度研究」に変更すること**です。
 
 ---
 
-## 2. Ground truth, oracle, and method taxonomy
+## 1. 内部的整合性と指標
 
-| Issue | Action |
-|-------|--------|
-| Reviewer 2/3: true subgroup structure defined by k-means on Z is crude; oracle ARI should be near 1 for the same K. | Define the ground truth using **the discrete critical-variable categories** when K matches the true number of categories. If k-means on Z is retained as a continuous approximation, explain that it is a reference partition, not a biological truth, and report oracle ARI near 1 for the same K. |
-| Reviewer 2: oracle is not an upper bound for all metrics. | Add a paragraph explaining why oracle k-means on Z can be outperformed by outcome-informed methods for bias-related metrics. |
-| Reviewer 2: method taxonomy is inconsistent (3 vs 4 active comparators, 18 methods count). | Create one exact method inventory and use it consistently in the abstract, methods, tables, and response letter. |
-| Reviewer 3: latent class models also identify hidden subgroups; the distinction is unclear. | Add a paragraph clarifying that latent class/finite mixture models discover subgroups **from observed variables** under distributional assumptions, whereas IONE treats the observed population as potentially incoherent and provides a coherence diagnostic before any subgroup analysis. |
+### 1.1 バイアス削減
 
----
+| 問題 | 対応 |
+|------|------|
+| Reviewer 1/2：報告されたバイアス削減値が式と矛盾している | 式と報告値を整合させる。相対削減 \(1 - |\text{bias}_\text{stratified}| / |\text{bias}_\text{crude}|\) を一貫して使用する**か**、絶対削減を使う場合はそのように正しくラベル付けする。式、すべての表、図のキャプション、抄録、Discussion を更新する。 |
+| Reviewer 2：方法 1B がオラクル基準をこの指標で上回る | 短い説明を追加する。結果に関与する方法は、Z 上のオラクル k-means が捕捉しない形で観測された結果を条件付けることができるため、この指標は結果に関与する方法にとって上限基準ではない。 |
 
-## 3. Outcome model and outcome-informed methods
+### 1.2 W 指標
 
-| Issue | Action |
-|-------|--------|
-| Reviewer 3: outcome model only includes A×Z interactions; why not X×Z or X×A? | Either add selected X–Z and X–A interaction terms in a sensitivity analysis, or explicitly justify the parsimonious model and state that generalizability to models with richer interactions is tested in the sensitivity analysis. |
-| Reviewer 3: interpretation of τ as a main treatment effect is unclear when A interacts with Z. | Clarify that τ is the conditional log-odds ratio at the reference level of Z, not a marginal main effect. |
-| Reviewer 2: residual stratification uses the observed outcome, creating circularity/collider risk. | Restrict residual-based stratification to **exploratory diagnostics**; for downstream treatment-effect estimation, require a discovery/evaluation split or a hold-out sample. Add a sensitivity analysis quantifying the induced bias. |
+| 問題 | 対応 |
+|------|------|
+| Reviewer 1：W は真の CATE から計算されており、オラクル指標である | (a) 観測データのみに基づく推定 CATE 版の W を実装・評価する**か**、(b) 実用的診断の言い回しを削除し、W をシミュレーション限定の性能指標として再ラベル付けして補足指標セクションに移す。 |
 
----
+### 1.3 C1 整合性指標
 
-## 4. Framing and claims
-
-| Issue | Action |
-|-------|--------|
-| Reviewer 2: extraction performance in primary simulation is very low (best ARI 0.021 vs oracle 0.353). | Reframe throughout: extraction is **conditionally and partially successful**, not a usable two-tier workflow. Lead with the diagnostic value of C1. |
-| Reviewer 2: semi-synthetic claim that all methods achieved ARI > 0.7 is over-stated. | Revise the abstract and results to report the full set: 2-group examples reach ARI > 0.7, but multi-group examples (COVID-19 CFR, UC Berkeley) remain below 0.1. |
-| Reviewer 1/2/3: "neutralisation" is not operationalised. | Define "neutralisation" explicitly as "bias reduction through stratification" and avoid language implying causal elimination of confounding. |
-| Reviewer 1: recovery target is a post-hoc partition of partly continuous Z. | State plainly that ARI measures agreement with a constructed clustering target, not natural subgroups. |
+| 問題 | 対応 |
+|------|------|
+| Reviewer 1/2：主要シミュレーションで、提案手法からランダム層化まで C1 値が大きく重なっている | C1 を「探索的・未校正」診断として提示する。固定しきい値ではなく、ランダム層化、Z→X の弱/強、離散/連続 Z、有限サンプルなどの領域にわたる校正曲線を報告する。C1 が「整合性を確実に検出する」という主張を削除する。 |
+| 暫定しきい値 C1 < 0.05 は裏付けが不十分 | しきい値を感度に基づく解釈に置き換える。しきい値は暫定的であり、外部校正が必要であることを明記する。 |
 
 ---
 
-## 5. Empirical examples and reproducibility
+## 2. 真の構造、オラクル、方法分類
 
-| Issue | Action |
-|-------|--------|
-| Reviewer 1: Additional file 1 inconsistencies (reconstructed vs simulated variables, group counts). | Clarify in Additional file 1 which variables were reconstructed from published contingency tables and which were generated from logistic models. Ensure group counts match Table 1. |
-| Reviewer 2: Morris 2021 source is a blog post. | In the main text, describe the Morris example as a publicly available data-analysis example, not a peer-reviewed study. |
-| Reviewer 2: implementation details are missing. | Add a supplement or appendix with logistic regression regularisation, standardisation, random-forest settings, k-means initialisations and starts, GMM covariance, convergence, and random seeds. |
-| Reviewer 2: add permanent code archive. | Create a tagged GitHub release or Zenodo archive and report the commit hash/DOI in the data availability statement. |
-
----
-
-## 6. Target journal strategy
-
-See `next_journal_proposal.md` for candidates and the recommended order.
+| 問題 | 対応 |
+|------|------|
+| Reviewer 2/3：Z 上の k-means で定義された真の部分集団構造は粗い；同じ K でオラクル ARI が 1 に近いべき | K が真のカテゴリ数と一致する場合は、**離散化されたクリティカル変数のカテゴリ**を使って真の構造を定義する。Z 上の k-means を連続近似として残す場合は、それは生物学的事実ではなく参照分割であることを説明し、同じ K でオラクル ARI が 1 に近くなるよう報告する。 |
+| Reviewer 2：オラクルはすべての指標で上限ではない | なぜ Z 上のオラクル k-means が、バイアス関連指標では結果に関与する方法に上回られる可能性があるかを説明する段落を追加する。 |
+| Reviewer 2：方法分類が一貫していない（能動的比較対象が 3 つと 4 つ、18 手法のカウント） | 正確な方法一覧を 1 つ作成し、抄録、方法、表、返答状で一貫して使用する。 |
+| Reviewer 3：潜在クラスモデルも隠れた部分集団を同定する；違いが不明確 | 潜在クラス・有限混合モデルは分布仮定の下で**観測変数から**部分集団を発見するのに対し、IONE は観測母集団を潜在的に非整合であるとして扱い、部分集団分析の前に整合性診断を提供する、という違いを明確にする段落を追加する。 |
 
 ---
 
-## Files to work from
+## 3. 結果モデルと結果に関与する方法
 
-- **Base manuscript:** `IONE_manuscript_r2_cleaned.docx` (BMC MRM R2 version; contains W, Tables 8–11, MC SEs, active comparators, ADEMP).
-- **Repository branch:** `IONE-stratification-framework` in `bougtoir/wip`.
-- **Response-to-reviewers for R2:** `IONE_response_to_reviewers_v2.docx`.
-- **Figure legends:** `IONE_figure_legends.docx`.
+| 問題 | 対応 |
+|------|------|
+| Reviewer 3：結果モデルは A×Z 交互作用のみ；なぜ X×Z や X×A を含まないのか | X–Z および X–A 交互作用項を感度分析で追加する**か**、簡潔なモデルを明示的に正当化し、より豊かな交互作用を持つモデルへの一般化が感度分析で検討されていることを述べる。 |
+| Reviewer 3：A が Z と交互作用する場合、τ を主治療効果として解釈することが不明確 | τ は Z の基準水準における条件付き対数オッズ比であり、周辺的主効果ではないことを明記する。 |
+| Reviewer 2：残差に基基づく層化は観測された結果を使用し、循環性・コライダー・リスクを生む | 残差に基づく層化を**探索的診断**に限定する。下流の治療効果推定には、発見/評価の分割またはホールドアウトサンプルを要求する。誘導バイアスを定量化した感度分析を追加する。 |
 
-These files have been downloaded and extracted. Revisions should start from the R2 manuscript, not the original first-round version in the repo.
+---
+
+## 4. フレーミングと主張
+
+| 問題 | 対応 |
+|------|------|
+| Reviewer 2：主要シミュレーションでの抽出性能は非常に低い（最善の提案手法 ARI = 0.021、オラクル k-means = 0.353） | 全体を通じて、抽出は「条件付きで部分的に成功する」と再位置づける。使用可能な2段階ワークフローとして提示しない。C1 の診断的価値を前面に出す。 |
+| Reviewer 2：半合成例で「すべての手法が ARI > 0.7 を達成した」という主張は過大 | 抄録と結果を修正し、2 群の例では ARI > 0.7 だが、多群の例（COVID-19 CFR、UC Berkeley）は 0.1 未満であることを報告する。 |
+| Reviewer 1/2/3：「Neutralisation」が操作上定義されていない | 「層化によるバイアス削減」として「neutralisation」を明確に定義し、交絡の因果的除去を想起させる言い回しを避ける。 |
+| Reviewer 1：回収ターゲットは部分的に連続な Z の事後分割であり、ARI はしばしば構造化されたクラスタリングターゲットとの一致を測っている | ARI は自然な部分集団の回収ではなく、構築されたクラスタリングターゲットとの一致を測っていることを明確に述べる。 |
+
+---
+
+## 5. 実例と再現性
+
+| 問題 | 対応 |
+|------|------|
+| Reviewer 1：追加ファイル 1 に整合性がない（再構築された変数とシミュレートされた変数、グループ数） | 追加ファイル 1 において、公開された分割表から再構築された変数とロジスティックモデルから生成された変数をそれぞれ明確にする。グループ数が表 1 と一致するようにする。 |
+| Reviewer 2：Morris 2021 の出典はブログ投稿 | 本文では Morris の例を査読付き研究ではなく、公開されているデータ分析例として記述する。 |
+| Reviewer 2：実装の詳細が欠けている | ロジスティック回帰の正則化、標準化、ランダムフォレスト設定、k-means の初期化と開始数、GMM の共分散、収束、乱数シードなどを含む付録または補足資料を追加する。 |
+| Reviewer 2：恒久的なコードアーカイブを追加 | タグ付き GitHub リリースまたは Zenodo アーカイブを作成し、コミットハッシュ/DOI をデータ可用性声明に記載する。 |
+
+---
+
+## 6. 目標誌戦略
+
+詳細は `next_journal_proposal.md` に記載の候補と推奨順序を参照してください。
+
+---
+
+## 7. 編集作業のベースとなるファイル
+
+- **ベース原稿**: `IONE_manuscript_r2_cleaned.docx`（BMC MRM R2 版；W、表 8–11、モンテカルロ標準誤差、能動的比較対象、ADEMP を含む）
+- **リポジトリブランチ**: `bougtoir/wip` の `IONE-stratification-framework`
+- **R2 返答状**: `IONE_response_to_reviewers_v2.docx`
+- **図の凡例**: `IONE_figure_legends.docx`
+
+これらのファイルはダウンロード・抽出済みです。修正は、リポジトリ内のオリジナルの第1ラウンド版ではなく、R2 原稿から始めてください。
