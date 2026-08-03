@@ -8,7 +8,7 @@ IONE proposes two exploratory diagnostics for observational treatment-effect est
 - **C1** (between-stratum heterogeneity): 1 − I² from stratum-specific log odds ratios of treatment on outcome.
 - **W** (within-stratum homogeneity): variance ratio of estimated or true conditional average treatment effects within strata.
 
-The repository implements the data-generating mechanism, stratification methods, evaluation metrics and manuscript-generation pipeline used in the revised submission to *Statistical Methods in Medical Research*.
+The repository implements the data-generating mechanism, stratification methods, evaluation metrics and manuscript-generation pipeline used in the revised submission to *Statistical Methods in Medical Research*, with an additional RSM-framed IPD meta-analysis scenario and manuscript under `devin/ione-rsm-reframe`.
 
 ## Repository structure
 
@@ -17,9 +17,11 @@ The repository implements the data-generating mechanism, stratification methods,
 ├── methods.py                  # Stratification methods (IONE, active comparators, baselines)
 ├── evaluation.py               # Metrics: ARI, η², C1, W, risk-difference ATE bias reduction
 ├── run_simulation.py           # Phase 1, sensitivity and non-linearity simulations
+├── run_rsm_ipd_simulation.py   # RSM IPD meta-analysis simulation
 ├── real_data_analysis.py       # Semi-synthetic illustrations from 5 Simpson's-paradox examples
 ├── generate_summary.py         # Aggregate simulation/real-data CSVs into summary tables
 ├── generate_manuscript.py      # Generate Word manuscript and figures from summaries
+├── generate_rsm_manuscript.py  # Generate RSM-framed Word manuscript and figures
 ├── generate_tables_docx.py     # Generate separate editable tables .docx
 ├── md_to_docx.py               # Minimal markdown-to-docx converter
 ├── requirements.txt            # Python dependencies
@@ -40,11 +42,13 @@ With Python 3.10+:
 
 ```bash
 pip install -r requirements.txt
-python3 run_simulation.py                  # ~1 hour on 2 CPUs
+python3 run_simulation.py                  # ~30 min on 2 CPUs
+python3 run_rsm_ipd_simulation.py          # RSM IPD meta-analysis scenario, ~1 min on 2 CPUs
 python3 real_data_analysis.py              # a few minutes
 python3 generate_summary.py
 python3 generate_tables_docx.py
-python3 generate_manuscript.py
+python3 generate_manuscript.py             # SMMR/Stat Med manuscript
+python3 generate_rsm_manuscript.py         # RSM manuscript
 ```
 
 All numbers in `results/manuscript/IONE_revised_manuscript.docx` are read from `results/summary/*.csv`; no estimates are hard-coded in the manuscript generator.
