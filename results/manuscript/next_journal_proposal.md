@@ -117,11 +117,11 @@ The final goal is to publish **LINKO**, **IONE**, **KOTHA** as component papers 
 | **ONISHI** | **Research Synthesis Methods** (submitted 7/31 after AJE rejection 7/30) | Unifying framework; RSM is the current venue. Preprint citations to LINKO/IONE/KOTHA should be in the cover letter and updated if needed. | $0 |
 
 **Practical sequencing for citations (as of 2026-08-03):**
-1. **ONISHI is already under review at RSM** (submitted 7/31). It currently cites the component papers as preprints or companion manuscripts.
-2. Put all three component papers on **medRxiv/arXiv** with versioned DOIs as soon as possible so ONISHI can refer to stable preprint citations during review.
+1. **ONISHI is already under review at RSM** (submitted 7/31). It currently cites the component papers via their **Research Square** preprint URLs/DOIs.
+2. Update all three component papers to **Research Square v2** as soon as the revised versions are ready, so ONISHI can cite stable, versioned preprint DOIs.
 3. Submit **KOTHA** to RSM first (already prepared; addresses KOTHA-specific reviewer concerns).
-4. Submit **IONE** to *Statistics in Medicine* after the major reframing/revision.
-5. Decide **LINKO** target (BMC MRM regular or RSM) and publish as a preprint immediately.
-6. If RSM asks for revisions on ONISHI, update the component preprint DOIs in the response.
+4. Submit **IONE** to *Statistics in Medicine* after the major reframing/revision, and upload the revised version to Research Square v2.
+5. Decide **LINKO** target (BMC MRM regular or RSM) and publish/update the Research Square preprint immediately.
+6. If RSM asks for revisions on ONISHI, update the Research Square v2 DOIs in the response.
 
 **Risk note:** BMC MRM has now rejected both IONE and KOTHA after peer review. If LINKO is also rejected by BMC MRM, the fallback is **Research Synthesis Methods** for LINKO (if methodological innovation can be sharpened) or **Systematic Reviews** (BMC series, full OA).
