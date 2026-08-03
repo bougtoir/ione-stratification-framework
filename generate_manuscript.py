@@ -379,7 +379,7 @@ def generate_manuscript():
     cm.add_paragraph(doc, (
         "We position IONE as an exploratory diagnostic-sensitivity tool, not as a complete causal-inference workflow. "
         "The simulations show that hidden population structure can sometimes be detected and that stratified estimates can have smaller ATE bias in some scenarios, but success is strongly conditional on the confounder leaving strong traces in measured variables and on a simple, low-dimensional hidden structure. "
-        "Outcome-informed methods can capitalise on outcome heterogeneity but require sample splitting to avoid overfitting and induced bias; outcome-free methods are more robust but lack the outcome signal. "
+        "Outcome-informed methods can draw on outcome heterogeneity but require sample splitting to avoid overfitting and induced bias; outcome-free methods are more robust but lack the outcome signal. "
         "C1 and W provide transparent diagnostics, but they are not calibrated decision rules and should not replace propensity-score or regression adjustment or more comprehensive causal-inference methods{hernan2020}. "
         "Limitations include the stylised DGM, the constructed nature of the true-Z partition, and the absence of a real individual-level cohort. Future work should calibrate C1/W thresholds on individual-level clinical data and compare IONE with latent-class and mixture-model approaches."
     ))
