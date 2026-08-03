@@ -67,17 +67,16 @@ class CitationManager:
 
 cm = CitationManager()
 
-# Register references used in the text
+# Register references in the order of their first appearance in the text.
 cm.cite('manski1990', 'Manski CF. Nonparametric bounds on treatment effects. Am Econ Rev. 1990;80(2):319-323.')
-cm.cite('vanderweele2015', 'VanderWeele TJ. Explanation in Causal Inference: Methods for Mediation and Interaction. Oxford University Press; 2015.')
-cm.cite('pearl2009', 'Pearl J. Causality. 2nd ed. Cambridge University Press; 2009.')
 cm.cite('rubin1974', 'Rubin DB. Estimating causal effects of treatments in randomized and nonrandomized studies. J Educ Psychol. 1974;66(5):688-701.')
+cm.cite('pearl2009', 'Pearl J. Causality. 2nd ed. Cambridge University Press; 2009.')
 cm.cite('austin2015', 'Austin PC, Stuart EA. Moving towards best practice when using inverse probability of treatment weighting (IPTW) using the propensity score to estimate causal treatment effects in observational studies. Stat Med. 2015;34(28):3661-3679.')
-cm.cite('robins1992', 'Robins JM, Greenland S. Identifiability and exchangeability for direct and indirect effects. Epidemiology. 1992;3(2):143-155.')
-cm.cite('hernan2020', 'Hernán MA, Robins JM. Causal Inference: What If. Boca Raton: Chapman & Hall/CRC; 2020.')
-cm.cite('morris2021', 'Morris S. Israeli vaccine efficacy data: a public-domain Simpson’s paradox example. 2021. Available from: https://sgmorris.net/posts/science/simpsons-paradox-israels-vaccine-data/')
+cm.cite('vanderweele2015', 'VanderWeele TJ. Explanation in Causal Inference: Methods for Mediation and Interaction. Oxford University Press; 2015.')
+cm.cite('morris2021', 'Morris JS. Israeli data: How can efficacy vs. severe disease be strong when 60% of hospitalized are vaccinated? 2021. Available from: https://www.covid-datascience.com/post/israeli-data-how-can-efficacy-vs-severe-disease-be-strong-when-60-of-hospitalized-are-vaccinated')
 cm.cite('appleton1996', 'Appleton DR, French NR, Vanderpump MP. Ignoring a covariate: an example of Simpson’s paradox. Am Stat. 1996;50(4):340-341.')
 cm.cite('julious1994', 'Julious SA, Mullee MA. Confounding and Simpson’s paradox. BMJ. 1994;309(6967):1480-1481.')
+cm.cite('hernan2020', 'Hernán MA, Robins JM. Causal Inference: What If. Boca Raton: Chapman & Hall/CRC; 2020.')
 
 
 def _read_csv(name):
@@ -281,6 +280,7 @@ def generate_manuscript():
     doc.add_heading('1. Introduction', level=1)
     cm.add_paragraph(doc, (
         "Treatment-effect estimates from observational data are valid only under assumptions that are often only partly testable{manski1990}. "
+        "We frame the problem with the counterfactual (potential-outcomes) model{rubin1974}. "
         "When a population is composed of subgroups with different treatment effects or different confounding structures, a marginal estimate can be non-robust or even qualitatively wrong (Simpson's paradox){pearl2009}. "
         "Standard adjustment methods rely on measured covariates and cannot reveal hidden effect modification by unmeasured modifiers. "
         "We study whether routine measured variables (X) can be used to stratify the population so that the resulting subgroups are more coherent in their treatment-response pattern. "
@@ -357,7 +357,8 @@ def generate_manuscript():
         "Five well-known Simpson's-paradox examples were reconstructed as pseudo-individual records and pseudo-general variables were generated to mimic proxies of the known confounder{morris2021}{appleton1996}{julious1994}. "
         "High ARI was obtained only when the pseudo-variables were strongly correlated with a low-dimensional confounder (kidney stone, Israeli vaccine). "
         "Multi-level confounders produced near-zero ARI (UC Berkeley, COVID-19 CFR). "
-        "These examples are illustrations of favourable vs. unfavourable settings, not validation of out-of-the-box performance. Figure 3 summarises ARI across datasets."
+        "Table 2 gives the best-performing method and stratum count for each dataset, and Figure 3 summarises ARI across all datasets. "
+        "These examples are illustrations of favourable vs. unfavourable settings, not validation of out-of-the-box performance."
     ))
     if real_data is not None:
         rd_best = real_data.loc[real_data.groupby('dataset')['ARI_mean'].idxmax()].copy()
@@ -379,10 +380,10 @@ def generate_manuscript():
     # Discussion
     doc.add_heading('4. Discussion', level=1)
     cm.add_paragraph(doc, (
-        "This study reframes IONE as an exploratory diagnostic-sensitivity tool rather than a mature two-stage workflow. "
-        "The simulations show that hidden population structure can sometimes be detected and partially corrected, but success is strongly conditional on the confounder leaving strong traces in measured variables and on a simple, low-dimensional hidden structure. "
+        "We position IONE as an exploratory diagnostic-sensitivity tool, not as a complete causal-inference workflow. "
+        "The simulations show that hidden population structure can sometimes be detected and that stratified estimates can have smaller ATE bias in some scenarios, but success is strongly conditional on the confounder leaving strong traces in measured variables and on a simple, low-dimensional hidden structure. "
         "Outcome-informed methods can capitalise on outcome heterogeneity but require sample splitting to avoid overfitting and induced bias; outcome-free methods are more robust but lack the outcome signal. "
-        "C1 and W provide transparent diagnostics, but they are not calibrated decision rules and should not replace propensity-score or regression adjustment. "
+        "C1 and W provide transparent diagnostics, but they are not calibrated decision rules and should not replace propensity-score or regression adjustment or more comprehensive causal-inference methods{hernan2020}. "
         "Limitations include the stylised DGM, the constructed nature of the true-Z partition, and the absence of a real individual-level cohort. Future work should calibrate C1/W thresholds on individual-level clinical data and compare IONE with latent-class and mixture-model approaches."
     ))
 
