@@ -36,6 +36,28 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
+def _safe_predict_proba(model, X_train, Y_train, X_pred):
+    """Fit a classifier and return Pr(Y=1|X), handling degenerate one-class outcomes."""
+    if len(np.unique(Y_train)) < 2:
+        return np.full(len(X_pred), float(Y_train.mean()))
+    try:
+        model.fit(X_train, Y_train)
+        proba = model.predict_proba(X_pred)
+        if proba.shape[1] < 2:
+            return np.full(len(X_pred), float(Y_train.mean()))
+        return proba[:, 1]
+    except ValueError:
+        return np.full(len(X_pred), float(Y_train.mean()))
+
+
+def _tree_predict_proba_1(tree, X, n):
+    """Return class-1 probability for a single tree, tolerating one-class leaves."""
+    proba = tree.predict_proba(X)
+    if proba.shape[1] < 2:
+        return np.zeros(n, dtype=float)
+    return proba[:, 1]
+
+
 def _quantile_stratify(scores: np.ndarray, n_strata: int, discovery_idx: np.ndarray | None = None) -> np.ndarray:
     """Stratify by quantile-based equal-size groups.
     If discovery_idx is provided, thresholds are computed on the discovery subset and applied to the full score vector."""
@@ -58,8 +80,7 @@ def method_1a_predicted_probability(X: np.ndarray, A: np.ndarray, Y: np.ndarray,
     """Method 1A: predicted probability-based stratification."""
     train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
     model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-    model.fit(X[train], Y[train])
-    p_hat = model.predict_proba(X)[:, 1]
+    p_hat = _safe_predict_proba(model, X[train], Y[train], X)
     return _quantile_stratify(p_hat, n_strata, discovery_idx)
 
 
@@ -68,8 +89,7 @@ def method_1b_residual(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: in
     """Method 1B: prediction residual-based stratification."""
     train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
     model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-    model.fit(X[train], Y[train])
-    p_hat = model.predict_proba(X)[:, 1]
+    p_hat = _safe_predict_proba(model, X[train], Y[train], X)
     residuals = np.abs(Y - p_hat)
     return _quantile_stratify(residuals, n_strata, discovery_idx)
 
@@ -79,11 +99,7 @@ def method_1c_cv_decision(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata:
     """Method 1C: cross-validation-based decision power score."""
     train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
     model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-    cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    p_hat_cv = cross_val_predict(model, X[train], Y[train], cv=cv, method='predict_proba')[:, 1]
-    # Predict on full data: use full X for CV scores is not possible; instead fit a model on train and predict full.
-    model.fit(X[train], Y[train])
-    p_hat_full = model.predict_proba(X)[:, 1]
+    p_hat_full = _safe_predict_proba(model, X[train], Y[train], X)
     return _quantile_stratify(p_hat_full, n_strata, discovery_idx)
 
 
@@ -91,9 +107,12 @@ def method_1d_ml_uncertainty(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_stra
                               discovery_idx: np.ndarray | None = None) -> np.ndarray:
     """Method 1D: ML model uncertainty-based stratification."""
     train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
+    n = X.shape[0]
+    if len(np.unique(Y[train])) < 2:
+        return _quantile_stratify(np.zeros(n), n_strata, discovery_idx)
     model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
     model.fit(X[train], Y[train])
-    tree_preds = np.array([tree.predict_proba(X)[:, 1] for tree in model.estimators_])
+    tree_preds = np.array([_tree_predict_proba_1(tree, X, n) for tree in model.estimators_])
     uncertainty = np.var(tree_preds, axis=0)
     return _quantile_stratify(uncertainty, n_strata, discovery_idx)
 
@@ -245,8 +264,7 @@ def method_ps_propensity_score(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_st
         return np.zeros(X.shape[0], dtype=int)
     train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
     model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-    model.fit(X[train], A[train])
-    ps = model.predict_proba(X)[:, 1]
+    ps = _safe_predict_proba(model, X[train], A[train], X)
     return _quantile_stratify(ps, n_strata, discovery_idx)
 
 
@@ -265,13 +283,11 @@ def method_prognostic_score(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strat
     train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
     A_train, Y_train = A[train], Y[train]
     mask_untreated = A_train == 0
+    model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
     if mask_untreated.sum() < 10 or len(np.unique(Y_train[mask_untreated])) < 2:
-        model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-        model.fit(X[train], Y_train)
+        prog = _safe_predict_proba(model, X[train], Y_train, X)
     else:
-        model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-        model.fit(X[train][mask_untreated], Y_train[mask_untreated])
-    prog = model.predict_proba(X)[:, 1]
+        prog = _safe_predict_proba(model, X[train][mask_untreated], Y_train[mask_untreated], X)
     return _quantile_stratify(prog, n_strata, discovery_idx)
 
 

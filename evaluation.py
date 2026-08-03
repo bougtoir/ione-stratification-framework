@@ -191,8 +191,8 @@ def compute_w_est(A: np.ndarray, X: np.ndarray, Y: np.ndarray, strata: np.ndarra
     and compute CATE estimates. Then compute W as for W_true.
     """
     n = X.shape[0]
-    if n < 20:
-        return 1.0
+    if n < 20 or len(np.unique(Y)) < 2:
+        return float(np.nan)
 
     # Build design matrix with main effects and A*X interactions
     X_std = StandardScaler().fit_transform(X)
@@ -206,15 +206,19 @@ def compute_w_est(A: np.ndarray, X: np.ndarray, Y: np.ndarray, strata: np.ndarra
         # Predict under A=0 and A=1: set A_col and interactions to 0 or replicate X
         design_a0 = np.hstack([X_std, np.zeros((n, 1)), np.zeros((n, X.shape[1]))])
         design_a1 = np.hstack([X_std, np.ones((n, 1)), X_std])
-        p0 = model.predict_proba(design_a0)[:, 1]
-        p1 = model.predict_proba(design_a1)[:, 1]
+        proba0 = model.predict_proba(design_a0)
+        proba1 = model.predict_proba(design_a1)
+        if proba0.shape[1] < 2 or proba1.shape[1] < 2:
+            return float(np.nan)
+        p0 = proba0[:, 1]
+        p1 = proba1[:, 1]
     except Exception:
-        return 1.0
+        return float(np.nan)
 
     cate_est = p1 - p0
     overall_var = np.var(cate_est, ddof=0)
     if overall_var == 0:
-        return 1.0
+        return float(np.nan)
 
     unique_strata = np.unique(strata)
     weighted_within_var = 0.0

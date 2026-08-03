@@ -166,12 +166,13 @@ def run_phase1_simulation(
     zx_scales = [0.3, 0.5, 1.0]
     method_specs = build_method_specs(include_slow=False)
 
+    nonlinear = False
     scenarios = []
     for sim_id in range(n_sims):
         for n_strata in n_strata_list:
             for zx_scale in zx_scales:
                 seed = sim_id * 10000 + int(zx_scale * 100) + n_strata
-                scenarios.append((sim_id, n, n_strata, 1.0, zx_scale, 1.0, 1.0, 3, seed, False))
+                scenarios.append((sim_id, n, n_strata, 1.0, zx_scale, 1.0, 1.0, 3, seed))
 
     n_scenarios = len(scenarios)
     n_methods = len(method_specs)
@@ -182,7 +183,7 @@ def run_phase1_simulation(
 
     all_results = Parallel(n_jobs=n_jobs, verbose=10)(
         delayed(run_scenario)(
-            *s, method_specs=method_specs,
+            *s, method_specs=method_specs, nonlinear=nonlinear,
         )
         for s in scenarios
     )
@@ -227,6 +228,7 @@ def run_sensitivity_simulation(
         ('baseline_random', None, {}),
     ]
 
+    nonlinear = False
     scenarios = []
     for sim_id in range(n_sims):
         for n_val in sample_sizes:
@@ -234,7 +236,7 @@ def run_sensitivity_simulation(
                 for zx in zx_influence_scales:
                     for ns in n_strata_list:
                         seed = sim_id * 100000 + n_val + int(ze * 10) + int(zx * 100) + ns
-                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed, False))
+                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed))
 
     n_scenarios = len(scenarios)
     n_methods = len(method_specs)
@@ -244,7 +246,7 @@ def run_sensitivity_simulation(
 
     all_results = Parallel(n_jobs=n_jobs, verbose=10)(
         delayed(run_scenario)(
-            *s, method_specs=method_specs,
+            *s, method_specs=method_specs, nonlinear=nonlinear,
         )
         for s in scenarios
     )
@@ -289,6 +291,7 @@ def run_nonlinearity_simulation(
         ('baseline_random', None, {}),
     ]
 
+    nonlinear = True
     scenarios = []
     for sim_id in range(n_sims):
         for n_val in sample_sizes:
@@ -296,7 +299,7 @@ def run_nonlinearity_simulation(
                 for zx in zx_influence_scales:
                     for ns in n_strata_list:
                         seed = sim_id * 100000 + 1 + n_val + int(ze * 10) + int(zx * 100) + ns
-                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed, True))
+                        scenarios.append((sim_id, n_val, ns, ze, zx, 1.0, 1.0, 3, seed))
 
     n_scenarios = len(scenarios)
     n_methods = len(method_specs)
@@ -306,7 +309,7 @@ def run_nonlinearity_simulation(
 
     all_results = Parallel(n_jobs=n_jobs, verbose=10)(
         delayed(run_scenario)(
-            *s, method_specs=method_specs,
+            *s, method_specs=method_specs, nonlinear=nonlinear,
         )
         for s in scenarios
     )
