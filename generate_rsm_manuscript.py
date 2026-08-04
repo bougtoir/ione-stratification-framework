@@ -304,9 +304,9 @@ def generate_rsm_manuscript():
     style.font.size = Pt(11)
 
     # Title
-    title = doc.add_heading('A coherence diagnostic for hidden effect modification in individual participant data meta-analysis:', level=0)
+    title = doc.add_heading('IONE: Incoherence-Oriented Neutralisation and Extraction for hidden effect modification', level=0)
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    subtitle = doc.add_heading('a simulation study of stratification-based extraction', level=0)
+    subtitle = doc.add_heading('in individual participant data meta-analysis: a simulation study of stratification-based extraction', level=0)
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
     doc.add_paragraph()
 
@@ -315,6 +315,7 @@ def generate_rsm_manuscript():
     abstract_text = (
         "Background. Random-effects meta-analyses report an average treatment effect and assume that between-study heterogeneity has been adequately modelled. "
         "When an individual participant data (IPD) meta-analysis contains hidden effect modifiers or confounders, a marginal summary can be non-robust or qualitatively wrong (aggregation bias). "
+        "We propose IONE (Incoherence-Oriented Neutralisation and Extraction), an exploratory diagnostic toolkit for hidden effect modification. "
         f"Methods. We simulated an IPD meta-analysis with {n_studies} studies, binary treatment and outcome, measured covariates carrying traces of an unmeasured effect-modifier, and study-level variation in baseline risk and treatment prevalence. "
         "Proposed IONE methods and active comparators were used to stratify the pooled IPD; stratum-specific risk differences were pooled with two-stage fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
         "We report ARI with a constructed true-Z partition, C1 (between-stratum heterogeneity of A→Y log odds ratios), W (within-stratum CATE homogeneity), and ATE bias reduction on the risk-difference scale. "
@@ -483,9 +484,9 @@ def generate_rsm_manuscript():
     tp_style = tp.styles['Normal']
     tp_style.font.name = 'Times New Roman'
     tp_style.font.size = Pt(11)
-    tp_title = tp.add_heading('A coherence diagnostic for hidden effect modification in individual participant data meta-analysis:', level=0)
+    tp_title = tp.add_heading('IONE: Incoherence-Oriented Neutralisation and Extraction for hidden effect modification', level=0)
     tp_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    tp_sub = tp.add_heading('a simulation study of stratification-based extraction', level=0)
+    tp_sub = tp.add_heading('in individual participant data meta-analysis: a simulation study of stratification-based extraction', level=0)
     tp_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
     tp.add_paragraph()
     tp_auth = tp.add_paragraph()
