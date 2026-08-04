@@ -150,11 +150,11 @@ def generate_dataset(
     else:
         gamma_z = np.asarray(gamma_z, dtype=float)
     if gamma_x is None:
-        gamma_x = x_effect_scale * np.zeros(X.shape[1])
+        gamma_x = x_effect_scale * np.array([0.01] * 10)
     else:
         gamma_x = np.asarray(gamma_x, dtype=float)
-        if len(gamma_x) < X.shape[1]:
-            gamma_x = np.concatenate([gamma_x, np.zeros(X.shape[1] - len(gamma_x))])
+    if len(gamma_x) < X.shape[1]:
+        gamma_x = np.concatenate([gamma_x, np.zeros(X.shape[1] - len(gamma_x))])
     logit_a = (
         gamma_z[0] * Z1_std + gamma_z[1] * Z2 + gamma_z[2] * Z3_std
         + X @ gamma_x
