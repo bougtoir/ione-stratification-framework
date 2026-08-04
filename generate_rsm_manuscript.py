@@ -315,7 +315,7 @@ def generate_rsm_manuscript():
     abstract_text = (
         "Background. Random-effects meta-analyses report an average treatment effect and assume that between-study heterogeneity has been adequately modelled. "
         "When an individual participant data (IPD) meta-analysis contains hidden effect modifiers or confounders, a marginal summary can be non-robust or qualitatively wrong (aggregation bias). "
-        "We propose IONE (Incoherence-Oriented Neutralisation and Extraction), an exploratory diagnostic toolkit for hidden effect modification. "
+        "We propose Incoherence-Oriented Neutralisation and Extraction (IONE), an exploratory diagnostic toolkit for hidden effect modification. "
         f"Methods. We simulated an IPD meta-analysis with {n_studies} studies, binary treatment and outcome, measured covariates carrying traces of an unmeasured effect-modifier, and study-level variation in baseline risk and treatment prevalence. "
         "Proposed IONE methods and active comparators were used to stratify the pooled IPD; stratum-specific risk differences were pooled with two-stage fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
         "We report ARI with a constructed true-Z partition, C1 (between-stratum heterogeneity of A→Y log odds ratios), W (within-stratum CATE homogeneity), and ATE bias reduction on the risk-difference scale. "
@@ -344,7 +344,7 @@ def generate_rsm_manuscript():
         "Yet these methods do not in themselves reveal whether an unmeasured effect modifier is present or whether the estimated average effect is robust across clinically meaningful subgroups."
     ))
     _add_paragraph(doc, (
-        "We develop IONE (Identifying hidden population structure and extracting it by stratification) for the IPD meta-analysis setting. "
+        "We develop Incoherence-Oriented Neutralisation and Extraction (IONE) for the IPD meta-analysis setting. "
         "We ask whether routine measured covariates can be used to stratify a pooled IPD so that within-stratum treatment effects are more homogeneous and the pooled estimate is less biased. "
         "We evaluate the proposal in a simulation study with explicit between-study heterogeneity and hidden effect modification, and illustrate behaviour with well-known Simpson-paradox examples."
     ))
