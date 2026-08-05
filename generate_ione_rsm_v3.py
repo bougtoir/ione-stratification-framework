@@ -801,7 +801,9 @@ def generate_v3_manuscript():
     tp.add_paragraph('Onishi Tatsuki')
     tp.add_paragraph('Data Science AI Innovation Research Promotion Center, Shiga University')
     tp.add_paragraph('Corresponding author: Onishi Tatsuki')
-    tp.add_paragraph('bougtoir@gmail.com')
+    p=tp.add_paragraph()
+    p.add_run('bougtoir@gmail.com').italic=True
+    tp.add_paragraph('1-1-1 Bamba, Hikone, Shiga 522-8522 Japan')
     tp_path = os.path.join(RSM_DIR, 'title_page_rsm_v3.docx')
     tp.save(tp_path)
 
