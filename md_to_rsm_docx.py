@@ -14,9 +14,12 @@ Supports:
 
 import re
 import os
+import copy
 from docx import Document
 from docx.shared import Inches, Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from collections import OrderedDict
 
 
@@ -193,5 +196,145 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
         _apply_inline(p, line, cite_manager)
         i += 1
 
+    apply_math_to_doc(doc)
     doc.save(docx_path)
     print(f'[md_to_rsm_docx] {md_path} -> {docx_path}')
+
+# ---------------------------------------------------------------------------
+# Word equation (OMML) insertion for mathematical expressions
+# ---------------------------------------------------------------------------
+
+_MATH_PATTERNS = [
+    (r'P\(Y=1\|A=1\) - P\(Y=1\|A=0\)', 'riskdiff'),
+    (r'C1 = 1 - I\^2', 'c1def'),
+    (r'Y ~ X \+ A \+ X\*A', 'ymodel'),
+    (r'1 - \|bias_([a-z_]+)\| / \|bias_([a-z_]+)\|', 'frac'),
+    (r'\|bias_([a-z_]+)\| - \|bias_([a-z_]+)\|', 'diff'),
+    (r'tau\^2', 'tausq'),
+    (r'W_(true|est)', 'wsub'),
+    (r'I\^2', 'isq'),
+]
+
+
+def _math_text(oMath, text):
+    r = OxmlElement('m:r')
+    t = OxmlElement('m:t')
+    t.set(qn('xml:space'), 'preserve')
+    t.text = text
+    r.append(t)
+    oMath.append(r)
+
+
+def _math_superscript(oMath, base, sup):
+    ss = OxmlElement('m:sSup')
+    e = OxmlElement('m:e')
+    _math_text(e, base)
+    sup_el = OxmlElement('m:sup')
+    _math_text(sup_el, sup)
+    ss.append(e)
+    ss.append(sup_el)
+    oMath.append(ss)
+
+
+def _math_subscript(oMath, base, sub):
+    ss = OxmlElement('m:sSub')
+    e = OxmlElement('m:e')
+    _math_text(e, base)
+    sub_el = OxmlElement('m:sub')
+    _math_text(sub_el, sub)
+    ss.append(e)
+    ss.append(sub_el)
+    oMath.append(ss)
+
+
+def _math_fraction(oMath, num, den):
+    f = OxmlElement('m:f')
+    num_el = OxmlElement('m:num')
+    _math_text(num_el, num)
+    den_el = OxmlElement('m:den')
+    _math_text(den_el, den)
+    f.append(num_el)
+    f.append(den_el)
+    oMath.append(f)
+
+
+def _make_math_omath(kind, match):
+    oMath = OxmlElement('m:oMath')
+    if kind == 'riskdiff':
+        _math_text(oMath, 'P(Y=1|A=1) - P(Y=1|A=0)')
+    elif kind == 'c1def':
+        _math_text(oMath, 'C1 = 1 - ')
+        _math_superscript(oMath, 'I', '2')
+    elif kind == 'ymodel':
+        _math_text(oMath, 'Y ~ X + A + X×A')
+    elif kind == 'isq':
+        _math_superscript(oMath, 'I', '2')
+    elif kind == 'tausq':
+        _math_superscript(oMath, 'τ', '2')
+    elif kind == 'wsub':
+        _math_subscript(oMath, 'W', match.group(1))
+    elif kind == 'diff':
+        _math_text(oMath, f'|bias_{match.group(1)}| - |bias_{match.group(2)}|')
+    elif kind == 'frac':
+        _math_text(oMath, '1 - ')
+        _math_fraction(oMath, f'|bias_{match.group(1)}|', f'|bias_{match.group(2)}|')
+    return oMath
+
+
+def _text_run(text, rPr):
+    r = OxmlElement('w:r')
+    if rPr is not None:
+        r.append(copy.deepcopy(rPr))
+    t = OxmlElement('w:t')
+    t.set(qn('xml:space'), 'preserve')
+    t.text = text
+    r.append(t)
+    return r
+
+
+def _split_text_to_elems(text, rPr, patterns):
+    best = None
+    for pat, kind in patterns:
+        m = re.search(pat, text)
+        if m:
+            if best is None or m.start() < best[0].start():
+                best = (m, kind)
+    if best is None:
+        return [_text_run(text, rPr)]
+    m, kind = best
+    pre = text[:m.start()]
+    post = text[m.end():]
+    elems = []
+    if pre:
+        elems.append(_text_run(pre, rPr))
+    elems.append(_make_math_omath(kind, m))
+    if post:
+        elems.extend(_split_text_to_elems(post, rPr, patterns))
+    return elems
+
+
+def _split_run(run, patterns):
+    text = run.text
+    if not text:
+        return None
+    rPr = run._r.rPr
+    for pat, kind in patterns:
+        if re.search(pat, text):
+            return _split_text_to_elems(text, rPr, patterns)
+    return None
+
+
+def apply_math_to_doc(doc):
+    """Replace plain-text mathematical expressions with Word OMML equations."""
+    paras = list(doc.paragraphs)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                paras.extend(cell.paragraphs)
+    for p in paras:
+        for run in list(p.runs):
+            new_elems = _split_run(run, _MATH_PATTERNS)
+            if new_elems:
+                for el in new_elems:
+                    run._r.addprevious(el)
+                p._p.remove(run._r)

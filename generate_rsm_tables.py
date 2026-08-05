@@ -73,7 +73,8 @@ def main():
     )
 
     real = pd.read_csv(os.path.join(SUMMARY_DIR, 'real_data_summary.csv'))
-    rd_best = real.loc[real.groupby('dataset')['ARI_mean'].idxmax()].copy()
+    real_non_oracle = real[~real['method'].str.startswith('baseline_')]
+    rd_best = real_non_oracle.loc[real_non_oracle.groupby('dataset')['ARI_mean'].idxmax()].copy()
     _add_table(
         doc, rd_best,
         ['Dataset', 'Method', 'K', 'ARI', 'C1', 'W_est', 'Bias reduction'],
