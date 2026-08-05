@@ -157,7 +157,7 @@ These values show that, under the simulated data-generating mechanism, a small n
 
 ### Sensitivity to the number of strata
 
-Figure 2 and Table 2 show how random-effects bias reduction changed as the number of strata varied (K = 3, 5, 10). For most methods the gain from increasing K was limited and non-monotonic; increasing strata beyond the true dimensionality of the hidden structure introduced additional sampling variation and did not consistently improve ATE bias reduction. The Oracle baselines did improve with larger K, because more strata allow a finer partition of the true Z-space. In contrast, data-driven methods did not reliably exploit the additional flexibility, suggesting that the number of strata should be chosen conservatively or compared across several values, rather than simply maximised.
+Table 2 and Figure 2 show how random-effects bias reduction changed as the number of strata varied (K = 3, 5, 10). For most methods the gain from increasing K was limited and non-monotonic; increasing strata beyond the true dimensionality of the hidden structure introduced additional sampling variation and did not consistently improve ATE bias reduction. The Oracle baselines did improve with larger K, because more strata allow a finer partition of the true Z-space. In contrast, data-driven methods did not reliably exploit the additional flexibility, suggesting that the number of strata should be chosen conservatively or compared across several values, rather than simply maximised.
 
 | K | Method | ARI | RE bias | Rel reduction RE |
 |---|---|---|---|---|
