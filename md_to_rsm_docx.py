@@ -210,9 +210,11 @@ _MATH_PATTERNS = [
     (r'Y ~ X \+ A \+ X\*A', 'ymodel'),
     (r'1 - \|bias_([a-z_]+)\| / \|bias_([a-z_]+)\|', 'frac'),
     (r'\|bias_([a-z_]+)\| - \|bias_([a-z_]+)\|', 'diff'),
+    (r'\|Y - p\^\|', 'absphat'),
     (r'tau\^2', 'tausq'),
     (r'W_(true|est)', 'wsub'),
     (r'I\^2', 'isq'),
+    (r'(?<![A-Za-z0-9])p\^', 'phat'),
 ]
 
 
@@ -258,6 +260,19 @@ def _math_fraction(oMath, num, den):
     oMath.append(f)
 
 
+def _math_accent(oMath, base, accent='^'):
+    acc = OxmlElement('m:acc')
+    accPr = OxmlElement('m:accPr')
+    chr = OxmlElement('m:chr')
+    chr.set(qn('m:val'), accent)
+    accPr.append(chr)
+    e = OxmlElement('m:e')
+    _math_text(e, base)
+    acc.append(accPr)
+    acc.append(e)
+    oMath.append(acc)
+
+
 def _make_math_omath(kind, match):
     oMath = OxmlElement('m:oMath')
     if kind == 'riskdiff':
@@ -278,6 +293,12 @@ def _make_math_omath(kind, match):
     elif kind == 'frac':
         _math_text(oMath, '1 - ')
         _math_fraction(oMath, f'|bias_{match.group(1)}|', f'|bias_{match.group(2)}|')
+    elif kind == 'phat':
+        _math_accent(oMath, 'p')
+    elif kind == 'absphat':
+        _math_text(oMath, '|Y - ')
+        _math_accent(oMath, 'p')
+        _math_text(oMath, '|')
     return oMath
 
 
