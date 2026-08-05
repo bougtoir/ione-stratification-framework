@@ -1,13 +1,13 @@
 [Your name and address]
 [Date]
 
-Professor [Editor-in-Chief name], Editor-in-Chief
+Professors Dimitris Mavridis and Terri Pigott, Co-Editors-in-Chief
 *Research Synthesis Methods*
 Cambridge University Press
 
-Dear Professor [Name],
+Dear Professors Mavridis and Pigott,
 
-We wish to submit our manuscript, **"A coherence diagnostic for hidden effect modification in individual participant data meta-analysis: a simulation study of stratification-based extraction"**, for consideration by *Research Synthesis Methods*.
+We wish to submit our manuscript, **"IONE: Incoherence-Oriented Neutralisation and Extraction for hidden effect modification in individual participant data meta-analysis: a simulation study of stratification-based extraction"**, for consideration by *Research Synthesis Methods*.
 
 **Fit with the journal.**
 *Research Synthesis Methods* publishes work on the methods of designing, conducting, analysing, interpreting and applying systematic research synthesis. The manuscript develops an exploratory diagnostic for hidden effect modification and confounding inside individual participant data (IPD) meta-analyses. We benchmark the proposal against established synthesis comparators (random-effects meta-analysis, propensity-score stratification, Gaussian mixture models, prognostic-score stratification) and evaluate whether discovered strata can improve the pooled average treatment effect estimate. Because the work is directly concerned with how heterogeneity is detected and modelled in evidence synthesis, we believe it will be of interest to your readership.
