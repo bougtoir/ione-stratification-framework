@@ -8,7 +8,7 @@ IONE proposes two exploratory diagnostics for observational treatment-effect est
 - **C1** (between-stratum heterogeneity): 1 − I² from stratum-specific log odds ratios of treatment on outcome.
 - **W** (within-stratum homogeneity): variance ratio of estimated or true conditional average treatment effects within strata.
 
-The repository implements the data-generating mechanism, stratification methods, evaluation metrics and manuscript-generation pipeline used in the revised submission to *Statistical Methods in Medical Research*, with an additional RSM-framed IPD meta-analysis scenario and manuscript under `devin/ione-rsm-reframe`.
+The repository implements the data-generating mechanism, stratification methods, evaluation metrics and manuscript-generation pipeline used in the revised submission to *Research Synthesis Methods* (RSM), with an additional IPD meta-analysis scenario and manuscript generated under the `devin/ione-rsm-reframe` branch.
 
 ## Repository structure
 
@@ -17,45 +17,53 @@ The repository implements the data-generating mechanism, stratification methods,
 ├── methods.py                  # Stratification methods (IONE, active comparators, baselines)
 ├── evaluation.py               # Metrics: ARI, η², C1, W, risk-difference ATE bias reduction
 ├── run_simulation.py           # Phase 1, sensitivity and non-linearity simulations
-├── run_rsm_ipd_simulation.py   # RSM IPD meta-analysis simulation
+├── run_rsm_ipd_simulation.py   # RSM IPD meta-analysis primary simulation
+├── run_rsm_ipd_extended.py     # RSM IPD sample-size, Z-to-Y, Z-to-X and non-linearity robustness simulations
 ├── real_data_analysis.py       # Semi-synthetic illustrations from 5 Simpson's-paradox examples
 ├── generate_summary.py         # Aggregate simulation/real-data CSVs into summary tables
-├── generate_manuscript.py      # Generate Word manuscript and figures from summaries
-├── generate_rsm_manuscript.py  # Generate RSM-framed Word manuscript and figures
-├── generate_tables_docx.py     # Generate separate editable tables .docx
-├── md_to_docx.py               # Minimal markdown-to-docx converter
+├── generate_ione_rsm_v3.py     # Generate full RSM Word manuscript, title page, cover letter and figures
+├── generate_full_rsm_manuscript.py # Generate RSM figures and widescreen figures .pptx
+├── generate_rsm_tables.py      # Generate separate editable tables .docx
+├── md_to_rsm_docx.py           # Markdown-to-docx converter with author-date citations and OMML math
 ├── requirements.txt            # Python dependencies
 └── results/
-    ├── phase1_results.csv
-    ├── sensitivity_results.csv
-    ├── nonlinearity_results.csv
+    ├── rsm_ipd_results.csv
+    ├── rsm_ipd_sensitivity_results.csv
+    ├── rsm_ipd_nonlinearity_results.csv
     ├── real_data/
     │   └── real_data_results.csv
     ├── summary/                # Tidy summary tables with Monte Carlo SEs
-    ├── figures/                  # PNG figures + editable PowerPoint
-    └── manuscript/               # Revised manuscript, cover letters, response, checklists
+    ├── figures/                  # PNG/EPS figures + editable PowerPoint
+    └── manuscript/rsm_submission/  # RSM submission package (docx, pptx, zip)
 ```
 
-## One-command reproduction
+## Reproduction
 
 With Python 3.10+:
 
 ```bash
 pip install -r requirements.txt
-python3 run_simulation.py                  # ~30 min on 2 CPUs
-python3 run_rsm_ipd_simulation.py          # RSM IPD meta-analysis scenario, ~1 min on 2 CPUs
+python3 run_rsm_ipd_simulation.py          # primary IPD scenario (~2 min)
+python3 run_rsm_ipd_extended.py            # sensitivity and non-linearity robustness (~30 min)
 python3 real_data_analysis.py              # a few minutes
 python3 generate_summary.py
-python3 generate_tables_docx.py
-python3 generate_manuscript.py             # SMMR/Stat Med manuscript
-python3 generate_rsm_manuscript.py         # RSM manuscript
+python3 generate_ione_rsm_v3.py            # main manuscript, title page, cover letter, figures and .pptx
+python3 generate_rsm_tables.py             # separate editable tables docx
 ```
 
-All numbers in `results/manuscript/IONE_revised_manuscript.docx` are read from `results/summary/*.csv`; no estimates are hard-coded in the manuscript generator.
+To regenerate the full RSM submission package from the committed summary CSVs only:
+
+```bash
+python3 generate_summary.py
+python3 generate_ione_rsm_v3.py
+python3 generate_rsm_tables.py
+```
+
+All numbers in `results/manuscript/rsm_submission/IONE_rsm_v3.docx` are read from `results/summary/*.csv`; no estimates are hard-coded in the manuscript generator.
 
 ## Target journal
 
-- **Primary:** *Statistical Methods in Medical Research* (SAGE)
+- **Primary:** *Research Synthesis Methods* (Wiley/Cambridge)
 - **Alternatives:** *Journal of Causal Inference* (de Gruyter), *Statistics in Medicine* (Wiley)
 
 ## Key methods

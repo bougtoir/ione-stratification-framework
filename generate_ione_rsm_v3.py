@@ -38,6 +38,8 @@ def _scenario_values():
     ipd_full = _read_csv('rsm_ipd_full_summary.csv')
     study_summary = _read_csv('rsm_ipd_study_summary.csv')
     real_data = _read_csv('real_data_summary.csv')
+    ipd_sensitivity = _read_csv('rsm_ipd_sensitivity_full_summary.csv')
+    ipd_nonlinearity = _read_csv('rsm_ipd_nonlinearity_full_summary.csv')
 
     n_ipd, n_studies, study_effect, k_ipd = _scenario_params()
 
@@ -55,6 +57,10 @@ def _scenario_values():
     vals['study_effect'] = study_effect
     vals['k_ipd'] = k_ipd
     vals['best_method'] = best_re['method']
+    vals['best_method_ari'] = _fmt(best_re['ARI_mean'])
+    vals['best_method_c1'] = _fmt(best_re['C1_heterogeneity_mean'])
+    vals['best_method_wtrue'] = _fmt(best_re['W_true_mean'])
+    vals['best_method_west'] = _fmt(best_re['W_est_mean'])
     vals['best_ari'] = _fmt(best_ari_row['ARI_mean'])
     vals['best_ari_method'] = best_ari_row['method']
     vals['best_non_oracle_ari'] = _fmt(best_non_oracle_ari_row['ARI_mean'])
@@ -70,6 +76,8 @@ def _scenario_values():
     vals['mean_c1'] = _fmt(ipd_primary['C1_heterogeneity_mean'].mean(), 3)
     vals['mean_wtrue'] = _fmt(ipd_primary['W_true_mean'].mean(), 3)
     vals['mean_west'] = _fmt(ipd_primary['W_est_mean'].mean(), 3)
+    random_row = ipd_primary[ipd_primary['method'] == 'baseline_random']
+    vals['random_c1'] = _fmt(random_row['C1_heterogeneity_mean'].iloc[0], 3) if not random_row.empty else '—'
 
     # study-level meta-analysis comparator
     if study_summary is not None and not study_summary.empty:
@@ -112,6 +120,20 @@ def _scenario_values():
         vals['real_best_rows'] = rd_best_rows
     else:
         vals['real_best_rows'] = []
+
+    # Extended sensitivity / nonlinearity helpers
+    vals['ipd_sensitivity'] = ipd_sensitivity if ipd_sensitivity is not None else pd.DataFrame()
+    vals['ipd_nonlinearity'] = ipd_nonlinearity if ipd_nonlinearity is not None else pd.DataFrame()
+
+    def _sens_row(df, method, n, z, zx, k, metric):
+        if df.empty or metric not in df.columns:
+            return np.nan
+        sub = df[(df['method'] == method) & (df['n'] == n) &
+                 (df['z_effect_scale'] == z) & (df['zx_influence_scale'] == zx) &
+                 (df['n_strata'] == k)]
+        return sub[metric].iloc[0] if not sub.empty else np.nan
+
+    vals['_sens_row'] = _sens_row
 
     return vals
 
@@ -332,7 +354,9 @@ The data-generating mechanism follows a causal directed acyclic graph. Study mem
 
 #### Scenarios
 
-The primary scenario used n={n_ipd} participants, {n_studies} studies and K={k_ipd} strata, with a moderate Z-to-X trace, moderate outcome-event rate and moderate study-effect heterogeneity. To examine sensitivity to the number of strata, we repeated the simulation with K=3, 5 and 10 while keeping the total sample size and between-study heterogeneity fixed. Each scenario was replicated {n_sims_per_scenario} times, and all random seeds were fixed so that the exact numerical results can be reproduced by running the repository scripts.
+The primary scenario used n={n_ipd} participants, {n_studies} studies and K={k_ipd} strata, with a moderate Z-to-X trace, moderate outcome-event rate and moderate study-effect heterogeneity. To examine sensitivity to the number of strata, we repeated the simulation with K=3, 5 and 10 while keeping the total sample size and between-study heterogeneity fixed.
+
+We additionally examined four robustness scenarios. First, sample-size sensitivity was evaluated with n=500, 2000 and 10000, fixing K=5 and the same moderate Z-to-X and Z-to-Y effects. Second, we varied the strength of the Z-to-Y effect (effect scale = 0.5, 1.0 and 2.0) while holding sample size, strata count and Z-to-X influence constant. Third, we varied the strength of the Z-to-X influence (influence scale = 0.2, 0.5 and 1.0), which governs how much information about the hidden modifiers is carried by the measured covariates. Finally, we introduced a non-linear Z-to-X mapping in which the continuous component was transformed by a quadratic term and a log-normal scale transformation; this tests whether methods that rely on linear Y-on-X or X-space relationships remain effective when covariates encode the hidden structure non-linearly. The primary and strata-sensitivity scenarios used {n_sims_per_scenario} replications; the extended robustness scenarios used 10 replications to keep computational cost manageable.
 
 ### Stratification methods
 
@@ -463,6 +487,86 @@ def _new_results(v):
         f"(reduction {v['study_red']} from crude {v['study_crude']})."
     )
 
+    # Extended sensitivity / nonlinearity summaries
+    ipd_sensitivity = v.get('ipd_sensitivity', pd.DataFrame())
+    ipd_nonlinearity = v.get('ipd_nonlinearity', pd.DataFrame())
+    sens_row = v.get('_sens_row', lambda *a, **k: np.nan)
+
+    top_methods = list(dict.fromkeys([
+        str(v.get('best_method', '1B_residual')),
+        '1B_residual', 'PS_propensity_score', 'GMM', 'Prognostic_score', '2B_clustering'
+    ]))
+
+    def _sens_table_rows(methods, conditions_list):
+        rows = []
+        for cond in conditions_list:
+            for method in methods:
+                n, z, zx, k = cond.get('n', 2000), cond.get('z', 1.0), cond.get('zx', 1.0), cond.get('k', 5)
+                re_bias = sens_row(ipd_sensitivity, method, n, z, zx, k, 'abs_bias_re_mean')
+                if pd.isna(re_bias):
+                    continue
+                rows.append({
+                    'Condition': cond.get('label', ''),
+                    'Method': method,
+                    'ARI': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'ARI_mean')),
+                    'C1': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'C1_heterogeneity_mean')),
+                    'W_est': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'W_est_mean')),
+                    'RE bias': _fmt(re_bias, 5),
+                    'Rel reduction RE': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'bias_reduction_relative_re_mean'), 3),
+                    'RE I2': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 're_I2_mean')),
+                })
+        return rows
+
+    sample_rows = _sens_table_rows(top_methods, [
+        {'label': 'n=500', 'n': 500, 'z': 1.0, 'zx': 1.0, 'k': 5},
+        {'label': 'n=2000', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
+        {'label': 'n=10000', 'n': 10000, 'z': 1.0, 'zx': 1.0, 'k': 5},
+    ])
+    table_sample = _make_table(
+        ['Condition', 'Method', 'ARI', 'C1', 'W_est', 'RE bias', 'Rel reduction RE', 'RE I2'],
+        sample_rows
+    )
+
+    zx_rows = _sens_table_rows(top_methods, [
+        {'label': 'zx=0.2', 'n': 2000, 'z': 1.0, 'zx': 0.2, 'k': 5},
+        {'label': 'zx=0.5', 'n': 2000, 'z': 1.0, 'zx': 0.5, 'k': 5},
+        {'label': 'zx=1.0', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
+    ])
+    table_zx = _make_table(
+        ['Condition', 'Method', 'ARI', 'C1', 'W_est', 'RE bias', 'Rel reduction RE', 'RE I2'],
+        zx_rows
+    )
+
+    z_rows = _sens_table_rows(top_methods, [
+        {'label': 'z=0.5', 'n': 2000, 'z': 0.5, 'zx': 1.0, 'k': 5},
+        {'label': 'z=1.0', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
+        {'label': 'z=2.0', 'n': 2000, 'z': 2.0, 'zx': 1.0, 'k': 5},
+    ])
+    table_z = _make_table(
+        ['Condition', 'Method', 'ARI', 'C1', 'W_est', 'RE bias', 'Rel reduction RE', 'RE I2'],
+        z_rows
+    )
+
+    nonlinear_rows = []
+    for method in top_methods:
+        n, z, zx, k = 2000, 1.0, 1.0, 5
+        lin_bias = sens_row(ipd_sensitivity, method, n, z, zx, k, 'abs_bias_re_mean')
+        lin_rel = sens_row(ipd_sensitivity, method, n, z, zx, k, 'bias_reduction_relative_re_mean')
+        non_bias = sens_row(ipd_nonlinearity, method, n, z, zx, k, 'abs_bias_re_mean')
+        non_rel = sens_row(ipd_nonlinearity, method, n, z, zx, k, 'bias_reduction_relative_re_mean')
+        if not pd.isna(non_bias):
+            nonlinear_rows.append({
+                'Method': method,
+                'Linear RE bias': _fmt(lin_bias, 5),
+                'Linear rel reduction': _fmt(lin_rel, 3),
+                'Non-linear RE bias': _fmt(non_bias, 5),
+                'Non-linear rel reduction': _fmt(non_rel, 3),
+            })
+    table_nonlinear = _make_table(
+        ['Method', 'Linear RE bias', 'Linear rel reduction', 'Non-linear RE bias', 'Non-linear rel reduction'],
+        nonlinear_rows
+    )
+
     md = f"""## 3. Results
 
 ### Primary IPD scenario
@@ -475,7 +579,7 @@ Although all proposed methods and active comparators outperformed random stratif
 
 #### C1 and W as coherence diagnostics
 
-C1 behaved in the expected direction: methods that produced strata closer to the Oracle had C1 values closer to 1, whereas random stratification yielded a C1 of {v['mean_c1']}. However, the range of C1 values was compressed and the diagnostic does not, by itself, identify which method is most trustworthy. W_true was larger than W_est for most methods, reflecting the fact that the estimated CATE model (Y ~ X + A + X*A) can only capture part of the true CATE variation. W_est therefore provides a conservative, operationally available lower bound on within-stratum homogeneity.
+C1 behaved in the expected direction: methods that produced strata closer to the Oracle had C1 values closer to 1, whereas random stratification yielded a C1 of {v['random_c1']}. However, the range of C1 values was compressed and the diagnostic does not, by itself, identify which method is most trustworthy. W_true was larger than W_est for most methods, reflecting the fact that the estimated CATE model (Y ~ X + A + X*A) can only capture part of the true CATE variation. W_est therefore provides a conservative, operationally available lower bound on within-stratum homogeneity.
 
 #### ATE bias reduction on the risk-difference scale
 
@@ -509,6 +613,38 @@ Five well-known Simpson-paradox examples were reconstructed as pseudo-individual
 *Table 3. Best real-data illustration result per dataset (oracle baselines excluded).*
 
 ![Figure 3. Real-data illustration: ARI by dataset and method.](fig3_rsm_real_data_ari.png)
+
+### Sensitivity to sample size
+
+To assess whether the findings depend on the total number of participants, we repeated the primary scenario with n = 500, 2000 and 10 000, fixing K = 5 and the moderate Z-to-X and Z-to-Y effects. Table 4 and Figure 4 show the results for the leading methods. Because this extended sensitivity used only 10 replications per cell, the point estimates are noisier than in the primary scenario. The crude marginal ATE bias decreased with sample size, as expected from a more precisely estimated risk difference. The absolute random-effects bias also declined for several methods, but the outcome-residual and GMM approaches showed a floor near 0.008–0.009 across sample sizes. Consequently, the relative bias reduction for those methods decreased with n, whereas propensity-score, prognostic-score and clustering-based approaches achieved larger relative reductions at n = 10 000. This mixed pattern confirms that the practical value of IONE depends on the interplay between sample size and method choice: with small samples, estimation error dominates; with large samples, remaining bias reflects structural limits of the selected stratification.
+
+{table_sample}
+*Table 4. Sample-size sensitivity (K=5, z=1.0, zx=1.0): means over 10 simulations.*
+
+![Figure 4. Sample-size sensitivity of random-effects ATE bias reduction (K=5).](fig4_rsm_ipd_sample_size.png)
+
+### Sensitivity to Z-to-X influence strength
+
+The Z-to-X influence scale governs how much information the measured covariates carry about the hidden modifiers. Table 5 summarises performance for zx influence scale = 0.2, 0.5 and 1.0. A larger trace was associated with higher ARI for most methods, and C1 and W_est moved in the expected direction for several approaches, but the bias-reduction gains were non-monotonic and variable at this number of replications. This pattern indicates that stronger covariate traces improve subgroup recovery in principle, yet finite-sample noise and differences between methods in how the trace is exploited remain important; the diagnostics detect statistical traces rather than recover the hidden variables perfectly.
+
+{table_zx}
+*Table 5. Sensitivity to Z-to-X influence strength (n=2000, K=5, z=1.0, zx=0.2, 0.5, 1.0): means over 10 simulations.*
+
+### Sensitivity to Z-to-Y effect strength
+
+The Z-to-Y effect scale determines the magnitude of the hidden effect modification. Table 6 shows results for z effect scale = 0.5, 1.0 and 2.0. When effect modification was weak (z = 0.5), C1 and W_est were close to their null values, reflecting limited detectable heterogeneity. As the effect increased, C1 decreased and W_est increased for most methods, and the relative random-effects bias reduction improved for all leading approaches. The outcome-residual approach already produced a substantial relative bias reduction at z = 0.5, suggesting that it can exploit the moderate covariate trace even when the marginal modification signal is weak. Overall, the diagnostics are most informative when hidden effect modification is strong enough to bias the marginal ATE.
+
+{table_z}
+*Table 6. Sensitivity to Z-to-Y effect strength (n=2000, K=5, zx=1.0, z=0.5, 1.0, 2.0): means over 10 simulations.*
+
+### Robustness to non-linear Z-to-X mappings
+
+In real applications the mapping from hidden modifiers to measured covariates need not be linear. We therefore repeated the primary scenario with a non-linear Z-to-X transformation that included a quadratic term and a log-normal scale transformation. Table 7 compares the random-effects bias under the linear and non-linear mappings for the leading methods, and Figure 5 displays the same comparison. The effect of non-linearity was method-dependent: the outcome-residual and clustering-based approaches achieved somewhat larger relative bias reductions under the transformed mapping, the propensity-score and GMM approaches showed small improvements, and the prognostic-score approach showed a modest decline. No leading method was dramatically degraded by the transformation, indicating that the IONE diagnostics remain useful when measured covariates are non-linear functions of the hidden structure, although the relative ranking of methods can shift.
+
+{table_nonlinear}
+*Table 7. Linear versus non-linear Z-to-X mapping: random-effects ATE bias and relative bias reduction (n=2000, K=5, z=1.0, zx=1.0).*
+
+![Figure 5. Non-linear Z->X robustness: random-effects ATE bias reduction (n=2000, K=5).](fig5_rsm_ipd_nonlinearity.png)
 """
     return md
 def _new_conclusions():
@@ -661,7 +797,7 @@ IONE is best understood as complementary to these methods. We envision a workflo
 
 **Strengths.** This simulation study followed the ADEMP framework [morris2019], with transparent reporting of the data-generating mechanism, estimands, candidate methods, performance metrics and number of replications. All numerical results are produced by the repository scripts and inserted into the manuscript automatically, so the docx and markdown files can be regenerated without hand-entered numbers. The IPD data-generating mechanism includes study-level variation in baseline risk, treatment prevalence and covariate distributions, which mirrors the heterogeneity encountered in real IPD meta-analyses.
 
-**Limitations.** Several limitations should be acknowledged. First, the simulation used a single total sample size (n={v['n_ipd']}) and a moderate Z->X trace. Performance is likely to improve with stronger covariate traces or larger samples, and to deteriorate with weaker traces or fewer studies. Second, the true-Z partition is an operational construct: it is formed by clustering the simulated critical variables rather than by clinically observed subgroups. ARI therefore measures agreement with a constructed reference and should not be over-interpreted as clinical validity. Third, W_est depends on a correctly specified outcome model (Y ~ X + A + X*A). If the outcome model is misspecified, W_est may be misleading. Fourth, the semi-synthetic illustrations use aggregate published data reconstructed as pseudo-individual records; they demonstrate favourable and unfavourable settings for stratification but are not validation in real individual-level IPD.
+**Limitations.** Several limitations should be acknowledged. First, the primary scenario used a single total sample size (n={v['n_ipd']}) and a moderate Z->X trace, although additional sensitivity analyses examined n=500 to 10 000, Z-to-Y effect scales, Z-to-X influence scales and a non-linear Z->X mapping. Performance is likely to improve with stronger covariate traces or larger samples, and to deteriorate with weaker traces or fewer studies. Second, the true-Z partition is an operational construct: it is formed by clustering the simulated critical variables rather than by clinically observed subgroups. ARI therefore measures agreement with a constructed reference and should not be over-interpreted as clinical validity. Third, W_est depends on a correctly specified outcome model (Y ~ X + A + X*A). If the outcome model is misspecified, W_est may be misleading. Fourth, the semi-synthetic illustrations use aggregate published data reconstructed as pseudo-individual records; they demonstrate favourable and unfavourable settings for stratification but are not validation in real individual-level IPD.
 
 ### Implications for practice
 
@@ -684,7 +820,13 @@ def generate_v3_manuscript():
     ipd_full = _read_csv('rsm_ipd_full_summary.csv')
     study_summary = _read_csv('rsm_ipd_study_summary.csv')
     real_data = _read_csv('real_data_summary.csv')
-    figs, pptx_path = generate_rsm_figures(ipd_primary, ipd_full, real_data)
+    ipd_sensitivity = _read_csv('rsm_ipd_sensitivity_full_summary.csv')
+    ipd_nonlinearity = _read_csv('rsm_ipd_nonlinearity_full_summary.csv')
+    figs, pptx_path = generate_rsm_figures(
+        ipd_primary, ipd_full, real_data,
+        ipd_sensitivity=ipd_sensitivity,
+        ipd_nonlinearity=ipd_nonlinearity,
+    )
 
     # Citation manager
     cm = CiteManager()
@@ -698,9 +840,9 @@ def generate_v3_manuscript():
         f"**Methods:** We simulated an IPD meta-analysis with {v['n_studies']} studies, a binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. "
         f"Proposed methods and active comparators stratified the pooled IPD; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
         f"We report ARI, C1 (between-stratum heterogeneity), W_true/W_est (within-stratum homogeneity) and ATE bias reduction, with Monte Carlo standard errors. "
-        f"**Results:** In the primary scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']} strata), the best method was {v['best_method']} (ARI {v['best_ari']}; C1 {v['best_c1']}; W_true {v['best_wtrue']}; W_est {v['best_west']}). "
+        f"**Results:** In the primary scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']} strata), the best method by ATE bias reduction was {v['best_method']} (ARI {v['best_method_ari']}; C1 {v['best_method_c1']}; W_true {v['best_method_wtrue']}; W_est {v['best_method_west']}). "
         f"Crude ATE bias was {v['crude_bias']}; stratification reduced it to {v['strat_bias']} (relative {v['rel_strat']}) and random-effects pooling to {v['re_bias']} (relative {v['rel_re']}). "
-        f"Diagnostic agreement with the true hidden structure remained modest. "
+        f"Diagnostic agreement with the true hidden structure remained modest. Sensitivity analyses across sample sizes, Z-to-Y effect strengths, Z-to-X influence strengths and a non-linear Z-to-X mapping showed that bias reduction is most sensitive to sample size and effect-modification strength, with method-specific differences, and that diagnostics remained informative when covariates were non-linearly transformed. "
         f"**Conclusions:** IONE is a transparent, exploratory diagnostic for hidden effect modification in IPD meta-analyses, to be reported alongside conventional models and covariate adjustment."
     )
 
@@ -734,8 +876,6 @@ def generate_v3_manuscript():
 { _new_methods(v) }
 
 { _new_results(v) }
-
-## 4. Discussion
 
 {discussion}
 

@@ -126,8 +126,9 @@ def _add_paragraph_narrative(doc, text):
     return p
 
 
-def generate_rsm_figures(ipd_primary, ipd_full, real_data):
-    """Generate the three RSM figures and the editable PPTX deck."""
+def generate_rsm_figures(ipd_primary, ipd_full, real_data,
+                         ipd_sensitivity=None, ipd_nonlinearity=None):
+    """Generate the RSM figures and the editable PPTX deck."""
     os.makedirs(os.path.join(FIG_DIR, 'pptx'), exist_ok=True)
     figs = []
 
@@ -203,6 +204,84 @@ def generate_rsm_figures(ipd_primary, ipd_full, real_data):
             fig.savefig(os.path.join(FIG_DIR, 'fig3_rsm_real_data_ari.eps'), format='eps', bbox_inches='tight')
             plt.close(fig)
             figs.append(('Figure 3', 'Real-data illustration: ARI by dataset and method.', png))
+
+    # Figure 4: sample-size sensitivity for the best methods (K=5, z=1, zx=1)
+    if ipd_sensitivity is not None and not ipd_sensitivity.empty:
+        top_methods = ['1B_residual', 'PS_propensity_score', 'GMM', 'Prognostic_score', '2B_clustering']
+        sub = ipd_sensitivity[
+            (ipd_sensitivity['method'].isin(top_methods)) &
+            (ipd_sensitivity['n_strata'] == 5) &
+            (ipd_sensitivity['z_effect_scale'] == 1.0) &
+            (ipd_sensitivity['zx_influence_scale'] == 1.0)
+        ].copy()
+        if not sub.empty:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            for method in top_methods:
+                msub = sub[sub['method'] == method].sort_values('n')
+                if not msub.empty:
+                    ax.plot(msub['n'], msub['bias_reduction_relative_re_mean'], marker='o', label=method)
+            ax.set_xlabel('Sample size (n)')
+            ax.set_ylabel('Relative bias reduction (RE)')
+            ax.set_title('Sample-size sensitivity of RE bias reduction (K=5, z=1, zx=1)')
+            ax.set_xticks(sorted(sub['n'].unique()))
+            ax.legend(loc='best')
+            ax.axhline(0, color='black', linewidth=0.5)
+            fig.tight_layout()
+            png = os.path.join(FIG_DIR, 'fig4_rsm_ipd_sample_size.png')
+            fig.savefig(png, dpi=300)
+            fig.savefig(os.path.join(FIG_DIR, 'fig4_rsm_ipd_sample_size.eps'), format='eps', bbox_inches='tight')
+            plt.close(fig)
+            figs.append(('Figure 4', 'Sample-size sensitivity of random-effects ATE bias reduction (K=5).', png))
+
+    # Figure 5: non-linearity robustness (n=2000, K=5, z=1, zx=1)
+    if ipd_nonlinearity is not None and not ipd_nonlinearity.empty:
+        top_methods = ['1B_residual', 'PS_propensity_score', 'GMM', 'Prognostic_score', '2B_clustering']
+        sub = ipd_nonlinearity[
+            (ipd_nonlinearity['method'].isin(top_methods)) &
+            (ipd_nonlinearity['n'] == 2000) &
+            (ipd_nonlinearity['n_strata'] == 5) &
+            (ipd_nonlinearity['z_effect_scale'] == 1.0) &
+            (ipd_nonlinearity['zx_influence_scale'] == 1.0)
+        ].copy()
+        if not sub.empty:
+            fig, ax = plt.subplots(figsize=(8, 5))
+            # Pull corresponding linear point for reference
+            if ipd_sensitivity is not None and not ipd_sensitivity.empty:
+                lin = ipd_sensitivity[
+                    (ipd_sensitivity['method'].isin(top_methods)) &
+                    (ipd_sensitivity['n'] == 2000) &
+                    (ipd_sensitivity['n_strata'] == 5) &
+                    (ipd_sensitivity['z_effect_scale'] == 1.0) &
+                    (ipd_sensitivity['zx_influence_scale'] == 1.0)
+                ].copy()
+            else:
+                lin = pd.DataFrame()
+            for method in top_methods:
+                msub = sub[sub['method'] == method]
+                if not msub.empty:
+                    val = msub['bias_reduction_relative_re_mean'].iloc[0]
+                    ax.scatter([method], [val], marker='o', s=80, label=f'{method} (nonlinear)' if method == top_methods[0] else '')
+                if not lin.empty:
+                    mlin = lin[lin['method'] == method]
+                    if not mlin.empty:
+                        val_lin = mlin['bias_reduction_relative_re_mean'].iloc[0]
+                        ax.scatter([method], [val_lin], marker='x', s=80, label=f'{method} (linear)' if method == top_methods[0] else '')
+            ax.set_ylabel('Relative bias reduction (RE)')
+            ax.set_title('Non-linear Z->X robustness (n=2000, K=5, z=1, zx=1)')
+            ax.axhline(0, color='black', linewidth=0.5)
+            # Create a small custom legend for markers
+            from matplotlib.lines import Line2D
+            legend_elements = [
+                Line2D([0], [0], marker='o', color='w', markerfacecolor='gray', markersize=8, label='Non-linear'),
+                Line2D([0], [0], marker='x', color='gray', markersize=8, label='Linear'),
+            ]
+            ax.legend(handles=legend_elements, loc='best')
+            fig.tight_layout()
+            png = os.path.join(FIG_DIR, 'fig5_rsm_ipd_nonlinearity.png')
+            fig.savefig(png, dpi=300)
+            fig.savefig(os.path.join(FIG_DIR, 'fig5_rsm_ipd_nonlinearity.eps'), format='eps', bbox_inches='tight')
+            plt.close(fig)
+            figs.append(('Figure 5', 'Non-linear Z->X robustness: random-effects ATE bias reduction (n=2000, K=5).', png))
 
     prs = Presentation()
     prs.slide_width = PptxInches(13.333)

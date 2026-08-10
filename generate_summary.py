@@ -168,12 +168,53 @@ def summarise_rsm_ipd():
     print(f'[generate_summary] rsm_ipd study summary: {len(study_summary)} rows')
 
 
+def _summarise_rsm_ipd_file(path: str, label: str):
+    """Generic summariser for an RSM IPD results CSV (sensitivity or nonlinearity)."""
+    if not os.path.exists(path):
+        print(f'[generate_summary] {path} not found; skipping {label} summary')
+        return
+
+    df = pd.read_csv(path)
+    df = df[df['error'].isna()].copy()
+    metric_cols = ['ARI', 'C1_heterogeneity', 'W_true', 'W_est',
+                   'bias_crude', 'bias_stratified', 'bias_re',
+                   'bias_reduction', 'bias_reduction_relative',
+                   'bias_reduction_re', 'bias_reduction_relative_re',
+                   're_tau2', 're_I2']
+
+    # Full factorial summary
+    full = _summarise(
+        df,
+        ['method', 'n', 'z_effect_scale', 'zx_influence_scale', 'n_strata', 'nonlinear'],
+        metric_cols,
+    )
+    full.to_csv(os.path.join(OUT_DIR, f'{label}_full_summary.csv'), index=False)
+
+    # Method-only marginal (for figures)
+    method_marginal = _summarise(df, ['method'], metric_cols)
+    method_marginal.to_csv(os.path.join(OUT_DIR, f'{label}_method_summary.csv'), index=False)
+
+    print(f'[generate_summary] {label}: full {len(full)} rows, marginal {len(method_marginal)} rows')
+
+
+def summarise_rsm_ipd_sensitivity():
+    path = os.path.join(RESULTS_DIR, 'rsm_ipd_sensitivity_results.csv')
+    _summarise_rsm_ipd_file(path, 'rsm_ipd_sensitivity')
+
+
+def summarise_rsm_ipd_nonlinearity():
+    path = os.path.join(RESULTS_DIR, 'rsm_ipd_nonlinearity_results.csv')
+    _summarise_rsm_ipd_file(path, 'rsm_ipd_nonlinearity')
+
+
 def main():
     summarise_phase1()
     summarise_sensitivity('sensitivity')
     summarise_sensitivity('nonlinearity')
     summarise_real_data()
     summarise_rsm_ipd()
+    summarise_rsm_ipd_sensitivity()
+    summarise_rsm_ipd_nonlinearity()
     print('[generate_summary] all summaries written to', OUT_DIR)
 
 

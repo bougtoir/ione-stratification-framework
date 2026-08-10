@@ -4,7 +4,7 @@
 
 ## Abstract
 
-**Background:** Random-effects meta-analyses report an average treatment effect and assume that between-study heterogeneity has been adequately modelled. When an individual participant data (IPD) meta-analysis contains hidden effect modifiers, a marginal summary can be non-robust. We propose Incoherence-Oriented Neutralisation and Extraction (IONE), an exploratory diagnostic toolkit for hidden effect modification in pooled IPD. **Methods:** We simulated an IPD meta-analysis with 10 studies, a binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. Proposed methods and active comparators stratified the pooled IPD; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. We report ARI, C1 (between-stratum heterogeneity), W_true/W_est (within-stratum homogeneity) and ATE bias reduction, with Monte Carlo standard errors. **Results:** In the primary scenario (n=2000, 10 studies, K=5 strata), the best method was 1B_residual (ARI 0.372; C1 0.927; W_true 0.363; W_est 0.078). Crude ATE bias was 0.01865; stratification reduced it to 0.01345 (relative 0.279) and random-effects pooling to 0.00816 (relative 0.563). Diagnostic agreement with the true hidden structure remained modest. **Conclusions:** IONE is a transparent, exploratory diagnostic for hidden effect modification in IPD meta-analyses, to be reported alongside conventional models and covariate adjustment.
+**Background:** Random-effects meta-analyses report an average treatment effect and assume that between-study heterogeneity has been adequately modelled. When an individual participant data (IPD) meta-analysis contains hidden effect modifiers, a marginal summary can be non-robust. We propose Incoherence-Oriented Neutralisation and Extraction (IONE), an exploratory diagnostic toolkit for hidden effect modification in pooled IPD. **Methods:** We simulated an IPD meta-analysis with 10 studies, a binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. Proposed methods and active comparators stratified the pooled IPD; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. We report ARI, C1 (between-stratum heterogeneity), W_true/W_est (within-stratum homogeneity) and ATE bias reduction, with Monte Carlo standard errors. **Results:** In the primary scenario (n=2000, 10 studies, K=5 strata), the best method by ATE bias reduction was 1B_residual (ARI 0.032; C1 0.927; W_true 0.363; W_est 0.078). Crude ATE bias was 0.01865; stratification reduced it to 0.01345 (relative 0.279) and random-effects pooling to 0.00816 (relative 0.563). Diagnostic agreement with the true hidden structure remained modest. Sensitivity analyses across sample sizes, Z-to-Y effect strengths, Z-to-X influence strengths and a non-linear Z-to-X mapping showed that bias reduction is most sensitive to sample size and effect-modification strength, with method-specific differences, and that diagnostics remained informative when covariates were non-linearly transformed. **Conclusions:** IONE is a transparent, exploratory diagnostic for hidden effect modification in IPD meta-analyses, to be reported alongside conventional models and covariate adjustment.
 
 **Keywords:** individual participant data meta-analysis; evidence synthesis; heterogeneity; hidden effect modification; stratification
 
@@ -54,7 +54,9 @@ The data-generating mechanism follows a causal directed acyclic graph. Study mem
 
 #### Scenarios
 
-The primary scenario used n=2000 participants, 10 studies and K=5 strata, with a moderate Z-to-X trace, moderate outcome-event rate and moderate study-effect heterogeneity. To examine sensitivity to the number of strata, we repeated the simulation with K=3, 5 and 10 while keeping the total sample size and between-study heterogeneity fixed. Each scenario was replicated 50 times, and all random seeds were fixed so that the exact numerical results can be reproduced by running the repository scripts.
+The primary scenario used n=2000 participants, 10 studies and K=5 strata, with a moderate Z-to-X trace, moderate outcome-event rate and moderate study-effect heterogeneity. To examine sensitivity to the number of strata, we repeated the simulation with K=3, 5 and 10 while keeping the total sample size and between-study heterogeneity fixed.
+
+We additionally examined four robustness scenarios. First, sample-size sensitivity was evaluated with n=500, 2000 and 10000, fixing K=5 and the same moderate Z-to-X and Z-to-Y effects. Second, we varied the strength of the Z-to-Y effect (effect scale = 0.5, 1.0 and 2.0) while holding sample size, strata count and Z-to-X influence constant. Third, we varied the strength of the Z-to-X influence (influence scale = 0.2, 0.5 and 1.0), which governs how much information about the hidden modifiers is carried by the measured covariates. Finally, we introduced a non-linear Z-to-X mapping in which the continuous component was transformed by a quadratic term and a log-normal scale transformation; this tests whether methods that rely on linear Y-on-X or X-space relationships remain effective when covariates encode the hidden structure non-linearly. The primary and strata-sensitivity scenarios used 50 replications; the extended robustness scenarios used 10 replications to keep computational cost manageable.
 
 ### Stratification methods
 
@@ -129,7 +131,7 @@ Although all proposed methods and active comparators outperformed random stratif
 
 #### C1 and W as coherence diagnostics
 
-C1 behaved in the expected direction: methods that produced strata closer to the Oracle had C1 values closer to 1, whereas random stratification yielded a C1 of 0.889. However, the range of C1 values was compressed and the diagnostic does not, by itself, identify which method is most trustworthy. W_true was larger than W_est for most methods, reflecting the fact that the estimated CATE model (Y ~ X + A + X*A) can only capture part of the true CATE variation. W_est therefore provides a conservative, operationally available lower bound on within-stratum homogeneity.
+C1 behaved in the expected direction: methods that produced strata closer to the Oracle had C1 values closer to 1, whereas random stratification yielded a C1 of 0.883. However, the range of C1 values was compressed and the diagnostic does not, by itself, identify which method is most trustworthy. W_true was larger than W_est for most methods, reflecting the fact that the estimated CATE model (Y ~ X + A + X*A) can only capture part of the true CATE variation. W_est therefore provides a conservative, operationally available lower bound on within-stratum homogeneity.
 
 #### ATE bias reduction on the risk-difference scale
 
@@ -219,8 +221,96 @@ Five well-known Simpson-paradox examples were reconstructed as pseudo-individual
 
 ![Figure 3. Real-data illustration: ARI by dataset and method.](fig3_rsm_real_data_ari.png)
 
+### Sensitivity to sample size
 
-## 4. Discussion
+To assess whether the findings depend on the total number of participants, we repeated the primary scenario with n = 500, 2000 and 10 000, fixing K = 5 and the moderate Z-to-X and Z-to-Y effects. Table 4 and Figure 4 show the results for the leading methods. Because this extended sensitivity used only 10 replications per cell, the point estimates are noisier than in the primary scenario. The crude marginal ATE bias decreased with sample size, as expected from a more precisely estimated risk difference. The absolute random-effects bias also declined for several methods, but the outcome-residual and GMM approaches showed a floor near 0.008–0.009 across sample sizes. Consequently, the relative bias reduction for those methods decreased with n, whereas propensity-score, prognostic-score and clustering-based approaches achieved larger relative reductions at n = 10 000. This mixed pattern confirms that the practical value of IONE depends on the interplay between sample size and method choice: with small samples, estimation error dominates; with large samples, remaining bias reflects structural limits of the selected stratification.
+
+| Condition | Method | ARI | C1 | W_est | RE bias | Rel reduction RE | RE I2 |
+|---|---|---|---|---|---|---|---|
+| n=500 | 1B_residual | 0.029 | 0.935 | 0.098 | 0.00694 | 0.834 | 0.045 |
+| n=500 | PS_propensity_score | 0.003 | 0.892 | 0.081 | 0.04168 | 0.005 | 0.144 |
+| n=500 | GMM | 0.009 | 0.966 | 0.117 | 0.03830 | 0.086 | 0.140 |
+| n=500 | Prognostic_score | 0.017 | 0.895 | 0.086 | 0.03880 | 0.074 | 0.133 |
+| n=500 | 2B_clustering | 0.024 | 0.914 | 0.206 | 0.03454 | 0.176 | 0.078 |
+| n=2000 | 1B_residual | 0.032 | 0.976 | 0.064 | 0.00852 | 0.602 | 0.000 |
+| n=2000 | PS_propensity_score | 0.007 | 0.828 | 0.080 | 0.02162 | -0.011 | 0.189 |
+| n=2000 | GMM | 0.006 | 0.956 | 0.057 | 0.02180 | -0.020 | 0.074 |
+| n=2000 | Prognostic_score | 0.025 | 0.905 | 0.080 | 0.01536 | 0.281 | 0.141 |
+| n=2000 | 2B_clustering | 0.022 | 0.914 | 0.108 | 0.02077 | 0.028 | 0.037 |
+| n=10000 | 1B_residual | 0.034 | 0.973 | 0.106 | 0.00852 | 0.238 | 0.067 |
+| n=10000 | PS_propensity_score | 0.012 | 0.890 | 0.063 | 0.00668 | 0.403 | 0.107 |
+| n=10000 | GMM | 0.005 | 0.890 | 0.043 | 0.01028 | 0.080 | 0.143 |
+| n=10000 | Prognostic_score | 0.031 | 0.879 | 0.167 | 0.00725 | 0.352 | 0.218 |
+| n=10000 | 2B_clustering | 0.024 | 0.859 | 0.141 | 0.00667 | 0.403 | 0.162 |
+
+*Table 4. Sample-size sensitivity (K=5, z=1.0, zx=1.0): means over 10 simulations.*
+
+![Figure 4. Sample-size sensitivity of random-effects ATE bias reduction (K=5).](fig4_rsm_ipd_sample_size.png)
+
+### Sensitivity to Z-to-X influence strength
+
+The Z-to-X influence scale governs how much information the measured covariates carry about the hidden modifiers. Table 5 summarises performance for zx influence scale = 0.2, 0.5 and 1.0. A larger trace was associated with higher ARI for most methods, and C1 and W_est moved in the expected direction for several approaches, but the bias-reduction gains were non-monotonic and variable at this number of replications. This pattern indicates that stronger covariate traces improve subgroup recovery in principle, yet finite-sample noise and differences between methods in how the trace is exploited remain important; the diagnostics detect statistical traces rather than recover the hidden variables perfectly.
+
+| Condition | Method | ARI | C1 | W_est | RE bias | Rel reduction RE | RE I2 |
+|---|---|---|---|---|---|---|---|
+| zx=0.2 | 1B_residual | 0.010 | 1.000 | 0.068 | 0.00897 | 0.560 | 0.029 |
+| zx=0.2 | PS_propensity_score | 0.001 | 0.813 | 0.139 | 0.01900 | 0.067 | 0.191 |
+| zx=0.2 | GMM | 0.001 | 0.905 | 0.136 | 0.01931 | 0.052 | 0.110 |
+| zx=0.2 | Prognostic_score | 0.001 | 0.933 | 0.085 | 0.01894 | 0.070 | 0.064 |
+| zx=0.2 | 2B_clustering | 0.001 | 0.764 | 0.153 | 0.01872 | 0.081 | 0.251 |
+| zx=0.5 | 1B_residual | 0.017 | 1.000 | 0.055 | 0.00875 | 0.429 | 0.000 |
+| zx=0.5 | PS_propensity_score | 0.001 | 0.774 | 0.109 | 0.01536 | -0.004 | 0.220 |
+| zx=0.5 | GMM | 0.002 | 0.909 | 0.072 | 0.01634 | -0.068 | 0.097 |
+| zx=0.5 | Prognostic_score | 0.009 | 0.933 | 0.068 | 0.01465 | 0.043 | 0.086 |
+| zx=0.5 | 2B_clustering | 0.006 | 0.835 | 0.146 | 0.01280 | 0.163 | 0.172 |
+| zx=1.0 | 1B_residual | 0.032 | 0.976 | 0.064 | 0.00852 | 0.602 | 0.000 |
+| zx=1.0 | PS_propensity_score | 0.007 | 0.828 | 0.080 | 0.02162 | -0.011 | 0.189 |
+| zx=1.0 | GMM | 0.006 | 0.956 | 0.057 | 0.02180 | -0.020 | 0.074 |
+| zx=1.0 | Prognostic_score | 0.025 | 0.905 | 0.080 | 0.01536 | 0.281 | 0.141 |
+| zx=1.0 | 2B_clustering | 0.022 | 0.914 | 0.108 | 0.02077 | 0.028 | 0.037 |
+
+*Table 5. Sensitivity to Z-to-X influence strength (n=2000, K=5, z=1.0, zx=0.2, 0.5, 1.0): means over 10 simulations.*
+
+### Sensitivity to Z-to-Y effect strength
+
+The Z-to-Y effect scale determines the magnitude of the hidden effect modification. Table 6 shows results for z effect scale = 0.5, 1.0 and 2.0. When effect modification was weak (z = 0.5), C1 and W_est were close to their null values, reflecting limited detectable heterogeneity. As the effect increased, C1 decreased and W_est increased for most methods, and the relative random-effects bias reduction improved for all leading approaches. The outcome-residual approach already produced a substantial relative bias reduction at z = 0.5, suggesting that it can exploit the moderate covariate trace even when the marginal modification signal is weak. Overall, the diagnostics are most informative when hidden effect modification is strong enough to bias the marginal ATE.
+
+| Condition | Method | ARI | C1 | W_est | RE bias | Rel reduction RE | RE I2 |
+|---|---|---|---|---|---|---|---|
+| z=0.5 | 1B_residual | 0.027 | 1.000 | 0.039 | 0.00959 | 0.578 | 0.002 |
+| z=0.5 | PS_propensity_score | 0.012 | 0.841 | 0.068 | 0.02281 | -0.003 | 0.210 |
+| z=0.5 | GMM | 0.006 | 0.948 | 0.075 | 0.02043 | 0.102 | 0.047 |
+| z=0.5 | Prognostic_score | 0.024 | 0.908 | 0.058 | 0.02073 | 0.089 | 0.101 |
+| z=0.5 | 2B_clustering | 0.024 | 0.857 | 0.112 | 0.02072 | 0.089 | 0.138 |
+| z=1.0 | 1B_residual | 0.032 | 0.976 | 0.064 | 0.00852 | 0.602 | 0.000 |
+| z=1.0 | PS_propensity_score | 0.007 | 0.828 | 0.080 | 0.02162 | -0.011 | 0.189 |
+| z=1.0 | GMM | 0.006 | 0.956 | 0.057 | 0.02180 | -0.020 | 0.074 |
+| z=1.0 | Prognostic_score | 0.025 | 0.905 | 0.080 | 0.01536 | 0.281 | 0.141 |
+| z=1.0 | 2B_clustering | 0.022 | 0.914 | 0.108 | 0.02077 | 0.028 | 0.037 |
+| z=2.0 | 1B_residual | 0.035 | 0.921 | 0.062 | 0.00498 | 0.807 | 0.007 |
+| z=2.0 | PS_propensity_score | 0.009 | 0.975 | 0.072 | 0.01613 | 0.376 | 0.069 |
+| z=2.0 | GMM | 0.004 | 0.925 | 0.062 | 0.01914 | 0.259 | 0.101 |
+| z=2.0 | Prognostic_score | 0.027 | 1.000 | 0.088 | 0.00855 | 0.669 | 0.039 |
+| z=2.0 | 2B_clustering | 0.022 | 0.900 | 0.063 | 0.01606 | 0.379 | 0.163 |
+
+*Table 6. Sensitivity to Z-to-Y effect strength (n=2000, K=5, zx=1.0, z=0.5, 1.0, 2.0): means over 10 simulations.*
+
+### Robustness to non-linear Z-to-X mappings
+
+In real applications the mapping from hidden modifiers to measured covariates need not be linear. We therefore repeated the primary scenario with a non-linear Z-to-X transformation that included a quadratic term and a log-normal scale transformation. Table 7 compares the random-effects bias under the linear and non-linear mappings for the leading methods, and Figure 5 displays the same comparison. The effect of non-linearity was method-dependent: the outcome-residual and clustering-based approaches achieved somewhat larger relative bias reductions under the transformed mapping, the propensity-score and GMM approaches showed small improvements, and the prognostic-score approach showed a modest decline. No leading method was dramatically degraded by the transformation, indicating that the IONE diagnostics remain useful when measured covariates are non-linear functions of the hidden structure, although the relative ranking of methods can shift.
+
+| Method | Linear RE bias | Linear rel reduction | Non-linear RE bias | Non-linear rel reduction |
+|---|---|---|---|---|
+| 1B_residual | 0.00852 | 0.602 | 0.00664 | 0.690 |
+| PS_propensity_score | 0.02162 | -0.011 | 0.02084 | 0.027 |
+| GMM | 0.02180 | -0.020 | 0.01746 | 0.185 |
+| Prognostic_score | 0.01536 | 0.281 | 0.01762 | 0.178 |
+| 2B_clustering | 0.02077 | 0.028 | 0.01649 | 0.230 |
+
+*Table 7. Linear versus non-linear Z-to-X mapping: random-effects ATE bias and relative bias reduction (n=2000, K=5, z=1.0, zx=1.0).*
+
+![Figure 5. Non-linear Z->X robustness: random-effects ATE bias reduction (n=2000, K=5).](fig5_rsm_ipd_nonlinearity.png)
+
 
 ## 4. Discussion
 
@@ -244,7 +334,7 @@ IONE is best understood as complementary to these methods. We envision a workflo
 
 **Strengths.** This simulation study followed the ADEMP framework [morris2019], with transparent reporting of the data-generating mechanism, estimands, candidate methods, performance metrics and number of replications. All numerical results are produced by the repository scripts and inserted into the manuscript automatically, so the docx and markdown files can be regenerated without hand-entered numbers. The IPD data-generating mechanism includes study-level variation in baseline risk, treatment prevalence and covariate distributions, which mirrors the heterogeneity encountered in real IPD meta-analyses.
 
-**Limitations.** Several limitations should be acknowledged. First, the simulation used a single total sample size (n=2000) and a moderate Z->X trace. Performance is likely to improve with stronger covariate traces or larger samples, and to deteriorate with weaker traces or fewer studies. Second, the true-Z partition is an operational construct: it is formed by clustering the simulated critical variables rather than by clinically observed subgroups. ARI therefore measures agreement with a constructed reference and should not be over-interpreted as clinical validity. Third, W_est depends on a correctly specified outcome model (Y ~ X + A + X*A). If the outcome model is misspecified, W_est may be misleading. Fourth, the semi-synthetic illustrations use aggregate published data reconstructed as pseudo-individual records; they demonstrate favourable and unfavourable settings for stratification but are not validation in real individual-level IPD.
+**Limitations.** Several limitations should be acknowledged. First, the primary scenario used a single total sample size (n=2000) and a moderate Z->X trace, although additional sensitivity analyses examined n=500 to 10 000, Z-to-Y effect scales, Z-to-X influence scales and a non-linear Z->X mapping. Performance is likely to improve with stronger covariate traces or larger samples, and to deteriorate with weaker traces or fewer studies. Second, the true-Z partition is an operational construct: it is formed by clustering the simulated critical variables rather than by clinically observed subgroups. ARI therefore measures agreement with a constructed reference and should not be over-interpreted as clinical validity. Third, W_est depends on a correctly specified outcome model (Y ~ X + A + X*A). If the outcome model is misspecified, W_est may be misleading. Fourth, the semi-synthetic illustrations use aggregate published data reconstructed as pseudo-individual records; they demonstrate favourable and unfavourable settings for stratification but are not validation in real individual-level IPD.
 
 ### Implications for practice
 

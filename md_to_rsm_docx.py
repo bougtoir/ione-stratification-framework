@@ -112,11 +112,13 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
             if os.path.exists(path):
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                p.paragraph_format.space_after = Pt(6)
                 p.add_run().add_picture(path, width=Inches(5.8))
             else:
                 doc.add_paragraph(f'[Figure not found: {path}]')
             cap = doc.add_paragraph()
             cap.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            cap.paragraph_format.space_before = Pt(12)
             cap_run = cap.add_run(caption)
             cap_run.bold = True
             i += 1
@@ -194,6 +196,8 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
         # Plain paragraph (possibly merged with next if continuation? keep simple)
         p = doc.add_paragraph()
         _apply_inline(p, line, cite_manager)
+        if stripped.startswith('*') and ('Table' in stripped or 'Figure' in stripped):
+            p.paragraph_format.space_before = Pt(12)
         i += 1
 
     apply_math_to_doc(doc)
