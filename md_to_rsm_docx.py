@@ -306,15 +306,63 @@ def _make_math_omath(kind, match):
     return oMath
 
 
-def _text_run(text, rPr):
+def _text_run(text, rPr, superscript=False, subscript=False):
     r = OxmlElement('w:r')
     if rPr is not None:
-        r.append(copy.deepcopy(rPr))
+        rPr_copy = copy.deepcopy(rPr)
+    else:
+        rPr_copy = OxmlElement('w:rPr')
+    if superscript or subscript:
+        va = OxmlElement('w:vertAlign')
+        va.set(qn('w:val'), 'superscript' if superscript else 'subscript')
+        rPr_copy.append(va)
+    r.append(rPr_copy)
     t = OxmlElement('w:t')
     t.set(qn('xml:space'), 'preserve')
     t.text = text
     r.append(t)
     return r
+
+
+def _make_math_runs(kind, match, rPr):
+    """Return a list of Word text runs with font-based superscripts/subscripts."""
+    runs = []
+    if kind == 'riskdiff':
+        runs.append(_text_run('P(Y=1|A=1) - P(Y=1|A=0)', rPr))
+    elif kind == 'c1def':
+        runs.append(_text_run('C1 = 1 - ', rPr))
+        runs.append(_text_run('I', rPr, superscript=True))
+        runs.append(_text_run('2', rPr))
+    elif kind == 'ymodel':
+        runs.append(_text_run('Y ~ X + A + X', rPr))
+        runs.append(_text_run('×', rPr))
+        runs.append(_text_run('A', rPr))
+    elif kind == 'isq':
+        runs.append(_text_run('I', rPr, superscript=True))
+        runs.append(_text_run('2', rPr))
+    elif kind == 'tausq':
+        runs.append(_text_run('τ', rPr, superscript=True))
+        runs.append(_text_run('2', rPr))
+    elif kind == 'wsub':
+        runs.append(_text_run('W', rPr))
+        runs.append(_text_run('_', rPr))
+        runs.append(_text_run(match.group(1), rPr, subscript=True))
+    elif kind == 'diff':
+        runs.append(_text_run(f'|bias_{match.group(1)}| - |bias_{match.group(2)}|', rPr))
+    elif kind == 'frac':
+        runs.append(_text_run('1 - ', rPr))
+        runs.append(_text_run(f'|bias_{match.group(1)}|', rPr))
+        runs.append(_text_run(' / ', rPr))
+        runs.append(_text_run(f'|bias_{match.group(2)}|', rPr))
+    elif kind == 'phat':
+        runs.append(_text_run('p', rPr, superscript=True))
+        runs.append(_text_run('^', rPr))
+    elif kind == 'absphat':
+        runs.append(_text_run('|Y - ', rPr))
+        runs.append(_text_run('p', rPr, superscript=True))
+        runs.append(_text_run('^', rPr))
+        runs.append(_text_run('|', rPr))
+    return runs
 
 
 def _split_text_to_elems(text, rPr, patterns):
@@ -332,7 +380,7 @@ def _split_text_to_elems(text, rPr, patterns):
     elems = []
     if pre:
         elems.append(_text_run(pre, rPr))
-    elems.append(_make_math_omath(kind, m))
+    elems.extend(_make_math_runs(kind, m, rPr))
     if post:
         elems.extend(_split_text_to_elems(post, rPr, patterns))
     return elems
@@ -350,7 +398,7 @@ def _split_run(run, patterns):
 
 
 def apply_math_to_doc(doc):
-    """Replace plain-text mathematical expressions with Word OMML equations."""
+    """Replace plain-text mathematical expressions with Word runs using font-based superscripts/subscripts."""
     paras = list(doc.paragraphs)
     for table in doc.tables:
         for row in table.rows:
