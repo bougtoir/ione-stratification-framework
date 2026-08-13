@@ -135,35 +135,47 @@ def generate_rsm_figures(ipd_primary, ipd_full, real_data,
     if ipd_primary is not None and not ipd_primary.empty:
         order = ipd_primary.sort_values('bias_reduction_relative_re_mean', ascending=False)
         x = np.arange(len(order))
-        fig, axes = plt.subplots(1, 2, figsize=(13, 5))
-        width = 0.18
-        metrics = ['ARI_mean', 'C1_heterogeneity_mean', 'W_true_mean', 'W_est_mean']
-        labels = ['ARI', 'C1', 'W_true', 'W_est']
-        for i, (m, lab) in enumerate(zip(metrics, labels)):
-            axes[0].bar(x + (i - 1.5) * width, order[m], width, label=lab)
+        fig, axes = plt.subplots(1, 3, figsize=(16, 4.5))
+
+        # (a) ARI on its own scale
+        width = 0.5
+        axes[0].bar(x, order['ARI_mean'], width, color='tab:blue')
         axes[0].set_xticks(x)
         axes[0].set_xticklabels(order['method'], rotation=45, ha='right')
-        axes[0].set_ylabel('Metric value')
-        axes[0].set_title('Diagnostic metrics (IPD primary scenario)')
-        axes[0].legend(loc='upper right')
+        axes[0].set_ylabel('Adjusted Rand Index')
+        axes[0].set_title('(a) Recovery of true hidden structure')
         axes[0].axhline(0, color='black', linewidth=0.5)
 
-        width2 = 0.25
-        axes[1].bar(x - width2 / 2, order['bias_reduction_relative_mean'], width2, label='Stratified')
-        axes[1].bar(x + width2 / 2, order['bias_reduction_relative_re_mean'], width2, label='Random-effects')
+        # (b) C1 and W on a shared [0, 1] homogeneity scale
+        width2 = 0.22
+        axes[1].bar(x - width2, order['C1_heterogeneity_mean'], width2, label='C1', color='tab:orange')
+        axes[1].bar(x, order['W_true_mean'], width2, label='W_true', color='tab:green')
+        axes[1].bar(x + width2, order['W_est_mean'], width2, label='W_est', color='tab:red')
         axes[1].set_xticks(x)
         axes[1].set_xticklabels(order['method'], rotation=45, ha='right')
-        axes[1].set_ylabel('Relative bias reduction')
-        axes[1].set_title('ATE bias reduction (risk difference)')
-        axes[1].legend(loc='upper right')
+        axes[1].set_ylabel('Coherence / homogeneity')
+        axes[1].set_ylim(0, 1)
+        axes[1].set_title('(b) Stratum coherence diagnostics')
+        axes[1].legend(loc='best')
         axes[1].axhline(0, color='black', linewidth=0.5)
+
+        # (c) Bias reduction on risk-difference scale
+        width3 = 0.25
+        axes[2].bar(x - width3 / 2, order['bias_reduction_relative_mean'], width3, label='Stratified')
+        axes[2].bar(x + width3 / 2, order['bias_reduction_relative_re_mean'], width3, label='Random-effects')
+        axes[2].set_xticks(x)
+        axes[2].set_xticklabels(order['method'], rotation=45, ha='right')
+        axes[2].set_ylabel('Relative bias reduction')
+        axes[2].set_title('(c) ATE bias reduction (risk difference)')
+        axes[2].legend(loc='best')
+        axes[2].axhline(0, color='black', linewidth=0.5)
 
         fig.tight_layout()
         png = os.path.join(FIG_DIR, 'fig1_rsm_ipd_primary.png')
         fig.savefig(png, dpi=300)
         fig.savefig(os.path.join(FIG_DIR, 'fig1_rsm_ipd_primary.eps'), format='eps', bbox_inches='tight')
         plt.close(fig)
-        figs.append(('Figure 1', 'Primary IPD scenario: diagnostic metrics and ATE bias reduction by method.', png))
+        figs.append(('Figure 1', 'Primary IPD scenario: (a) ARI, (b) C1/W coherence diagnostics, and (c) ATE bias reduction by method.', png))
 
     if ipd_full is not None and not ipd_full.empty:
         top_methods = ['1B_residual', 'PS_propensity_score', 'GMM', 'Prognostic_score', '2B_clustering']

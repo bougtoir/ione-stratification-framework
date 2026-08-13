@@ -1,43 +1,29 @@
-Onishi Tatsuki
-Data Science AI Innovation Research Promotion Center, Shiga University
-1-1-1 Bamba, Hikone, Shiga 522-8522, Japan
-bougtoir@gmail.com
+Dear Editor,
 
-Professors Dimitris Mavridis and Terri Pigott, Co-Editors-in-Chief
-*Research Synthesis Methods*
-Cambridge University Press
+We are pleased to submit our manuscript, **"IONE: Incoherence-Oriented Neutralisation and Extraction for hidden effect modification in individual participant data meta-analysis: a simulation study of stratification-based extraction"**, for consideration by *Biostatistics*.
 
-Dear Professors Mavridis and Pigott,
+## Why *Biostatistics* is the right venue
 
-We wish to submit our manuscript, **"IONE: Incoherence-Oriented Neutralisation and Extraction for hidden effect modification in individual participant data meta-analysis: a simulation study of stratification-based extraction"**, for consideration by *Research Synthesis Methods*.
+The paper addresses a methodological problem at the heart of modern biostatistics: how to diagnose and reduce bias from hidden effect modification when individual participant data are pooled across studies. We frame the problem as an exploratory IPD meta-analysis problem, propose a new diagnostic toolkit (IONE) built on coherence diagnostics, and evaluate it through Monte Carlo simulation and semi-synthetic illustrations. The work therefore fits the journal's scope of statistical methods with direct application to health and disease data, rather than being a disease-specific clinical study.
 
-**Fit with the journal.**
-*Research Synthesis Methods* publishes work on the methods of designing, conducting, analysing, interpreting and applying systematic research synthesis. The manuscript develops an exploratory diagnostic for hidden effect modification and confounding inside individual participant data (IPD) meta-analyses. We benchmark the proposal against established synthesis comparators (random-effects meta-analysis, propensity-score stratification, Gaussian mixture models, prognostic-score stratification) and evaluate whether discovered strata can improve the pooled average treatment effect estimate. Because the work is directly concerned with how heterogeneity is detected and modelled in evidence synthesis, we believe it will be of interest to your readership.
+## What the paper contributes
 
-**What is new.**
-- We extend a stratification-based diagnostic framework to the IPD meta-analysis setting, where between-study heterogeneity is combined with hidden within-study effect modification.
-- We compare two-stage stratified synthesis with DerSimonian-Laird random-effects synthesis of stratum-specific risk differences.
-- We report between-stratum (C1) and within-stratum (W) coherence diagnostics alongside ATE bias reduction, making the homogeneity assumptions of the pooled estimate explicit.
-- We add extensive sensitivity analyses for sample size, Z-to-Y effect strength, Z-to-X influence strength and a non-linear Z-to-X mapping to characterise the conditions under which the diagnostics are most informative.
+1. **A diagnostic, not a black-box estimator.** IONE separates two tasks: detecting whether a marginal IPD summary is incoherent with respect to a conditional treatment effect, and extracting coherent subpopulations when covariate traces of hidden modifiers are available. We formalise this through two metrics, C1 and W, and show how they relate to ATE bias reduction on the risk-difference scale.
+2. **IPD meta-analysis framing.** The motivating examples and the simulation design are presented as a two-stage IPD meta-analysis: first stratification, then DerSimonian-Laird random-effects synthesis. The method is therefore evaluated in the context in which it would actually be used.
+3. **Transparent, reproducible simulation.** Every numerical result is read from CSV summary files produced by a public repository (https://github.com/bougtoir/ione-stratification-framework). The repository contains the data-generating code, fixed random seeds, all scenario definitions, a `requirements.txt` file, and the manuscript generator itself. A Zenodo archive with a DOI will be created before acceptance.
 
-**Originality and exclusivity.**
-This manuscript is original. An earlier version was submitted to BMC Medical Research Methodology and is no longer under consideration there. The present version has been substantially reframed for Research Synthesis Methods, with an emphasis on individual participant data meta-analysis, and all authors have approved the submission.
+## How we have addressed likely reviewer concerns
 
-**Conflicts and funding.**
-The authors have no competing interests. No external funding supported this work.
+- **Supplementary materials.** The Additional files, the list of abbreviations, and the extended sensitivity tables (K selection, sample size, Z-to-X and Z-to-Y effects) are now collected in `biostatistics_supplementary_v3.docx`. The main manuscript references them at the appropriate points.
+- **Definitions.** The term "neutralisation" is now defined explicitly in the Methods, and the a-priori rule used to choose the number of strata in the semi-synthetic illustrations is reported.
+- **Reproducibility.** We have expanded the Data/Code Availability and AI declarations. A double-spaced PDF for initial submission is included in the package, together with the editable docx files.
+- **Figures and tables.** All figures and tables are cited in order in the main text, and the separate `biostatistics_tables_separate.docx` and `biostatistics_figures.pptx` files provide editable versions.
 
-**Artificial intelligence.**
-Parts of the manuscript text and Python code were drafted or revised using a large language model under the author’s direct supervision; the author verified all analyses, references and interpretations.
-
-**Data and code.**
-The simulation code and semi-synthetic example data are available in a public repository (https://github.com/bougtoir/ione-stratification-framework). All numerical results are generated from the repository; no estimates are hard-coded.
-
-Thank you for considering our submission.
+We hope that readers of *Biostatistics* will find the framework useful as a sensitivity step when reporting IPD meta-analyses.
 
 Sincerely,
 
-Onishi Tatsuki, PhD
-corresponding author
+Onishi Tatsuki
 Data Science AI Innovation Research Promotion Center, Shiga University
-1-1-1 Bamba, Hikone, Shiga 522-8522, Japan
 bougtoir@gmail.com
+ORCID: 0000-0001-7261-9062

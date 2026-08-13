@@ -44,17 +44,23 @@ def _summarise(df: pd.DataFrame, group_cols: list, metric_cols: list) -> pd.Data
             row[f'{m}_ci95'] = ci
         # Robust relative bias reduction from absolute bias means, not from per-simulation ratios
         if 'bias_crude' in metric_cols and 'bias_stratified' in metric_cols:
-            abs_crude = sub['bias_crude'].abs().mean()
-            abs_strat = sub['bias_stratified'].abs().mean()
+            abs_crude_ser = sub['bias_crude'].abs()
+            abs_strat_ser = sub['bias_stratified'].abs()
+            abs_crude = abs_crude_ser.mean()
+            abs_strat = abs_strat_ser.mean()
             row['abs_bias_crude_mean'] = float(abs_crude)
             row['abs_bias_stratified_mean'] = float(abs_strat)
+            row['abs_bias_crude_se'] = float(abs_crude_ser.std() / np.sqrt(len(abs_crude_ser)))
+            row['abs_bias_stratified_se'] = float(abs_strat_ser.std() / np.sqrt(len(abs_strat_ser)))
             if abs_crude > 0:
                 row['bias_reduction_relative_mean'] = float(1.0 - abs_strat / abs_crude)
             else:
                 row['bias_reduction_relative_mean'] = float(np.nan)
             if 'bias_re' in metric_cols:
-                abs_re = sub['bias_re'].abs().mean()
+                abs_re_ser = sub['bias_re'].abs()
+                abs_re = abs_re_ser.mean()
                 row['abs_bias_re_mean'] = float(abs_re)
+                row['abs_bias_re_se'] = float(abs_re_ser.std() / np.sqrt(len(abs_re_ser)))
                 if abs_crude > 0:
                     row['bias_reduction_relative_re_mean'] = float(1.0 - abs_re / abs_crude)
                 else:
