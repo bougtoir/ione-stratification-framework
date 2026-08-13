@@ -323,7 +323,7 @@ def _adapt_background(old_bg, cm, v):
         'They do not test whether the pooled participants themselves form internally homogeneous subpopulations with respect to the treatment effect. '
         'We therefore frame Incoherence-Oriented Neutralisation and Extraction (IONE) as an exploratory diagnostic: it flags when a marginal summary may be fragile and, when incoherence is indicated, extracts more homogeneous subgroups from multivariate patterns in measured variables. '
         '"Neutralisation" means reducing the misleading influence of a marginal summary by separating it into coherent subpopulations.\n\n'
-        'Hidden population structure is documented across medicine and social science: kidney-stone treatments [charig1986], university admissions [bickel1975], COVID-19 case-fatality comparisons [vonkuegelgen2021], vaccination-effectiveness evaluations [haas2021], and smoking-mortality studies [appleton1996]. '
+        'Hidden population structure is documented across medicine and social science: kidney-stone treatments [charig1986], university admissions [bickel1975], COVID-19 case-fatality comparisons [vonkuegelgen2021], national vaccine-surveillance data [haas2021], and smoking-mortality studies [appleton1996]. '
         'Established methods—propensity scores [rosenbaum1983], prognostic scores [hansen2008], disease-risk scores [miettinen1976], instrumental variables [angrist1996] and high-dimensional propensity scores [schneeweiss2009]—adjust for measured confounders but do not detect unmeasured population structure. '
         'Proximal causal inference and latent-class models use proxy variables [tchetgen2024][mclachlan2000] but do not report a transparent between-stratum heterogeneity diagnostic. '
         'We operationalise IONE through two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total CATE variance explained by the stratification. '
@@ -373,7 +373,7 @@ W_est is computed from an estimated individual-level CATE. Omitting treatment-co
 
 ### Semi-synthetic illustrations
 
-Five Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. The Israeli vaccination example used pseudo-IPD reconstructed from age- and vaccination-stratified COVID-19-related hospitalisation counts published by Haas et al. [haas2021]. Pseudo-general variables mimicked proxies of the known confounder and K was chosen from {{2, 3, min(K_true,4), K_true}} as the value maximising ARI. These are illustrations, not real-IPD validation.
+Five Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. The Israeli vaccination example used pseudo-IPD reconstructed from age- and vaccination-stratified COVID-19-related hospitalisation counts published by Haas et al. [haas2021]. Because the published counts cover approximately 6.5 million people, we used a stratified random down-sample of 100,000 records preserving the age- and vaccination-specific hospitalisation rates; this gives a rare-outcome example. Pseudo-general variables mimicked proxies of the known confounder and K was chosen from {{2, 3, min(K_true,4), K_true}} as the value maximising ARI. These are illustrations, not real-IPD validation.
 
 ### Reporting and reproducibility
 
@@ -656,7 +656,7 @@ Figure 2 and Supplementary Table S1 show random-effects bias reduction across K 
 
 ### Semi-synthetic illustrations
 
-Five Simpson-paradox examples were reconstructed as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. Table 2 reports the best non-Oracle method per dataset; high ARI occurred only when pseudo-variables strongly correlated with a low-dimensional confounder.
+Five Simpson-paradox examples were reconstructed as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. Table 2 reports the best non-Oracle method per dataset. The Israel hospitalisation example was the most challenging: strong age confounding and a very low hospitalisation rate (~0.09%) meant that the crude marginal association reversed with stratification, yet recovery of the true age groups from multivariate covariate patterns remained modest.
 
 {table_real}
 *Table 2. Best semi-synthetic illustration result per dataset (oracle baselines excluded). Bias reduction is the absolute difference between crude and stratified ATE risk-difference bias.*
