@@ -28,8 +28,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), 'results')
 SUMMARY_DIR = os.path.join(RESULTS_DIR, 'summary')
 FIG_DIR = os.path.join(RESULTS_DIR, 'figures')
-RSM_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'rsm_submission')
-os.makedirs(RSM_DIR, exist_ok=True)
+SUBMISSION_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'biostatistics_submission')
+os.makedirs(SUBMISSION_DIR, exist_ok=True)
 
 
 def _scenario_values():
@@ -917,11 +917,11 @@ def generate_v3_manuscript():
     md = _old_to_keys(md, cm)
 
     # Save markdown and convert to docx
-    md_path = os.path.join(RSM_DIR, 'IONE_rsm_v3.md')
+    md_path = os.path.join(SUBMISSION_DIR, 'IONE_biostatistics_v3.md')
     with open(md_path, 'w', encoding='utf-8') as f:
         f.write(md)
 
-    docx_path = os.path.join(RSM_DIR, 'IONE_rsm_v3.docx')
+    docx_path = os.path.join(SUBMISSION_DIR, 'IONE_biostatistics_v3.docx')
     convert(md_path, docx_path, cite_manager=cm, figure_dir=FIG_DIR)
 
     # Separate title page
@@ -955,26 +955,26 @@ def generate_v3_manuscript():
     tp.add_paragraph('Acknowledgements: Not applicable.')
     tp.add_paragraph('Artificial intelligence: Parts of the manuscript text and Python code were generated or revised using a large language model under the author\'s direct supervision. The author verified all analyses, selected references and approved the final content.')
     tp.add_paragraph('Data and code availability: https://github.com/bougtoir/ione-stratification-framework')
-    tp_path = os.path.join(RSM_DIR, 'title_page_rsm_v3.docx')
+    tp_path = os.path.join(SUBMISSION_DIR, 'title_page_biostatistics_v3.docx')
     tp.save(tp_path)
 
     # Cover letter
-    cover_md = os.path.join(RSM_DIR, 'cover_letter_rsm_v3.md')
+    cover_md = os.path.join(SUBMISSION_DIR, 'cover_letter_biostatistics_v3.md')
     if os.path.exists(cover_md):
         from md_to_rsm_docx import convert as _convert
-        cover_docx = os.path.join(RSM_DIR, 'cover_letter_rsm_v3.docx')
+        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_biostatistics_v3.docx')
         _convert(cover_md, cover_docx)
 
     # Submission package zip
     import zipfile
-    zip_path = os.path.join(RSM_DIR, 'v3_ione_rsm_submission_package.zip')
+    zip_path = os.path.join(SUBMISSION_DIR, 'v3_ione_biostatistics_submission_package.zip')
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         zf.write(docx_path, os.path.basename(docx_path))
         zf.write(tp_path, os.path.basename(tp_path))
-        cover_docx = os.path.join(RSM_DIR, 'cover_letter_rsm_v3.docx')
+        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_biostatistics_v3.docx')
         if os.path.exists(cover_docx):
             zf.write(cover_docx, os.path.basename(cover_docx))
-        tables_docx = os.path.join(RSM_DIR, 'rsm_tables_separate.docx')
+        tables_docx = os.path.join(SUBMISSION_DIR, 'biostatistics_tables_separate.docx')
         if os.path.exists(tables_docx):
             zf.write(tables_docx, os.path.basename(tables_docx))
         pptx_path = os.path.join(FIG_DIR, 'rsm_figures.pptx')

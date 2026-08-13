@@ -1,4 +1,4 @@
-"""Generate a separate editable .docx containing all RSM tables."""
+"""Generate a separate editable .docx containing all Biostatistics tables."""
 
 import os
 import numpy as np
@@ -7,7 +7,7 @@ from docx import Document
 from docx.shared import Pt
 
 SUMMARY_DIR = os.path.join(os.path.dirname(__file__), 'results', 'summary')
-OUT_DIR = os.path.join(os.path.dirname(__file__), 'results', 'manuscript', 'rsm_submission')
+OUT_DIR = os.path.join(os.path.dirname(__file__), 'results', 'manuscript', 'biostatistics_submission')
 os.makedirs(OUT_DIR, exist_ok=True)
 
 
@@ -281,7 +281,7 @@ def main():
                                    'Non-linear rel reduction': 3, 'Non-linear rel reduction SE': 3}
             )
 
-    out = os.path.join(OUT_DIR, 'rsm_tables_separate.docx')
+    out = os.path.join(OUT_DIR, 'biostatistics_tables_separate.docx')
     doc.save(out)
     print(f'[generate_rsm_tables] {out}')
 
