@@ -201,10 +201,8 @@ def _register_citations(cm):
                 'Bickel PJ, Hammel EA, O\'Connell JW. Sex bias in graduate admissions: data from Berkeley. Science. 1975;187(4175):398–404.')
     cm.register('vonkuegelgen2021', 'von Kügelgen et al.', 2021,
                 'von Kügelgen J, Gresele L, Schölkopf B. Simpson\'s paradox in Covid-19 case fatality rates: a mediation analysis of age-related causal effects. IEEE Trans Artif Intell. 2021;2(1):18–27.')
-    cm.register('morris2021', 'Morris', 2021,
-                'Morris JS. Israeli data: how can efficacy vs. severe disease be strong when 60% of hospitalized are vaccinated? 2021. Available from: https://www.covid-datascience.com/post/israeli-data-how-can-efficacy-vs-severe-disease-be-strong-when-60-of-hospitalized-are-vaccinated (accessed 10 August 2026).')
-    cm.register('morris2025', 'Morris', 2025,
-                'Morris JS. Tracking vaccine effectiveness in an evolving pandemic, countering misleading hot takes and epidemiologic fallacies. Am J Epidemiol. 2025;194(3):898-907.')
+    cm.register('haas2021', 'Haas et al.', 2021,
+                'Haas EJ, Angulo FJ, McLaughlin JM, et al. Impact and effectiveness of mRNA BNT162b2 vaccine against SARS-CoV-2 infections and COVID-19 cases, hospitalisations, and deaths following a nationwide vaccination campaign in Israel: an observational study using national surveillance data. Lancet. 2021;397(10287):1819–1829.')
     cm.register('appleton1996', 'Appleton et al.', 1996,
                 'Appleton DR, French NR, Vanderpump MP. Ignoring a covariate: an example of Simpson\'s paradox. Am Stat. 1996;50(4):340–341.')
     cm.register('rosenbaum1983', 'Rosenbaum and Rubin', 1983,
@@ -260,8 +258,8 @@ def _register_citations(cm):
 def _old_to_keys(text, cm=None):
     """Replace old numbered citations [1], [1, 2], [9–13] with [key] author-date citations."""
     # Specific ranges first
-    text = text.replace('[9–13]', '[charig1986][bickel1975][vonkuegelgen2021][morris2021][appleton1996]')
-    text = text.replace('[9-13]', '[charig1986][bickel1975][vonkuegelgen2021][morris2021][appleton1996]')
+    text = text.replace('[9–13]', '[charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]')
+    text = text.replace('[9-13]', '[charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]')
     text = text.replace('[14, 15]', '[rosenbaum1983][hansen2008]')
     text = text.replace('[19, 20]', '[schneeweiss2009][rassen2012]')
     text = text.replace('[19, 21]', '[schneeweiss2009][wyss2018]')
@@ -281,7 +279,7 @@ def _old_to_keys(text, cm=None):
         '9': 'charig1986',
         '10': 'bickel1975',
         '11': 'vonkuegelgen2021',
-        '12': 'morris2021',
+        '12': 'haas2021',
         '13': 'appleton1996',
         '14': 'rosenbaum1983',
         '15': 'hansen2008',
@@ -325,7 +323,7 @@ def _adapt_background(old_bg, cm, v):
         'They do not test whether the pooled participants themselves form internally homogeneous subpopulations with respect to the treatment effect. '
         'We therefore frame Incoherence-Oriented Neutralisation and Extraction (IONE) as an exploratory diagnostic: it flags when a marginal summary may be fragile and, when incoherence is indicated, extracts more homogeneous subgroups from multivariate patterns in measured variables. '
         '"Neutralisation" means reducing the misleading influence of a marginal summary by separating it into coherent subpopulations.\n\n'
-        'Hidden population structure is documented across medicine and social science: kidney-stone treatments [charig1986], university admissions [bickel1975], COVID-19 case-fatality comparisons [vonkuegelgen2021], vaccination-effectiveness evaluations [morris2021], and smoking-mortality studies [appleton1996]. '
+        'Hidden population structure is documented across medicine and social science: kidney-stone treatments [charig1986], university admissions [bickel1975], COVID-19 case-fatality comparisons [vonkuegelgen2021], vaccination-effectiveness evaluations [haas2021], and smoking-mortality studies [appleton1996]. '
         'Established methods—propensity scores [rosenbaum1983], prognostic scores [hansen2008], disease-risk scores [miettinen1976], instrumental variables [angrist1996] and high-dimensional propensity scores [schneeweiss2009]—adjust for measured confounders but do not detect unmeasured population structure. '
         'Proximal causal inference and latent-class models use proxy variables [tchetgen2024][mclachlan2000] but do not report a transparent between-stratum heterogeneity diagnostic. '
         'We operationalise IONE through two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total CATE variance explained by the stratification. '
@@ -375,7 +373,7 @@ W_est is computed from an estimated individual-level CATE. Omitting treatment-co
 
 ### Semi-synthetic illustrations
 
-Five Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics [charig1986][bickel1975][vonkuegelgen2021][morris2021][appleton1996]. The Israeli vaccination example used pseudo-IPD reconstructed from dashboard-derived counts reported in a data-analysis blog post by Morris [morris2021], with conceptual interpretation supported by a peer-reviewed commentary by the same author [morris2025]. Pseudo-general variables mimicked proxies of the known confounder and K was chosen from {{2, 3, min(K_true,4), K_true}} as the value maximising ARI. These are illustrations, not real-IPD validation.
+Five Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. The Israeli vaccination example used pseudo-IPD reconstructed from age- and vaccination-stratified COVID-19-related hospitalisation counts published by Haas et al. [haas2021]. Pseudo-general variables mimicked proxies of the known confounder and K was chosen from {{2, 3, min(K_true,4), K_true}} as the value maximising ARI. These are illustrations, not real-IPD validation.
 
 ### Reporting and reproducibility
 
@@ -658,7 +656,7 @@ Figure 2 and Supplementary Table S1 show random-effects bias reduction across K 
 
 ### Semi-synthetic illustrations
 
-Five Simpson-paradox examples were reconstructed as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][morris2021][appleton1996]. Table 2 reports the best non-Oracle method per dataset; high ARI occurred only when pseudo-variables strongly correlated with a low-dimensional confounder.
+Five Simpson-paradox examples were reconstructed as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. Table 2 reports the best non-Oracle method per dataset; high ARI occurred only when pseudo-variables strongly correlated with a low-dimensional confounder.
 
 {table_real}
 *Table 2. Best semi-synthetic illustration result per dataset (oracle baselines excluded). Bias reduction is the absolute difference between crude and stratified ATE risk-difference bias.*
@@ -710,7 +708,7 @@ Not applicable.
 
 ### Availability of data and materials
 
-All simulation code, analysis scripts, semi-synthetic example data, and the manuscript generator are publicly available at https://github.com/bougtoir/ione-stratification-framework. The repository contains a `requirements.txt` file and a `requirements-lock.txt` file with exact package versions, fixed random seeds for every scenario, and `generate_summary.py`, `generate_ione_rsm_v3.py` and `generate_rsm_tables.py` scripts that regenerate all manuscript numbers, figures and tables in a Python 3.11 environment. The exact Git commit hash used to create this submission package is recorded in `results/commit_hash.txt`. An archived Zenodo release with a DOI will be created before acceptance to satisfy long-term reproducibility requirements. The published aggregate datasets used for the semi-synthetic illustrations are referenced in the original publications [charig1986][bickel1975][vonkuegelgen2021][morris2021][appleton1996].
+All simulation code, analysis scripts, semi-synthetic example data, and the manuscript generator are publicly available at https://github.com/bougtoir/ione-stratification-framework. The repository contains a `requirements.txt` file and a `requirements-lock.txt` file with exact package versions, fixed random seeds for every scenario, and `generate_summary.py`, `generate_ione_rsm_v3.py` and `generate_rsm_tables.py` scripts that regenerate all manuscript numbers, figures and tables in a Python 3.11 environment. The exact Git commit hash used to create this submission package is recorded in `results/commit_hash.txt`. An archived Zenodo release with a DOI will be created before acceptance to satisfy long-term reproducibility requirements. The published aggregate datasets used for the semi-synthetic illustrations are referenced in the original publications [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996].
 
 ### Competing interests
 

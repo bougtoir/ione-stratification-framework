@@ -22,7 +22,7 @@ Meta-analysis pools treatment-effect estimates across studies and is central to 
 
 IPD meta-analysis offers subgroup analyses, meta-regression and one-stage mixed models, but these explain heterogeneity through measured covariates and study-level factors. They do not test whether the pooled participants themselves form internally homogeneous subpopulations with respect to the treatment effect. We therefore frame Incoherence-Oriented Neutralisation and Extraction (IONE) as an exploratory diagnostic: it flags when a marginal summary may be fragile and, when incoherence is indicated, extracts more homogeneous subgroups from multivariate patterns in measured variables. "Neutralisation" means reducing the misleading influence of a marginal summary by separating it into coherent subpopulations.
 
-Hidden population structure is documented across medicine and social science: kidney-stone treatments [charig1986], university admissions [bickel1975], COVID-19 case-fatality comparisons [vonkuegelgen2021], vaccination-effectiveness evaluations [morris2021], and smoking-mortality studies [appleton1996]. Established methods—propensity scores [rosenbaum1983], prognostic scores [hansen2008], disease-risk scores [miettinen1976], instrumental variables [angrist1996] and high-dimensional propensity scores [schneeweiss2009]—adjust for measured confounders but do not detect unmeasured population structure. Proximal causal inference and latent-class models use proxy variables [tchetgen2024][mclachlan2000] but do not report a transparent between-stratum heterogeneity diagnostic. We operationalise IONE through two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total CATE variance explained by the stratification. Stratum-specific risk differences are synthesised with fixed-effect or DerSimonian-Laird random-effects meta-analysis.
+Hidden population structure is documented across medicine and social science: kidney-stone treatments [charig1986], university admissions [bickel1975], COVID-19 case-fatality comparisons [vonkuegelgen2021], vaccination-effectiveness evaluations [haas2021], and smoking-mortality studies [appleton1996]. Established methods—propensity scores [rosenbaum1983], prognostic scores [hansen2008], disease-risk scores [miettinen1976], instrumental variables [angrist1996] and high-dimensional propensity scores [schneeweiss2009]—adjust for measured confounders but do not detect unmeasured population structure. Proximal causal inference and latent-class models use proxy variables [tchetgen2024][mclachlan2000] but do not report a transparent between-stratum heterogeneity diagnostic. We operationalise IONE through two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total CATE variance explained by the stratification. Stratum-specific risk differences are synthesised with fixed-effect or DerSimonian-Laird random-effects meta-analysis.
 
 ## 2. Methods
 
@@ -66,7 +66,7 @@ W_est is computed from an estimated individual-level CATE. Omitting treatment-co
 
 ### Semi-synthetic illustrations
 
-Five Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics [charig1986][bickel1975][vonkuegelgen2021][morris2021][appleton1996]. The Israeli vaccination example used pseudo-IPD reconstructed from dashboard-derived counts reported in a data-analysis blog post by Morris [morris2021], with conceptual interpretation supported by a peer-reviewed commentary by the same author [morris2025]. Pseudo-general variables mimicked proxies of the known confounder and K was chosen from {2, 3, min(K_true,4), K_true} as the value maximising ARI. These are illustrations, not real-IPD validation.
+Five Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. The Israeli vaccination example used pseudo-IPD reconstructed from age- and vaccination-stratified COVID-19-related hospitalisation counts published by Haas et al. [haas2021]. Pseudo-general variables mimicked proxies of the known confounder and K was chosen from {2, 3, min(K_true,4), K_true} as the value maximising ARI. These are illustrations, not real-IPD validation.
 
 ### Reporting and reproducibility
 
@@ -105,12 +105,12 @@ Figure 2 and Supplementary Table S1 show random-effects bias reduction across K 
 
 ### Semi-synthetic illustrations
 
-Five Simpson-paradox examples were reconstructed as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][morris2021][appleton1996]. Table 2 reports the best non-Oracle method per dataset; high ARI occurred only when pseudo-variables strongly correlated with a low-dimensional confounder.
+Five Simpson-paradox examples were reconstructed as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. Table 2 reports the best non-Oracle method per dataset; high ARI occurred only when pseudo-variables strongly correlated with a low-dimensional confounder.
 
 | Dataset | Method | K | ARI | C1 | W_est | Bias reduction |
 |---|---|---|---|---|---|---|
 | COVID-19 CFR | 1B_residual | 3 | 0.065 | 1.000 | 0.035 | 0.017 |
-| Israel Vaccine | 2B_clustering | 2 | 0.746 | 0.048 | 0.289 | 0.011 |
+| Israel Vaccine | 2B_clustering | 2 | 0.644 | 1.000 | 0.557 | 0.001 |
 | Kidney Stone | GMM | 2 | 0.966 | 0.830 | 0.167 | 0.094 |
 | Smoking Mortality | 1A_predicted_prob | 7 | 0.498 | 1.000 | 0.161 | 0.114 |
 | UC Berkeley | PS_propensity_score | 3 | 0.084 | 0.284 | 0.177 | 0.031 |
@@ -195,7 +195,7 @@ Not applicable.
 
 ### Availability of data and materials
 
-All simulation code, analysis scripts, semi-synthetic example data, and the manuscript generator are publicly available at https://github.com/bougtoir/ione-stratification-framework. The repository contains a `requirements.txt` file and a `requirements-lock.txt` file with exact package versions, fixed random seeds for every scenario, and `generate_summary.py`, `generate_ione_rsm_v3.py` and `generate_rsm_tables.py` scripts that regenerate all manuscript numbers, figures and tables in a Python 3.11 environment. The exact Git commit hash used to create this submission package is recorded in `results/commit_hash.txt`. An archived Zenodo release with a DOI will be created before acceptance to satisfy long-term reproducibility requirements. The published aggregate datasets used for the semi-synthetic illustrations are referenced in the original publications [charig1986][bickel1975][vonkuegelgen2021][morris2021][appleton1996].
+All simulation code, analysis scripts, semi-synthetic example data, and the manuscript generator are publicly available at https://github.com/bougtoir/ione-stratification-framework. The repository contains a `requirements.txt` file and a `requirements-lock.txt` file with exact package versions, fixed random seeds for every scenario, and `generate_summary.py`, `generate_ione_rsm_v3.py` and `generate_rsm_tables.py` scripts that regenerate all manuscript numbers, figures and tables in a Python 3.11 environment. The exact Git commit hash used to create this submission package is recorded in `results/commit_hash.txt`. An archived Zenodo release with a DOI will be created before acceptance to satisfy long-term reproducibility requirements. The published aggregate datasets used for the semi-synthetic illustrations are referenced in the original publications [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996].
 
 ### Competing interests
 

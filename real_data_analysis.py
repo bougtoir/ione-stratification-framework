@@ -180,37 +180,62 @@ def prepare_berkeley_data():
 
 
 def prepare_israel_vaccine_data():
-    """Israel COVID-19 vaccine efficacy by age."""
+    """Israel COVID-19 vaccine effectiveness: COVID-19-related hospitalisations by age and vaccination status (Haas et al. 2021)."""
     print("\n" + "=" * 60)
-    print("Dataset: Israel COVID-19 Vaccine Efficacy (Morris 2021)")
+    print("Dataset: Israel COVID-19 Vaccine Effectiveness (Haas 2021)")
     print("=" * 60)
 
-    data = [
-        ('<60', 1, 3500, 11),
-        ('<60', 0, 1300, 43),
-        ('>=60', 1, 1100, 171),
-        ('>=60', 0, 200, 48),
-    ]
-
-    records = []
+    csv_path = os.path.join(os.path.dirname(__file__), 'data',
+                            'haas_2021_israel_hospitalization_counts.csv')
+    df_counts = pd.read_csv(csv_path, comment='#')
+    target_n = 100000
+    total_pop = df_counts['population'].sum()
     rng = np.random.default_rng(42)
-    for age_grp, vacc, n_pop, n_severe in data:
-        is_old = 1 if age_grp == '>=60' else 0
-        for k in range(n_pop):
-            severe = 1 if k < n_severe else 0
-            age = (65 + rng.normal(0, 8)) if is_old else (35 + rng.normal(0, 12))
-            age = np.clip(age, 12, 95)
+    weights = df_counts['population'].values / total_pop
+    n_strata = rng.multinomial(target_n, weights)
+
+    age_mids = {'16-44': 30.0, '45-64': 54.5, '65+': 75.0}
+    age_spreads = {'16-44': 8.5, '45-64': 9.5, '65+': 8.0}
+    age_idx_map = {'16-44': 0, '45-64': 1, '65+': 2}
+    records = []
+
+    for i, row in df_counts.iterrows():
+        n_s = int(n_strata[i])
+        if n_s == 0:
+            continue
+        p = float(row['hospitalizations']) / float(row['population'])
+        p = max(0.0, min(1.0, p))
+        n_y = int(rng.binomial(n_s, p))
+        age_grp = row['age_group']
+        age_idx = age_idx_map[age_grp]
+        vacc = int(row['vaccinated'])
+
+        ages = rng.normal(age_mids[age_grp], age_spreads[age_grp], n_s)
+        ages = np.clip(ages, 16, 95)
+        comorbidity_score = 0.5 * age_idx + rng.normal(0, 0.3, n_s)
+        immune_response = -0.3 * age_idx + 0.2 * vacc + rng.normal(0, 0.5, n_s)
+        bmi = 25 + 2 * age_idx + rng.normal(0, 4, n_s)
+        blood_pressure = 120 + 15 * age_idx + rng.normal(0, 10, n_s)
+        previous_infection = rng.binomial(1, 0.15 + 0.05 * age_idx, n_s)
+        crp = 0.3 * age_idx + rng.exponential(1.0, n_s)
+
+        y = np.zeros(n_s, dtype=float)
+        if n_y > 0:
+            y[:n_y] = 1.0
+            y = rng.permutation(y)
+
+        for k in range(n_s):
             records.append({
                 'A': float(vacc),
-                'age_group': is_old,
-                'Y': float(severe),
-                'age': age,
-                'comorbidity_score': 0.5 * is_old + rng.normal(0, 0.3),
-                'immune_response': -0.3 * is_old + 0.2 * vacc + rng.normal(0, 0.5),
-                'bmi': 25 + 2 * is_old + rng.normal(0, 4),
-                'blood_pressure': 120 + 15 * is_old + rng.normal(0, 10),
-                'previous_infection': rng.binomial(1, 0.15 + 0.05 * is_old),
-                'crp': 0.3 * is_old + rng.exponential(1.0),
+                'age_group': age_idx,
+                'Y': float(y[k]),
+                'age': ages[k],
+                'comorbidity_score': comorbidity_score[k],
+                'immune_response': immune_response[k],
+                'bmi': bmi[k],
+                'blood_pressure': blood_pressure[k],
+                'previous_infection': previous_infection[k],
+                'crp': crp[k],
             })
 
     df = pd.DataFrame(records)
@@ -221,7 +246,7 @@ def prepare_israel_vaccine_data():
     true_labels = df['age_group'].values.astype(int)
     Z = df[['age', 'comorbidity_score']].values
 
-    print(f"  N = {len(df)}, Severe rate = {Y.mean():.4f}")
+    print(f"  N = {len(df)}, Hospitalization rate = {Y.mean():.4f}")
     _print_paradox(A, Y, 'Vaccinated', 'Unvaccinated')
     return X, A, Y, true_labels, Z, 'Israel Vaccine'
 
