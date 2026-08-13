@@ -78,7 +78,7 @@ Detailed algebraic description of the IPD data-generating mechanism. For each of
 | PCA | Principal component analysis |
 | PS | Propensity score |
 | RCT | Randomised controlled trial |
-| W | Within-stratum homogeneity indicator |
+| W | Proportion of total CATE variance explained by the stratification |
 
 
 {{PAGE}}

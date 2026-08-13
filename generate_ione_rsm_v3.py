@@ -646,6 +646,8 @@ Table 1 reports the primary scenario (n={v['n_ipd']}, {v['n_studies']} studies, 
 {table1}
 *Table 1. Primary IPD scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']}): means over 50 simulations.*
 
+Figure 1 visualises the primary scenario across methods.
+
 ![Figure 1. Primary IPD scenario: (a) ARI, (b) C1/W coherence diagnostics, and (c) ATE bias reduction by method.](fig1_rsm_ipd_primary.png)
 
 ### Sensitivity to the number of strata
@@ -660,6 +662,8 @@ Five Simpson-paradox examples were reconstructed as pseudo-individual records [c
 
 {table_real}
 *Table 2. Best semi-synthetic illustration result per dataset (oracle baselines excluded). Bias reduction is the absolute difference between crude and stratified ATE risk-difference bias.*
+
+Figure 3 displays ARI by dataset and method for the semi-synthetic examples.
 
 ![Figure 3. Semi-synthetic illustration: ARI by dataset and method.](fig3_rsm_real_data_ari.png)
 
@@ -679,6 +683,8 @@ Table 3 compares random-effects bias under linear and non-linear Z-to-X mappings
 
 {table_nonlinear}
 *Table 3. Linear versus non-linear Z-to-X mapping: random-effects ATE bias and relative bias reduction (n=2000, K=5, z=1.0, zx=1.0).*
+
+Figure 5 shows random-effects ATE bias reduction under the non-linear mapping.
 
 ![Figure 5. Non-linear Z->X robustness: random-effects ATE bias reduction (n=2000, K=5).](fig5_rsm_ipd_nonlinearity.png)
 
@@ -808,7 +814,7 @@ def _abbreviations():
 | PCA | Principal component analysis |
 | PS | Propensity score |
 | RCT | Randomised controlled trial |
-| W | Within-stratum homogeneity indicator |
+| W | Proportion of total CATE variance explained by the stratification |
 """
 
 
@@ -818,11 +824,11 @@ def _new_discussion(v):
 
 ### Principal findings
 
-This study frames IONE as an exploratory diagnostic for hidden effect modification in IPD meta-analysis. C1 and W signal whether a pooled IPD contains hidden effect modification: methods that captured more true Z structure produced lower C1 and higher W. Extraction of the true partition was harder (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}), but the best data-driven method reduced crude ATE bias from {v['crude_bias']} to {v['re_bias']} (relative reduction {v['rel_re']}) with DerSimonian-Laird pooling. This shows that stratum-specific effects should be allowed to vary once incoherence is flagged.
+This study frames IONE as an exploratory diagnostic for hidden effect modification in IPD meta-analysis. C1 and W signal whether a pooled IPD is internally coherent: methods that captured more of the true Z structure produced C1 values close to the Oracle and higher W, especially the residual-based method. Extraction of the true partition remained modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}), but the best data-driven method reduced crude ATE bias from {v['crude_bias']} to {v['re_bias']} (relative reduction {v['rel_re']}) with DerSimonian-Laird pooling. These findings suggest that stratum-specific effects should be allowed to vary once incoherence is flagged.
 
 ### Detection versus extraction
 
-Detection asks whether the pooled population is incoherent; C1 and W address this without requiring hidden subgroups to be specified. If C1 is low and W_est is low, the marginal summary should be interpreted cautiously. Extraction attempts to recover hidden subgroups, but it is much harder than detection. IONE's practical value therefore lies in detection and partial ATE improvement, not in perfect confounding adjustment.
+Detection asks whether the pooled population is internally coherent; C1 and W address this without requiring hidden subgroups to be specified. If C1 is low and W_est is high, the marginal summary is likely incoherent and should be interpreted cautiously. Extraction attempts to recover hidden subgroups, but it is much harder than detection. IONE's practical value therefore lies in detection and partial ATE improvement, not in perfect confounding adjustment.
 
 ### Comparison with existing methods
 
@@ -889,7 +895,7 @@ def generate_v3_manuscript():
     # Build sections
     abstract = (
         f"**Background:** In IPD meta-analysis, marginal treatment-effect estimates can be biased when hidden effect modifiers are ignored. "
-        f"We propose two coherence diagnostics, C1 (between-stratum heterogeneity) and W (within-stratum homogeneity), and evaluate them within Incoherence-Oriented Neutralisation and Extraction (IONE), an exploratory diagnostic framework for hidden effect modification.\n\n"
+        f"We propose two coherence diagnostics, C1 (1 minus the I^2 statistic applied to stratum-specific log odds ratios) and W (the proportion of CATE variance explained by the stratification), and evaluate them within Incoherence-Oriented Neutralisation and Extraction (IONE), an exploratory diagnostic framework for hidden effect modification.\n\n"
         f"**Methods:** We simulated an IPD meta-analysis with {v['n_studies']} studies, a binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. "
         f"Proposed and comparator methods stratified the pooled IPD; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
         f"We report ARI, C1, W_true/W_est and ATE bias reduction with Monte Carlo standard errors, and we examined the empirical null distribution of the diagnostics and the sensitivity of W_est to outcome-model misspecification.\n\n"
