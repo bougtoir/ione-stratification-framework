@@ -21,10 +21,13 @@ We wish to submit our manuscript, **"IONE: Incoherence-Oriented Neutralisation a
 - We add extensive sensitivity analyses for sample size, Z-to-Y effect strength, Z-to-X influence strength and a non-linear Z-to-X mapping to characterise the conditions under which the diagnostics are most informative.
 
 **Originality and exclusivity.**
-This manuscript is original and is not under consideration elsewhere. All authors have approved the submission.
+This manuscript is original. An earlier version was submitted to BMC Medical Research Methodology and is no longer under consideration there. The present version has been substantially reframed for Research Synthesis Methods, with an emphasis on individual participant data meta-analysis, and all authors have approved the submission.
 
 **Conflicts and funding.**
 The authors have no competing interests. No external funding supported this work.
+
+**Artificial intelligence.**
+Parts of the manuscript text and Python code were drafted or revised using a large language model under the author’s direct supervision; the author verified all analyses, references and interpretations.
 
 **Data and code.**
 The simulation code and semi-synthetic example data are available in a public repository (https://github.com/bougtoir/ione-stratification-framework). All numerical results are generated from the repository; no estimates are hard-coded.

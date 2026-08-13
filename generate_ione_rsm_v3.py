@@ -210,8 +210,6 @@ def _register_citations(cm):
                 'Morris TP, White IR, Crowther MJ. Using simulation studies to evaluate statistical methods. Stat Med. 2019;38(11):2074–2102.')
     cm.register('hubert1985', 'Hubert and Arabie', 1985,
                 'Hubert L, Arabie P. Comparing partitions. J Classif. 1985;2(1):193–218.')
-    cm.register('strehl2002', 'Strehl and Ghosh', 2002,
-                'Strehl A, Ghosh J. Cluster ensembles—a knowledge reuse framework for combining multiple partitions. J Mach Learn Res. 2002;3:583–617.')
 
     # Additional RSM / meta-analysis / causal references
     cm.register('borenstein2009', 'Borenstein et al.', 2009,
@@ -296,6 +294,9 @@ def _adapt_background(old_bg, cm, v):
     # Remove the objectives paragraph (will be handled separately)
     old_bg = re.sub(r'The objectives of this study are threefold.*', '', old_bg, flags=re.S).strip()
 
+    # Remove a phantom Table 1 reference left by the old observational background
+    old_bg = old_bg.replace('baseline characteristics tables (Table 1)', 'a conventional baseline characteristics table')
+
     # Prepend an RSM/IPD framing paragraph before the original observational background
     rsm_intro = (
         'Meta-analysis combines treatment-effect estimates from related studies and is central to evidence-based medicine and policy [borenstein2009]. '
@@ -306,13 +307,14 @@ def _adapt_background(old_bg, cm, v):
         'Current IPD meta-analysis practice offers several tools for exploring heterogeneity, including subgroup analyses, meta-regression and one-stage mixed models with treatment-covariate interactions. '
         'These approaches explain heterogeneity through measured covariates and study-level characteristics, but they do not test whether the pooled participants themselves form internally homogeneous subpopulations with respect to the treatment effect. '
         'In other words, an analyst can conclude that there is statistically significant between-study heterogeneity without knowing whether that heterogeneity arises from a hidden effect modifier that also operates within studies. '
-        'We therefore frame IONE as an exploratory diagnostic that can be applied before or alongside a conventional synthesis, to alert analysts when a marginal summary may be fragile.\n\n'
+        'We therefore frame IONE as an exploratory diagnostic that can be applied before or alongside a conventional synthesis, to alert analysts when a marginal summary may be fragile. '
+        'The term "neutralisation" refers to reducing the misleading influence of a marginal summary that conflates heterogeneous subgroups, by extracting coherent subpopulations for separate analysis.\n\n'
     )
 
     # Update the operationalisation sentence to describe C1 and W
     old_bg = re.sub(
         r'As a coherence indicator, we propose a metric \(C1\) derived from the I\u00b2 heterogeneity statistic \[25\] applied to within-stratum treatment effects, which quantifies the degree to which effect estimates are homogeneous across strata\.',
-        'As coherence diagnostics, we propose C1, derived from the I² heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total conditional average treatment effect (CATE) variance explained by the stratification.',
+        'As coherence diagnostics, we propose C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total conditional average treatment effect (CATE) variance explained by the stratification.',
         old_bg
     )
 
@@ -392,7 +394,7 @@ All quantile-based methods used equal-frequency strata after score estimation. L
 
 ### Synthesis of stratum-specific effects
 
-For each discovered stratum we computed the risk difference P(Y=1|A=1) - P(Y=1|A=0) and its standard error. A two-stage fixed-effect summary was the stratum-size-weighted average of these risk differences. A DerSimonian-Laird random-effects summary added an estimate of between-stratum variance and re-weighted stratum estimates accordingly [dersimonian1986]. We also report the resulting tau^2 and I^2 as summaries of between-stratum heterogeneity on the risk-difference scale. The random-effects synthesis treats discovered strata as studies in a conventional meta-analysis, allowing the stratum-specific effects to vary.
+For each discovered stratum we computed the risk difference P(Y=1|A=1) - P(Y=1|A=0) and its standard error. A two-stage fixed-effect summary was the stratum-size-weighted average of these risk differences. A DerSimonian-Laird random-effects summary added an estimate of between-stratum variance and re-weighted stratum estimates accordingly [dersimonian1986]. We also report the resulting tau^2 and I^2 as summaries of between-stratum heterogeneity on the risk-difference scale. The random-effects synthesis treats discovered strata as studies in a conventional meta-analysis, allowing the stratum-specific effects to vary. Two caveats apply here. First, because the strata are discovered from the same data, the stratum-specific estimates are not independent study-level estimates; DerSimonian-Laird is used as a convenient synthesis that borrows strength across strata and should not be interpreted as a conventional between-study random-effects model. Second, C1 is computed from stratum-specific log odds ratios while the ATE bias is on the risk-difference scale, so C1 is an indirect diagnostic of hidden effect modification rather than a direct measure of ATE bias.
 
 ### Evaluation metrics
 
@@ -404,11 +406,11 @@ For each method we report:
 - **ATE bias reduction** on the risk-difference scale, reported as the absolute difference |bias_crude| - |bias_stratified| and |bias_crude| - |bias_re|, and as the relative ratio 1 - |bias_stratified| / |bias_crude|.
 - Monte Carlo standard errors and 95% confidence intervals for every mean.
 
-The true-Z partition is an operational construct: k-means clustering applied to the standardised Z-space with K equal to the number of strata. ARI therefore measures agreement with a constructed reference rather than with clinically observed subgroups. W_true is available only in simulation; W_est is the operational diagnostic that can be computed in real data, although it requires a correctly specified outcome model and should be interpreted cautiously.
+The true-Z partition is an operational construct: k-means clustering applied to the standardised Z-space with K equal to the number of strata. ARI therefore measures agreement with a constructed reference rather than with clinically observed subgroups. W_true is available only in simulation; W_est is the operational diagnostic that can be computed in real data, although it requires a correctly specified outcome model and should be interpreted cautiously. C1 is derived from log odds ratio heterogeneity and is reported alongside risk-difference bias reduction; the two metrics operate on different scales, so a low C1 signals incoherence but does not by itself quantify ATE bias.
 
 ### Semi-synthetic illustrations
 
-Five well-known Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics: kidney stone treatments [charig1986], UC Berkeley admissions [bickel1975], COVID-19 case fatality rates [vonkuegelgen2021], Israeli vaccine effectiveness [morris2021], and smoking-mortality [appleton1996]. For each example, pseudo-general variables were generated to mimic proxies of the known confounder, and the same IONE methods were applied. The Morris [morris2021] example is a publicly available aggregate data analysis and has not been peer-reviewed. These examples illustrate favourable and unfavourable settings for stratification; they are not validation of out-of-the-box performance in real IPD.
+Five well-known Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics: kidney stone treatments [charig1986], UC Berkeley admissions [bickel1975], COVID-19 case fatality rates [vonkuegelgen2021], Israeli vaccine effectiveness [morris2021], and smoking-mortality [appleton1996]. For each example, pseudo-general variables were generated to mimic proxies of the known confounder, and the same IONE methods were applied. The number of strata was selected a priori by the analysis script as the sorted unique values from {{2, 3, min(number of true confounder categories, 4), number of true confounder categories}}; because this set is fixed before any method is run, it avoids post hoc selection. The Morris [morris2021] example is a publicly available aggregate data analysis and has not been peer-reviewed. These examples illustrate favourable and unfavourable settings for stratification; they are not validation of out-of-the-box performance in real IPD.
 
 ### Reporting and reproducibility standards
 
@@ -509,10 +511,15 @@ def _new_results(v):
                     'Condition': cond.get('label', ''),
                     'Method': method,
                     'ARI': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'ARI_mean')),
+                    'ARI SE': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'ARI_se')),
                     'C1': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'C1_heterogeneity_mean')),
+                    'C1 SE': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'C1_heterogeneity_se')),
                     'W_est': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'W_est_mean')),
+                    'W_est SE': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'W_est_se')),
                     'RE bias': _fmt(re_bias, 5),
+                    'RE bias SE': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'abs_bias_re_se'), 5),
                     'Rel reduction RE': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'bias_reduction_relative_re_mean'), 3),
+                    'Rel reduction RE SE': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 'bias_reduction_relative_re_se'), 3),
                     'RE I2': _fmt(sens_row(ipd_sensitivity, method, n, z, zx, k, 're_I2_mean')),
                 })
         return rows
@@ -523,7 +530,7 @@ def _new_results(v):
         {'label': 'n=10000', 'n': 10000, 'z': 1.0, 'zx': 1.0, 'k': 5},
     ])
     table_sample = _make_table(
-        ['Condition', 'Method', 'ARI', 'C1', 'W_est', 'RE bias', 'Rel reduction RE', 'RE I2'],
+        ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE', 'Rel reduction RE', 'Rel reduction RE SE', 'RE I2'],
         sample_rows
     )
 
@@ -533,7 +540,7 @@ def _new_results(v):
         {'label': 'zx=1.0', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
     ])
     table_zx = _make_table(
-        ['Condition', 'Method', 'ARI', 'C1', 'W_est', 'RE bias', 'Rel reduction RE', 'RE I2'],
+        ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE', 'Rel reduction RE', 'Rel reduction RE SE', 'RE I2'],
         zx_rows
     )
 
@@ -543,7 +550,7 @@ def _new_results(v):
         {'label': 'z=2.0', 'n': 2000, 'z': 2.0, 'zx': 1.0, 'k': 5},
     ])
     table_z = _make_table(
-        ['Condition', 'Method', 'ARI', 'C1', 'W_est', 'RE bias', 'Rel reduction RE', 'RE I2'],
+        ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE', 'Rel reduction RE', 'Rel reduction RE SE', 'RE I2'],
         z_rows
     )
 
@@ -551,19 +558,27 @@ def _new_results(v):
     for method in top_methods:
         n, z, zx, k = 2000, 1.0, 1.0, 5
         lin_bias = sens_row(ipd_sensitivity, method, n, z, zx, k, 'abs_bias_re_mean')
+        lin_bias_se = sens_row(ipd_sensitivity, method, n, z, zx, k, 'abs_bias_re_se')
         lin_rel = sens_row(ipd_sensitivity, method, n, z, zx, k, 'bias_reduction_relative_re_mean')
+        lin_rel_se = sens_row(ipd_sensitivity, method, n, z, zx, k, 'bias_reduction_relative_re_se')
         non_bias = sens_row(ipd_nonlinearity, method, n, z, zx, k, 'abs_bias_re_mean')
+        non_bias_se = sens_row(ipd_nonlinearity, method, n, z, zx, k, 'abs_bias_re_se')
         non_rel = sens_row(ipd_nonlinearity, method, n, z, zx, k, 'bias_reduction_relative_re_mean')
+        non_rel_se = sens_row(ipd_nonlinearity, method, n, z, zx, k, 'bias_reduction_relative_re_se')
         if not pd.isna(non_bias):
             nonlinear_rows.append({
                 'Method': method,
                 'Linear RE bias': _fmt(lin_bias, 5),
+                'Linear RE bias SE': _fmt(lin_bias_se, 5),
                 'Linear rel reduction': _fmt(lin_rel, 3),
+                'Linear rel reduction SE': _fmt(lin_rel_se, 3),
                 'Non-linear RE bias': _fmt(non_bias, 5),
+                'Non-linear RE bias SE': _fmt(non_bias_se, 5),
                 'Non-linear rel reduction': _fmt(non_rel, 3),
+                'Non-linear rel reduction SE': _fmt(non_rel_se, 3),
             })
     table_nonlinear = _make_table(
-        ['Method', 'Linear RE bias', 'Linear rel reduction', 'Non-linear RE bias', 'Non-linear rel reduction'],
+        ['Method', 'Linear RE bias', 'Linear RE bias SE', 'Linear rel reduction', 'Linear rel reduction SE', 'Non-linear RE bias', 'Non-linear RE bias SE', 'Non-linear rel reduction', 'Non-linear rel reduction SE'],
         nonlinear_rows
     )
 
@@ -616,7 +631,7 @@ Five well-known Simpson-paradox examples were reconstructed as pseudo-individual
 
 ### Sensitivity to sample size
 
-To assess whether the findings depend on the total number of participants, we repeated the primary scenario with n = 500, 2000 and 10 000, fixing K = 5 and the moderate Z-to-X and Z-to-Y effects. Table 4 and Figure 4 show the results for the leading methods. Because this extended sensitivity used only 10 replications per cell, the point estimates are noisier than in the primary scenario. The crude marginal ATE bias decreased with sample size, as expected from a more precisely estimated risk difference. The absolute random-effects bias declined for propensity-score, prognostic-score and clustering-based approaches, and these methods achieved their largest relative bias reductions at n = 10 000. In contrast, the outcome-residual approach showed a floor near 0.008–0.009 and its relative bias reduction therefore decreased with n, while GMM improved only gradually and remained noisy at this number of replications. This mixed pattern confirms that the practical value of IONE depends on the interplay between sample size and method choice: with small samples, estimation error dominates; with large samples, remaining bias reflects structural limits of the selected stratification.
+To assess whether the findings depend on the total number of participants, we repeated the primary scenario with n = 500, 2000 and 10 000, fixing K = 5 and the moderate Z-to-X and Z-to-Y effects. Table 4 and Figure 4 show the results for the leading methods. Because this extended sensitivity used only 10 replications per cell, the point estimates are noisier than in the primary scenario; Monte Carlo SEs are reported in Tables 4–7 to help gauge this uncertainty. The crude marginal ATE bias decreased with sample size, as expected from a more precisely estimated risk difference. The absolute random-effects bias declined for propensity-score, prognostic-score and clustering-based approaches, and these methods achieved their largest relative bias reductions at n = 10 000. In contrast, the outcome-residual approach showed a floor near 0.008–0.009 and its relative bias reduction therefore decreased with n, while GMM improved only gradually and remained noisy at this number of replications. This mixed pattern confirms that the practical value of IONE depends on the interplay between sample size and method choice: with small samples, estimation error dominates; with large samples, remaining bias reflects structural limits of the selected stratification.
 
 {table_sample}
 *Table 4. Sample-size sensitivity (K=5, z=1.0, zx=1.0): means over 10 simulations.*
@@ -650,7 +665,7 @@ In real applications the mapping from hidden modifiers to measured covariates ne
 def _new_conclusions():
     return """## 5. Conclusions
 
-We have introduced IONE (Incoherence-Oriented Neutralisation and Extraction) as an exploratory diagnostic for hidden effect modification in IPD meta-analysis. Through Monte Carlo simulation and semi-synthetic examples, we show that IONE can detect incoherence and partially reduce ATE bias when hidden variables leave strong traces in measured covariates. The diagnostics should be reported alongside conventional meta-analytic models and covariate adjustment, and should not be used as a replacement for rigorous causal inference. We recommend that coherence assessment using C1 and W be considered as a standard sensitivity step in IPD meta-analysis reporting.
+IONE (Incoherence-Oriented Neutralisation and Extraction) is an exploratory diagnostic for hidden effect modification in IPD meta-analysis. Monte Carlo simulation and semi-synthetic examples show that IONE can detect incoherence and partially reduce ATE bias when hidden variables leave strong traces in measured covariates. The diagnostics should be reported alongside conventional meta-analytic models and covariate adjustment, and should not be used as a replacement for rigorous causal inference. We recommend that coherence assessment using C1 and W be considered as a standard sensitivity step in IPD meta-analysis reporting.
 """
 
 
@@ -677,9 +692,9 @@ The authors declare that they have no competing interests.
 
 No external funding supported this work.
 
-### Authors' contributions
+### Authors' contributions (CRediT taxonomy)
 
-[T. Onishi designed the study, developed the methodology, performed the analyses and wrote the manuscript.]
+Onishi Tatsuki: Conceptualisation, methodology, software, formal analysis, writing – original draft, writing – review and editing, visualisation.
 
 ### Acknowledgements
 
@@ -687,7 +702,7 @@ Not applicable.
 
 ### Artificial intelligence
 
-Large language models were used as a writing and coding aid. All scientific content, data, analyses and interpretations were reviewed and approved by the authors.
+Parts of the manuscript text and Python code were generated or revised using a large language model (OpenAI GPT-4/GPT-4o) under the direct supervision of the author. The author designed the study, verified all analyses, selected the references, and approved the final scientific content. The same model was used for grammar checking and formatting assistance.
 """
 
 
@@ -756,7 +771,7 @@ def _abbreviations():
 | ARI | Adjusted Rand Index |
 | ATE | Average treatment effect |
 | BMI | Body mass index |
-| C1 | Coherence indicator 1 (I²-based) |
+| C1 | Coherence indicator 1 (I^2-based) |
 | CATE | Conditional average treatment effect |
 | DAG | Directed acyclic graph |
 | DRS | Disease risk score |
@@ -779,9 +794,9 @@ def _new_discussion(v):
 
 ### Principal findings
 
-This study frames Incoherence-Oriented Neutralisation and Extraction (IONE) as an exploratory diagnostic for hidden effect modification in individual participant data (IPD) meta-analysis. The principal findings are twofold. First, the coherence diagnostics C1 and W can signal when a pooled IPD contains hidden effect modification: methods that captured more of the true Z structure produced lower C1 (stronger between-stratum heterogeneity) and higher W (greater within-stratum homogeneity). Second, stratification-based extraction of coherent subpopulations was conditionally successful: the Oracle baseline that used the true hidden variables directly achieved an ARI of {v['best_ari']}, whereas the best non-Oracle method ({v['best_non_oracle_ari_method']}) reached only {v['best_non_oracle_ari']}. This gap reflects the fundamental difficulty of recovering a multi-dimensional hidden effect-modifier from measured covariates that carry only moderate traces of the unmeasured variable.
+This study frames Incoherence-Oriented Neutralisation and Extraction (IONE) as an exploratory diagnostic for hidden effect modification in individual participant data (IPD) meta-analysis. Two main findings emerge. First, the coherence diagnostics C1 and W can signal when a pooled IPD contains hidden effect modification: methods that captured more of the true Z structure produced lower C1 (stronger between-stratum heterogeneity) and higher W (greater within-stratum homogeneity). Second, stratification-based extraction of coherent subpopulations was conditionally successful: the Oracle baseline that used the true hidden variables directly achieved an ARI of {v['best_ari']}, whereas the best non-Oracle method ({v['best_non_oracle_ari_method']}) reached only {v['best_non_oracle_ari']}. This gap reflects the fundamental difficulty of recovering a multi-dimensional hidden effect-modifier from measured covariates that carry only moderate traces of the unmeasured variable.
 
-Despite the modest recovery of the true partition, the best data-driven method reduced the crude ATE bias from {v['crude_bias']} to {v['re_bias']} on the risk-difference scale (relative reduction {v['rel_re']}) when stratum-specific estimates were pooled with a DerSimonian-Laird random-effects meta-analysis. The additional bias reduction from random-effects pooling, relative to a simple fixed-effect stratum-size-weighted summary, underscores the importance of allowing stratum-specific effects to vary once hidden heterogeneity has been flagged.
+Despite the modest recovery of the true partition, the best data-driven method reduced the crude ATE bias from {v['crude_bias']} to {v['re_bias']} on the risk-difference scale (relative reduction {v['rel_re']}) when stratum-specific estimates were pooled with a DerSimonian-Laird random-effects meta-analysis. The additional bias reduction from random-effects pooling, relative to a simple fixed-effect stratum-size-weighted summary, shows why stratum-specific effects should be allowed to vary once hidden heterogeneity has been flagged.
 
 ### Detection versus extraction
 
@@ -797,7 +812,7 @@ IONE is best understood as complementary to these methods. We envision a workflo
 
 **Strengths.** This simulation study followed the ADEMP framework [morris2019], with transparent reporting of the data-generating mechanism, estimands, candidate methods, performance metrics and number of replications. All numerical results are produced by the repository scripts and inserted into the manuscript automatically, so the docx and markdown files can be regenerated without hand-entered numbers. The IPD data-generating mechanism includes study-level variation in baseline risk, treatment prevalence and covariate distributions, which mirrors the heterogeneity encountered in real IPD meta-analyses.
 
-**Limitations.** Several limitations should be acknowledged. First, the primary scenario used a single total sample size (n={v['n_ipd']}) and a moderate Z->X trace, although additional sensitivity analyses examined n=500 to 10 000, Z-to-Y effect scales, Z-to-X influence scales and a non-linear Z->X mapping. Performance is likely to improve with stronger covariate traces or larger samples, and to deteriorate with weaker traces or fewer studies. Second, the true-Z partition is an operational construct: it is formed by clustering the simulated critical variables rather than by clinically observed subgroups. ARI therefore measures agreement with a constructed reference and should not be over-interpreted as clinical validity. Third, W_est depends on a correctly specified outcome model (Y ~ X + A + X*A). If the outcome model is misspecified, W_est may be misleading. Fourth, the semi-synthetic illustrations use aggregate published data reconstructed as pseudo-individual records; they demonstrate favourable and unfavourable settings for stratification but are not validation in real individual-level IPD.
+**Limitations.** Several limitations should be acknowledged. First, the primary scenario used a single total sample size (n={v['n_ipd']}) and a moderate Z->X trace, although additional sensitivity analyses examined n=500 to 10 000, Z-to-Y effect scales, Z-to-X influence scales and a non-linear Z->X mapping. Performance is likely to improve with stronger covariate traces or larger samples, and to deteriorate with weaker traces or fewer studies. Second, the true-Z partition is an operational construct: it is formed by clustering the simulated critical variables rather than by clinically observed subgroups. ARI therefore measures agreement with a constructed reference and should not be over-interpreted as clinical validity. Third, W_est depends on a correctly specified outcome model (Y ~ X + A + X*A). If the outcome model is misspecified, W_est may be misleading. Fourth, the DerSimonian-Laird synthesis treats discovered strata as if they were independent studies; because strata are derived from the same data set, the stratum estimates are not independent and the tau^2 and I^2 values should be viewed as summaries rather than as estimates of conventional between-study heterogeneity. Fifth, C1 is computed from stratum-specific log odds ratios while ATE bias is on the risk-difference scale; a low C1 is a signal of incoherence but does not directly quantify the magnitude of ATE bias. Sixth, the semi-synthetic illustrations use aggregate published data reconstructed as pseudo-individual records; they demonstrate favourable and unfavourable settings for stratification but are not validation in real individual-level IPD.
 
 ### Implications for practice
 
@@ -835,14 +850,14 @@ def generate_v3_manuscript():
     # Build sections
     abstract = (
         f"**Background:** Random-effects meta-analyses report an average treatment effect and assume that between-study heterogeneity has been adequately modelled. "
-        f"When an individual participant data (IPD) meta-analysis contains hidden effect modifiers, a marginal summary can be non-robust. "
-        f"We propose Incoherence-Oriented Neutralisation and Extraction (IONE), an exploratory diagnostic toolkit for hidden effect modification in pooled IPD. "
+        f"When an individual participant data (IPD) meta-analysis contains hidden effect modifiers, a marginal summary can be fragile. "
+        f"We propose Incoherence-Oriented Neutralisation and Extraction (IONE), an exploratory diagnostic toolkit for hidden effect modification in pooled IPD.\n\n"
         f"**Methods:** We simulated an IPD meta-analysis with {v['n_studies']} studies, a binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. "
         f"Proposed methods and active comparators stratified the pooled IPD; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
-        f"We report ARI, C1 (between-stratum heterogeneity), W_true/W_est (within-stratum homogeneity) and ATE bias reduction, with Monte Carlo standard errors. "
+        f"We report ARI, C1 (between-stratum heterogeneity), W_true/W_est (within-stratum homogeneity) and ATE bias reduction, with Monte Carlo standard errors.\n\n"
         f"**Results:** In the primary scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']} strata), the best method by ATE bias reduction was {v['best_method']} (ARI {v['best_method_ari']}; C1 {v['best_method_c1']}; W_true {v['best_method_wtrue']}; W_est {v['best_method_west']}). "
         f"Crude ATE bias was {v['crude_bias']}; stratification reduced it to {v['strat_bias']} (relative {v['rel_strat']}) and random-effects pooling to {v['re_bias']} (relative {v['rel_re']}). "
-        f"Diagnostic agreement with the true hidden structure remained modest. Sensitivity analyses across sample sizes, Z-to-Y effect strengths, Z-to-X influence strengths and a non-linear Z-to-X mapping showed that bias reduction is most sensitive to sample size and effect-modification strength, with method-specific differences, and that diagnostics remained informative when covariates were non-linearly transformed. "
+        f"Diagnostic agreement with the true hidden structure remained modest. Sensitivity analyses across sample sizes, Z-to-Y effect strengths, Z-to-X influence strengths and a non-linear Z-to-X mapping showed that bias reduction is most sensitive to sample size and effect-modification strength, with method-specific differences, and that diagnostics remained informative when covariates were non-linearly transformed.\n\n"
         f"**Conclusions:** IONE is a transparent, exploratory diagnostic for hidden effect modification in IPD meta-analyses, to be reported alongside conventional models and covariate adjustment."
     )
 
@@ -910,8 +925,6 @@ def generate_v3_manuscript():
     convert(md_path, docx_path, cite_manager=cm, figure_dir=FIG_DIR)
 
     # Separate title page
-    from docx import Document
-    from docx.enum.text import WD_ALIGN_PARAGRAPH
     tp = Document()
     tp_style = tp.styles['Normal']
     tp_style.font.name = 'Times New Roman'
@@ -923,17 +936,59 @@ def generate_v3_manuscript():
     tp.add_paragraph()
     tp.add_paragraph('Onishi Tatsuki')
     tp.add_paragraph('Data Science AI Innovation Research Promotion Center, Shiga University')
+    tp.add_paragraph('1-1-1 Bamba, Hikone, Shiga 522-8522, Japan')
+    tp.add_paragraph('ORCID: 0000-0001-7261-9062')
     tp.add_paragraph('Corresponding author: Onishi Tatsuki')
-    p=tp.add_paragraph()
-    p.add_run('bougtoir@gmail.com').italic=True
-    tp.add_paragraph('1-1-1 Bamba, Hikone, Shiga 522-8522 Japan')
+    p = tp.add_paragraph()
+    p.add_run('bougtoir@gmail.com').italic = True
+    tp.add_paragraph()
+    tp.add_paragraph('Number of figures: 5')
+    tp.add_paragraph('Number of tables: 7')
+    tp.add_paragraph('Word count: Abstract ~240; Main text ~5,900 (excluding references, tables and figures)')
+    tp.add_paragraph()
+    tp.add_heading('Declarations', level=1)
+    tp.add_paragraph('Ethics approval and consent to participate: Not applicable. This study used simulated data and publicly available aggregate statistics only.')
+    tp.add_paragraph('Consent for publication: Not applicable.')
+    tp.add_paragraph('Competing interests: The authors declare that they have no competing interests.')
+    tp.add_paragraph('Funding: No external funding supported this work.')
+    tp.add_paragraph('Authors\' contributions (CRediT): Onishi Tatsuki — Conceptualisation, methodology, software, formal analysis, writing – original draft, writing – review and editing, visualisation.')
+    tp.add_paragraph('Acknowledgements: Not applicable.')
+    tp.add_paragraph('Artificial intelligence: Parts of the manuscript text and Python code were generated or revised using a large language model under the author\'s direct supervision. The author verified all analyses, selected references and approved the final content.')
+    tp.add_paragraph('Data and code availability: https://github.com/bougtoir/ione-stratification-framework')
     tp_path = os.path.join(RSM_DIR, 'title_page_rsm_v3.docx')
     tp.save(tp_path)
+
+    # Cover letter
+    cover_md = os.path.join(RSM_DIR, 'cover_letter_rsm_v3.md')
+    if os.path.exists(cover_md):
+        from md_to_rsm_docx import convert as _convert
+        cover_docx = os.path.join(RSM_DIR, 'cover_letter_rsm_v3.docx')
+        _convert(cover_md, cover_docx)
+
+    # Submission package zip
+    import zipfile
+    zip_path = os.path.join(RSM_DIR, 'v3_ione_rsm_submission_package.zip')
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+        zf.write(docx_path, os.path.basename(docx_path))
+        zf.write(tp_path, os.path.basename(tp_path))
+        cover_docx = os.path.join(RSM_DIR, 'cover_letter_rsm_v3.docx')
+        if os.path.exists(cover_docx):
+            zf.write(cover_docx, os.path.basename(cover_docx))
+        tables_docx = os.path.join(RSM_DIR, 'rsm_tables_separate.docx')
+        if os.path.exists(tables_docx):
+            zf.write(tables_docx, os.path.basename(tables_docx))
+        pptx_path = os.path.join(FIG_DIR, 'rsm_figures.pptx')
+        if os.path.exists(pptx_path):
+            zf.write(pptx_path, os.path.basename(pptx_path))
+        for f in os.listdir(FIG_DIR):
+            if f.endswith(('.png', '.eps')):
+                zf.write(os.path.join(FIG_DIR, f), os.path.join('figures', f))
 
     print(f'[generate_ione_rsm_v3] markdown: {md_path}')
     print(f'[generate_ione_rsm_v3] docx:    {docx_path}')
     print(f'[generate_ione_rsm_v3] title page: {tp_path}')
-    return docx_path, md_path
+    print(f'[generate_ione_rsm_v3] zip:      {zip_path}')
+    return docx_path, md_path, zip_path
 
 
 if __name__ == '__main__':

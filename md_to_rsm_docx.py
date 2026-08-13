@@ -7,9 +7,10 @@ Supports:
 - Bullet and numbered lists
 - Blockquotes
 - Tables (pipe syntax)
-- Citations [key] -> (Author Year)
-- Figures ![caption](path)
+- Vancouver numbered citations [key] -> [n]
+- Figures with alt-text
 - Page breaks via a {{PAGE}} marker line
+- Word OMML equations for mathematical expressions
 """
 
 import re
@@ -24,9 +25,11 @@ from collections import OrderedDict
 
 
 class CiteManager:
-    """Author-date citation manager."""
+    """Vancouver-style numbered citation manager."""
     def __init__(self):
         self._refs = OrderedDict()
+        self._cited = []
+        self._key_to_num = {}
 
     def register(self, key, author_short, year, full_ref):
         self._refs[key] = {'author': author_short, 'year': year, 'full': full_ref}
@@ -35,28 +38,30 @@ class CiteManager:
     def cite(self, key, narrative=False):
         if key not in self._refs:
             raise KeyError(f'Citation key {key} not registered')
+        if key not in self._key_to_num:
+            self._cited.append(key)
+            self._key_to_num[key] = len(self._cited)
+        n = self._key_to_num[key]
         r = self._refs[key]
         if narrative:
-            return f"{r['author']} ({r['year']})"
-        return f"({r['author']} {r['year']})"
+            return f"{r['author']} [{n}]"
+        return f'[{n}]'
 
     def write_reference_list(self, doc):
         doc.add_heading('References', level=1)
-        items = sorted(
-            self._refs.items(),
-            key=lambda kv: (kv[1]['author'].split(' and ')[0].split(',')[0].strip().lower(),
-                           kv[1]['year'], kv[0])
-        )
-        for _, v in items:
+        for i, key in enumerate(self._cited, 1):
             p = doc.add_paragraph()
-            p.add_run(v['full'])
+            p.add_run(f'[{i}] {self._refs[key]["full"]}')
 
 
 def _apply_inline(runs, text, cite_manager=None):
     """Apply inline formatting and citation replacement to a paragraph or cell."""
-    # Replace citations first, keeping markers for formatting splits
     if cite_manager:
-        text = re.sub(r'\[([a-zA-Z0-9_]+)\]', lambda m: cite_manager.cite(m.group(1)), text)
+        text = re.sub(
+            r'\[([a-zA-Z0-9_]+)(?:\|([^\]]+))?\]',
+            lambda m: cite_manager.cite(m.group(1), narrative=(m.group(2) == 'narrative')),
+            text
+        )
     parts = re.split(r'(\*\*[^*]+\*\*|\*[^*]+\*|\`[^`]+\`)', text)
     for part in parts:
         if part.startswith('**') and part.endswith('**'):
@@ -113,7 +118,12 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
                 p = doc.add_paragraph()
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 p.paragraph_format.space_after = Pt(6)
-                p.add_run().add_picture(path, width=Inches(5.8))
+                pic = p.add_run().add_picture(path, width=Inches(5.8))
+                try:
+                    if pic._inline is not None and pic._inline.docPr is not None:
+                        pic._inline.docPr.set('descr', caption)
+                except Exception:
+                    pass
             else:
                 doc.add_paragraph(f'[Figure not found: {path}]')
             cap = doc.add_paragraph()
@@ -193,7 +203,7 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
                                 run.bold = True
             continue
 
-        # Plain paragraph (possibly merged with next if continuation? keep simple)
+        # Plain paragraph
         p = doc.add_paragraph()
         _apply_inline(p, line, cite_manager)
         if stripped.startswith('*') and ('Table' in stripped or 'Figure' in stripped):
@@ -203,6 +213,7 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
     apply_math_to_doc(doc)
     doc.save(docx_path)
     print(f'[md_to_rsm_docx] {md_path} -> {docx_path}')
+
 
 # ---------------------------------------------------------------------------
 # Word equation (OMML) insertion for mathematical expressions
@@ -298,25 +309,18 @@ def _make_math_omath(kind, match):
         _math_text(oMath, '1 - ')
         _math_fraction(oMath, f'|bias_{match.group(1)}|', f'|bias_{match.group(2)}|')
     elif kind == 'phat':
-        _math_accent(oMath, 'p')
+        _math_accent(oMath, 'p', accent='^')
     elif kind == 'absphat':
         _math_text(oMath, '|Y - ')
-        _math_accent(oMath, 'p')
+        _math_accent(oMath, 'p', accent='^')
         _math_text(oMath, '|')
     return oMath
 
 
-def _text_run(text, rPr, superscript=False, subscript=False):
+def _text_run(text, rPr):
     r = OxmlElement('w:r')
     if rPr is not None:
-        rPr_copy = copy.deepcopy(rPr)
-    else:
-        rPr_copy = OxmlElement('w:rPr')
-    if superscript or subscript:
-        va = OxmlElement('w:vertAlign')
-        va.set(qn('w:val'), 'superscript' if superscript else 'subscript')
-        rPr_copy.append(va)
-    r.append(rPr_copy)
+        r.append(copy.deepcopy(rPr))
     t = OxmlElement('w:t')
     t.set(qn('xml:space'), 'preserve')
     t.text = text
@@ -324,48 +328,9 @@ def _text_run(text, rPr, superscript=False, subscript=False):
     return r
 
 
-def _make_math_runs(kind, match, rPr):
-    """Return a list of Word text runs with font-based superscripts/subscripts."""
-    runs = []
-    if kind == 'riskdiff':
-        runs.append(_text_run('P(Y=1|A=1) - P(Y=1|A=0)', rPr))
-    elif kind == 'c1def':
-        runs.append(_text_run('C1 = 1 - ', rPr))
-        runs.append(_text_run('I', rPr, superscript=True))
-        runs.append(_text_run('2', rPr))
-    elif kind == 'ymodel':
-        runs.append(_text_run('Y ~ X + A + X', rPr))
-        runs.append(_text_run('×', rPr))
-        runs.append(_text_run('A', rPr))
-    elif kind == 'isq':
-        runs.append(_text_run('I', rPr, superscript=True))
-        runs.append(_text_run('2', rPr))
-    elif kind == 'tausq':
-        runs.append(_text_run('τ', rPr, superscript=True))
-        runs.append(_text_run('2', rPr))
-    elif kind == 'wsub':
-        runs.append(_text_run('W', rPr))
-        runs.append(_text_run('_', rPr))
-        runs.append(_text_run(match.group(1), rPr, subscript=True))
-    elif kind == 'diff':
-        runs.append(_text_run(f'|bias_{match.group(1)}| - |bias_{match.group(2)}|', rPr))
-    elif kind == 'frac':
-        runs.append(_text_run('1 - ', rPr))
-        runs.append(_text_run(f'|bias_{match.group(1)}|', rPr))
-        runs.append(_text_run(' / ', rPr))
-        runs.append(_text_run(f'|bias_{match.group(2)}|', rPr))
-    elif kind == 'phat':
-        runs.append(_text_run('p', rPr, superscript=True))
-        runs.append(_text_run('^', rPr))
-    elif kind == 'absphat':
-        runs.append(_text_run('|Y - ', rPr))
-        runs.append(_text_run('p', rPr, superscript=True))
-        runs.append(_text_run('^', rPr))
-        runs.append(_text_run('|', rPr))
-    return runs
-
-
 def _split_text_to_elems(text, rPr, patterns):
+    # Normalise Unicode superscripts to caret notation so OMML patterns catch them
+    text = text.replace('²', '^2')
     best = None
     for pat, kind in patterns:
         m = re.search(pat, text)
@@ -380,7 +345,7 @@ def _split_text_to_elems(text, rPr, patterns):
     elems = []
     if pre:
         elems.append(_text_run(pre, rPr))
-    elems.extend(_make_math_runs(kind, m, rPr))
+    elems.append(_make_math_omath(kind, m))
     if post:
         elems.extend(_split_text_to_elems(post, rPr, patterns))
     return elems
@@ -398,7 +363,7 @@ def _split_run(run, patterns):
 
 
 def apply_math_to_doc(doc):
-    """Replace plain-text mathematical expressions with Word runs using font-based superscripts/subscripts."""
+    """Replace plain-text mathematical expressions with Word OMML equations."""
     paras = list(doc.paragraphs)
     for table in doc.tables:
         for row in table.rows:
