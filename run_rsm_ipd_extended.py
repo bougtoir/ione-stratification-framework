@@ -124,7 +124,7 @@ def run_rsm_ipd_sensitivity(
         sample_sizes=[500, 2000, 10000],
         z_effect_scales=[0.5, 1.0, 2.0],
         zx_influence_scales=[0.2, 0.5, 1.0],
-        n_strata_list=[3, 5, 10],
+        n_strata_list=[5],
         nonlinear=False,
         n_studies=10,
         study_effect_scale=0.6,
@@ -134,7 +134,7 @@ def run_rsm_ipd_sensitivity(
 
 
 def run_rsm_ipd_nonlinearity(
-    n_sims: int = 30,
+    n_sims: int = 50,
     n_jobs: int = -1,
     output_dir: str = 'results',
 ):
@@ -143,10 +143,10 @@ def run_rsm_ipd_nonlinearity(
     return _run_grid(
         name='nonlinearity',
         n_sims=n_sims,
-        sample_sizes=[500, 2000, 10000],
-        z_effect_scales=[0.5, 1.0, 2.0],
-        zx_influence_scales=[0.2, 0.5, 1.0],
-        n_strata_list=[3, 5, 10],
+        sample_sizes=[2000],
+        z_effect_scales=[1.0],
+        zx_influence_scales=[1.0],
+        n_strata_list=[5],
         nonlinear=True,
         n_studies=10,
         study_effect_scale=0.6,
@@ -160,9 +160,9 @@ if __name__ == '__main__':
     print(f'Available CPUs: {n_cpus}')
 
     print('\n=== RSM IPD Sensitivity Analysis ===')
-    run_rsm_ipd_sensitivity(n_sims=10, n_jobs=n_cpus, output_dir='results')
+    run_rsm_ipd_sensitivity(n_sims=30, n_jobs=n_cpus, output_dir='results')
 
     print('\n=== RSM IPD Non-linearity Robustness ===')
-    run_rsm_ipd_nonlinearity(n_sims=10, n_jobs=n_cpus, output_dir='results')
+    run_rsm_ipd_nonlinearity(n_sims=50, n_jobs=n_cpus, output_dir='results')
 
     print('\nAll extended RSM IPD simulations complete!')

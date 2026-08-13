@@ -44,6 +44,8 @@ def run_scenario(
     study_effect_scale: float = 0.0,
     method_specs: list = None,
     nonlinear: bool = False,
+    delta: list = None,
+    w_est_specs: list = None,
 ) -> list:
     """
     Run one scenario: generate data once, apply ALL methods, evaluate each.
@@ -51,6 +53,8 @@ def run_scenario(
     """
     if method_specs is None:
         method_specs = []
+    if w_est_specs is None:
+        w_est_specs = ['interaction']
     data = generate_dataset(
         n=n,
         z_effect_scale=z_effect_scale,
@@ -62,6 +66,7 @@ def run_scenario(
         seed=seed,
         n_studies=n_studies,
         study_effect_scale=study_effect_scale,
+        delta=delta,
     )
 
     X, A, Y, Z = data['X'], data['A'], data['Y'], data['Z']
@@ -86,6 +91,8 @@ def run_scenario(
         'actual_treatment_prevalence': data['params']['actual_treatment_prevalence'],
         'true_ate_riskdiff': true_ate_riskdiff,
     }
+    if delta is not None:
+        base_info['delta'] = ','.join(str(v) for v in delta)
 
     # Discovery/evaluation split (fixed per scenario) to prevent outcome-informed overfitting
     rng = np.random.default_rng(seed)
@@ -118,6 +125,7 @@ def run_scenario(
                 true_ate_riskdiff=true_ate_riskdiff,
                 eval_idx=eval_idx,
                 study_id=study_id,
+                w_est_specs=w_est_specs,
             )
             result = {**base_info, 'method': method_name, 'error': None}
             result.update(metrics)

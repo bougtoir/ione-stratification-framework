@@ -42,29 +42,47 @@ def _summarise(df: pd.DataFrame, group_cols: list, metric_cols: list) -> pd.Data
             row[f'{m}_sd'] = std
             row[f'{m}_se'] = se
             row[f'{m}_ci95'] = ci
-        # Robust relative bias reduction from absolute bias means, not from per-simulation ratios
+        # Robust relative bias reduction from absolute bias means, not from per-simulation ratios.
+        # Delta-method SEs use the joint sampling variation of absolute crude and reduced biases.
         if 'bias_crude' in metric_cols and 'bias_stratified' in metric_cols:
             abs_crude_ser = sub['bias_crude'].abs()
             abs_strat_ser = sub['bias_stratified'].abs()
+            n = len(abs_crude_ser)
             abs_crude = abs_crude_ser.mean()
             abs_strat = abs_strat_ser.mean()
             row['abs_bias_crude_mean'] = float(abs_crude)
             row['abs_bias_stratified_mean'] = float(abs_strat)
-            row['abs_bias_crude_se'] = float(abs_crude_ser.std() / np.sqrt(len(abs_crude_ser)))
-            row['abs_bias_stratified_se'] = float(abs_strat_ser.std() / np.sqrt(len(abs_strat_ser)))
-            if abs_crude > 0:
-                row['bias_reduction_relative_mean'] = float(1.0 - abs_strat / abs_crude)
+            row['abs_bias_crude_se'] = float(abs_crude_ser.std(ddof=1) / np.sqrt(n))
+            row['abs_bias_stratified_se'] = float(abs_strat_ser.std(ddof=1) / np.sqrt(n))
+            if abs_crude > 1e-12:
+                r = 1.0 - abs_strat / abs_crude
+                row['bias_reduction_relative_mean'] = float(r)
+                cov = np.cov(abs_crude_ser.values, abs_strat_ser.values, ddof=1)
+                var_c = cov[0, 0] / n
+                var_s = cov[1, 1] / n
+                cov_cs = cov[0, 1] / n
+                var_r = (var_s / abs_crude**2) + (abs_strat**2 * var_c / abs_crude**4) - 2 * (abs_strat * cov_cs / abs_crude**3)
+                row['bias_reduction_relative_se'] = float(np.sqrt(max(var_r, 0.0)))
             else:
                 row['bias_reduction_relative_mean'] = float(np.nan)
+                row['bias_reduction_relative_se'] = float(np.nan)
             if 'bias_re' in metric_cols:
                 abs_re_ser = sub['bias_re'].abs()
                 abs_re = abs_re_ser.mean()
                 row['abs_bias_re_mean'] = float(abs_re)
-                row['abs_bias_re_se'] = float(abs_re_ser.std() / np.sqrt(len(abs_re_ser)))
-                if abs_crude > 0:
-                    row['bias_reduction_relative_re_mean'] = float(1.0 - abs_re / abs_crude)
+                row['abs_bias_re_se'] = float(abs_re_ser.std(ddof=1) / np.sqrt(len(abs_re_ser)))
+                if abs_crude > 1e-12:
+                    r_re = 1.0 - abs_re / abs_crude
+                    row['bias_reduction_relative_re_mean'] = float(r_re)
+                    cov_re = np.cov(abs_crude_ser.values, abs_re_ser.values, ddof=1)
+                    var_c = cov_re[0, 0] / n
+                    var_re = cov_re[1, 1] / n
+                    cov_cre = cov_re[0, 1] / n
+                    var_r_re = (var_re / abs_crude**2) + (abs_re**2 * var_c / abs_crude**4) - 2 * (abs_re * cov_cre / abs_crude**3)
+                    row['bias_reduction_relative_re_se'] = float(np.sqrt(max(var_r_re, 0.0)))
                 else:
                     row['bias_reduction_relative_re_mean'] = float(np.nan)
+                    row['bias_reduction_relative_re_se'] = float(np.nan)
         rows.append(row)
     return pd.DataFrame(rows)
 
@@ -213,6 +231,49 @@ def summarise_rsm_ipd_nonlinearity():
     _summarise_rsm_ipd_file(path, 'rsm_ipd_nonlinearity')
 
 
+def summarise_rsm_ipd_null():
+    path = os.path.join(RESULTS_DIR, 'rsm_ipd_null_results.csv')
+    if not os.path.exists(path):
+        print(f'[generate_summary] {path} not found; skipping null distribution summary')
+        return
+    df = pd.read_csv(path)
+    df = df[df['error'].isna()].copy()
+    metric_cols = ['ARI', 'C1_heterogeneity', 'W_true', 'W_est',
+                   'bias_crude', 'bias_stratified', 'bias_re',
+                   'bias_reduction', 'bias_reduction_relative',
+                   'bias_reduction_re', 'bias_reduction_relative_re',
+                   're_tau2', 're_I2']
+    summary = _summarise(df, ['method'], metric_cols)
+    # Empirical percentiles for null thresholds
+    q_metrics = ['C1_heterogeneity', 'W_est']
+    qs = [0.05, 0.95]
+    try:
+        quantiles = df.groupby('method')[q_metrics].quantile(qs).unstack(level=-1)
+        quantiles.columns = [f'{m}_{int(q*100)}pct' for m, q in quantiles.columns]
+        summary = summary.merge(quantiles.reset_index(), on='method', how='left')
+    except Exception as e:
+        print(f'[generate_summary] could not compute null quantiles: {e}')
+    summary.to_csv(os.path.join(OUT_DIR, 'rsm_ipd_null_summary.csv'), index=False)
+    print(f'[generate_summary] rsm_ipd_null summary: {len(summary)} rows')
+
+
+def summarise_w_est_misspec():
+    path = os.path.join(RESULTS_DIR, 'w_est_misspec_results.csv')
+    if not os.path.exists(path):
+        print(f'[generate_summary] {path} not found; skipping W_est misspec summary')
+        return
+    df = pd.read_csv(path)
+    df = df[df['error'].isna()].copy()
+    metric_cols = ['ARI', 'C1_heterogeneity', 'W_true', 'W_est', 'W_est_main', 'W_est_polynomial',
+                   'bias_crude', 'bias_stratified', 'bias_re',
+                   'bias_reduction', 'bias_reduction_relative',
+                   'bias_reduction_re', 'bias_reduction_relative_re',
+                   're_tau2', 're_I2']
+    summary = _summarise(df, ['method'], metric_cols)
+    summary.to_csv(os.path.join(OUT_DIR, 'w_est_misspec_summary.csv'), index=False)
+    print(f'[generate_summary] w_est_misspec summary: {len(summary)} rows')
+
+
 def main():
     summarise_phase1()
     summarise_sensitivity('sensitivity')
@@ -221,6 +282,8 @@ def main():
     summarise_rsm_ipd()
     summarise_rsm_ipd_sensitivity()
     summarise_rsm_ipd_nonlinearity()
+    summarise_rsm_ipd_null()
+    summarise_w_est_misspec()
     print('[generate_summary] all summaries written to', OUT_DIR)
 
 

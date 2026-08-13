@@ -17,7 +17,7 @@ import re
 import os
 import copy
 from docx import Document
-from docx.shared import Inches, Pt
+from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
@@ -48,6 +48,8 @@ class CiteManager:
         return f'[{n}]'
 
     def write_reference_list(self, doc):
+        if not self._cited:
+            return
         doc.add_heading('References', level=1)
         for i, key in enumerate(self._cited, 1):
             p = doc.add_paragraph()
@@ -62,7 +64,7 @@ def _apply_inline(runs, text, cite_manager=None):
             lambda m: cite_manager.cite(m.group(1), narrative=(m.group(2) == 'narrative')),
             text
         )
-    parts = re.split(r'(\*\*[^*]+\*\*|\*[^*]+\*|\`[^`]+\`)', text)
+    parts = re.split(r'(\*\*[^*]+\*\*|\*[^*]+\*|\`[^`]+\`|\[\d+\])', text)
     for part in parts:
         if part.startswith('**') and part.endswith('**'):
             run = runs.add_run(part[2:-2])
@@ -73,6 +75,9 @@ def _apply_inline(runs, text, cite_manager=None):
         elif part.startswith('`') and part.endswith('`'):
             run = runs.add_run(part[1:-1])
             run.font.name = 'Courier New'
+        elif re.fullmatch(r'\[\d+\]', part):
+            run = runs.add_run(part)
+            run.font.superscript = True
         else:
             runs.add_run(part)
 
@@ -85,6 +90,15 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
     style = doc.styles['Normal']
     style.font.name = 'Times New Roman'
     style.font.size = Pt(11)
+
+    # Force headings to use Times New Roman and black text (journal formatting)
+    for lvl in range(0, 4):
+        try:
+            h_style = doc.styles[f'Heading {lvl}']
+        except KeyError:
+            continue
+        h_style.font.name = 'Times New Roman'
+        h_style.font.color.rgb = RGBColor(0, 0, 0)
 
     i = 0
     while i < len(lines):

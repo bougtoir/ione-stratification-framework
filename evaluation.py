@@ -184,28 +184,45 @@ def compute_w_true(strata: np.ndarray, true_cate: np.ndarray) -> float:
     return float(1.0 - (weighted_within_var / n) / overall_var)
 
 
-def compute_w_est(A: np.ndarray, X: np.ndarray, Y: np.ndarray, strata: np.ndarray) -> float:
+def compute_w_est(A: np.ndarray, X: np.ndarray, Y: np.ndarray, strata: np.ndarray,
+                  model_spec: str = 'interaction', degree: int = 2) -> float:
     """
     W_est: within-stratum homogeneity of an estimated CATE.
-    Fit a flexible outcome model (X + A + X*A), predict potential outcomes under A=0 and A=1,
+    Fit an outcome model, predict potential outcomes under A=0 and A=1,
     and compute CATE estimates. Then compute W as for W_true.
+
+    model_spec:
+      'main'        : Y ~ X + A (no effect modification)
+      'interaction' : Y ~ X + A + X*A (default, flexible linear interactions)
+      'polynomial'  : Y ~ X + X^2 + A + X*A + X^2*A (linear + quadratic interactions)
     """
     n = X.shape[0]
     if n < 20 or len(np.unique(Y)) < 2:
         return float(np.nan)
 
-    # Build design matrix with main effects and A*X interactions
     X_std = StandardScaler().fit_transform(X)
     A_col = A.reshape(-1, 1)
-    AX = X_std * A_col
-    design = np.hstack([X_std, A_col, AX])
+
+    if model_spec == 'main':
+        design = np.hstack([X_std, A_col])
+        design_a0 = np.hstack([X_std, np.zeros((n, 1))])
+        design_a1 = np.hstack([X_std, np.ones((n, 1))])
+    elif model_spec == 'interaction':
+        AX = X_std * A_col
+        design = np.hstack([X_std, A_col, AX])
+        design_a0 = np.hstack([X_std, np.zeros((n, 1)), np.zeros((n, X.shape[1]))])
+        design_a1 = np.hstack([X_std, np.ones((n, 1)), X_std])
+    elif model_spec == 'polynomial':
+        X2 = X_std ** 2
+        design = np.hstack([X_std, X2, A_col, X_std * A_col, X2 * A_col])
+        design_a0 = np.hstack([X_std, X2, np.zeros((n, 1)), np.zeros((n, X.shape[1])), np.zeros((n, X.shape[1]))])
+        design_a1 = np.hstack([X_std, X2, np.ones((n, 1)), X_std, X2])
+    else:
+        raise ValueError(f"Unknown model_spec: {model_spec}")
 
     try:
         model = LogisticRegression(max_iter=1000, penalty='l2', C=0.5, solver='lbfgs')
         model.fit(design, Y)
-        # Predict under A=0 and A=1: set A_col and interactions to 0 or replicate X
-        design_a0 = np.hstack([X_std, np.zeros((n, 1)), np.zeros((n, X.shape[1]))])
-        design_a1 = np.hstack([X_std, np.ones((n, 1)), X_std])
         proba0 = model.predict_proba(design_a0)
         proba1 = model.predict_proba(design_a1)
         if proba0.shape[1] < 2 or proba1.shape[1] < 2:
@@ -416,8 +433,11 @@ def evaluate_stratification(
     true_ate_riskdiff: float,
     eval_idx: np.ndarray | None = None,
     study_id: np.ndarray | None = None,
+    w_est_specs: list | None = None,
 ) -> dict:
     """Run all evaluation metrics on a single stratification result."""
+    if w_est_specs is None:
+        w_est_specs = ['interaction']
     arrays = [X, A, Y, Z, Z_clusters, strata, true_cate]
     if study_id is not None:
         arrays.append(study_id)
@@ -433,7 +453,9 @@ def evaluate_stratification(
     results.update(compute_within_strata_entropy(Z, strata))
     results['C1_heterogeneity'] = compute_coherence_c1(A, Y, strata)
     results['W_true'] = compute_w_true(strata, true_cate)
-    results['W_est'] = compute_w_est(A, X, Y, strata)
+    for spec in w_est_specs:
+        key = 'W_est' if spec == 'interaction' else f'W_est_{spec}'
+        results[key] = compute_w_est(A, X, Y, strata, model_spec=spec)
     results.update(compute_effect_estimation_bias(A, Y, strata, true_ate_riskdiff))
     if study_id is not None and len(np.unique(study_id)) > 1:
         results.update(compute_effect_estimation_bias(A, Y, study_id, true_ate_riskdiff, prefix='study_'))

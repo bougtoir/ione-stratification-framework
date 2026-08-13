@@ -107,8 +107,9 @@ def main():
     real = _read('real_data_summary.csv')
     sensitivity = _read('rsm_ipd_sensitivity_full_summary.csv')
     nonlinearity = _read('rsm_ipd_nonlinearity_full_summary.csv')
+    null_summary = _read('rsm_ipd_null_summary.csv')
+    misspec_summary = _read('w_est_misspec_summary.csv')
 
-    # Determine top methods from primary scenario
     top_methods = ['1B_residual', 'PS_propensity_score', 'GMM', 'Prognostic_score', '2B_clustering']
     if primary is not None and not primary.empty:
         best = primary.loc[primary['bias_reduction_relative_re_mean'].idxmax()]['method']
@@ -134,27 +135,14 @@ def main():
                                'Relative reduction strat': 3, 'Relative reduction RE': 3}
         )
 
-    # Table 2: Strata count sensitivity
-    if full is not None and not full.empty:
-        _add_table(
-            doc, full[full['method'].isin(top_methods)],
-            ['K', 'Method', 'ARI', 'RE bias', 'Relative reduction RE'],
-            'Table 2. Sensitivity of random-effects ATE bias reduction to the number of strata.',
-            {
-                'K': 'n_strata', 'Method': 'method', 'ARI': 'ARI_mean',
-                'RE bias': 'abs_bias_re_mean', 'Relative reduction RE': 'bias_reduction_relative_re_mean'
-            },
-            decimal_overrides={'RE bias': 5, 'Relative reduction RE': 3}
-        )
-
-    # Table 3: Real data illustration
+    # Table 2: Real data illustration
     if real is not None and not real.empty:
         real_non_oracle = real[~real['method'].str.startswith('baseline_')]
         rd_best = real_non_oracle.loc[real_non_oracle.groupby('dataset')['ARI_mean'].idxmax()].copy()
         _add_table(
             doc, rd_best,
             ['Dataset', 'Method', 'K', 'ARI', 'C1', 'W_est', 'Bias reduction'],
-            'Table 3. Best real-data illustration result per dataset (oracle baselines excluded).',
+            'Table 2. Best real-data illustration result per dataset (oracle baselines excluded). Bias reduction is the absolute difference between crude and stratified ATE risk-difference bias.',
             {
                 'Dataset': 'dataset', 'Method': 'method', 'K': 'n_strata',
                 'ARI': 'ARI_mean', 'C1': 'C1_heterogeneity_mean', 'W_est': 'W_est_mean',
@@ -162,77 +150,7 @@ def main():
             }
         )
 
-    # Tables 4-6: sensitivity scenarios
-    sample_df = _sens_df(sensitivity, top_methods, [
-        {'label': 'n=500', 'n': 500, 'z': 1.0, 'zx': 1.0, 'k': 5},
-        {'label': 'n=2000', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
-        {'label': 'n=10000', 'n': 10000, 'z': 1.0, 'zx': 1.0, 'k': 5},
-    ])
-    if not sample_df.empty:
-        _add_table(
-            doc, sample_df,
-            ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE',
-             'Relative reduction RE', 'Relative reduction RE SE', 'RE I2'],
-            'Table 4. Sample-size sensitivity (K=5, z=1.0, zx=1.0): means over 10 simulations.',
-            {
-                'Condition': 'condition', 'Method': 'method', 'ARI': 'ARI_mean', 'ARI SE': 'ARI_se',
-                'C1': 'C1_heterogeneity_mean', 'C1 SE': 'C1_heterogeneity_se',
-                'W_est': 'W_est_mean', 'W_est SE': 'W_est_se',
-                'RE bias': 'abs_bias_re_mean', 'RE bias SE': 'abs_bias_re_se',
-                'Relative reduction RE': 'bias_reduction_relative_re_mean',
-                'Relative reduction RE SE': 'bias_reduction_relative_re_se',
-                'RE I2': 're_I2_mean'
-            },
-            decimal_overrides={'RE bias': 5, 'RE bias SE': 5, 'Relative reduction RE': 3, 'Relative reduction RE SE': 3}
-        )
-
-    zx_df = _sens_df(sensitivity, top_methods, [
-        {'label': 'zx=0.2', 'n': 2000, 'z': 1.0, 'zx': 0.2, 'k': 5},
-        {'label': 'zx=0.5', 'n': 2000, 'z': 1.0, 'zx': 0.5, 'k': 5},
-        {'label': 'zx=1.0', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
-    ])
-    if not zx_df.empty:
-        _add_table(
-            doc, zx_df,
-            ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE',
-             'Relative reduction RE', 'Relative reduction RE SE', 'RE I2'],
-            'Table 5. Sensitivity to Z-to-X influence strength (n=2000, K=5, z=1.0, zx=0.2, 0.5, 1.0): means over 10 simulations.',
-            {
-                'Condition': 'condition', 'Method': 'method', 'ARI': 'ARI_mean', 'ARI SE': 'ARI_se',
-                'C1': 'C1_heterogeneity_mean', 'C1 SE': 'C1_heterogeneity_se',
-                'W_est': 'W_est_mean', 'W_est SE': 'W_est_se',
-                'RE bias': 'abs_bias_re_mean', 'RE bias SE': 'abs_bias_re_se',
-                'Relative reduction RE': 'bias_reduction_relative_re_mean',
-                'Relative reduction RE SE': 'bias_reduction_relative_re_se',
-                'RE I2': 're_I2_mean'
-            },
-            decimal_overrides={'RE bias': 5, 'RE bias SE': 5, 'Relative reduction RE': 3, 'Relative reduction RE SE': 3}
-        )
-
-    z_df = _sens_df(sensitivity, top_methods, [
-        {'label': 'z=0.5', 'n': 2000, 'z': 0.5, 'zx': 1.0, 'k': 5},
-        {'label': 'z=1.0', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
-        {'label': 'z=2.0', 'n': 2000, 'z': 2.0, 'zx': 1.0, 'k': 5},
-    ])
-    if not z_df.empty:
-        _add_table(
-            doc, z_df,
-            ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE',
-             'Relative reduction RE', 'Relative reduction RE SE', 'RE I2'],
-            'Table 6. Sensitivity to Z-to-Y effect strength (n=2000, K=5, zx=1.0, z=0.5, 1.0, 2.0): means over 10 simulations.',
-            {
-                'Condition': 'condition', 'Method': 'method', 'ARI': 'ARI_mean', 'ARI SE': 'ARI_se',
-                'C1': 'C1_heterogeneity_mean', 'C1 SE': 'C1_heterogeneity_se',
-                'W_est': 'W_est_mean', 'W_est SE': 'W_est_se',
-                'RE bias': 'abs_bias_re_mean', 'RE bias SE': 'abs_bias_re_se',
-                'Relative reduction RE': 'bias_reduction_relative_re_mean',
-                'Relative reduction RE SE': 'bias_reduction_relative_re_se',
-                'RE I2': 're_I2_mean'
-            },
-            decimal_overrides={'RE bias': 5, 'RE bias SE': 5, 'Relative reduction RE': 3, 'Relative reduction RE SE': 3}
-        )
-
-    # Table 7: Nonlinearity comparison
+    # Table 3: Nonlinearity comparison
     if nonlinearity is not None and not nonlinearity.empty:
         rows = []
         for method in top_methods:
@@ -263,7 +181,7 @@ def main():
                 doc, nonlin_df,
                 ['Method', 'Linear RE bias', 'Linear RE bias SE', 'Linear rel reduction', 'Linear rel reduction SE',
                  'Non-linear RE bias', 'Non-linear RE bias SE', 'Non-linear rel reduction', 'Non-linear rel reduction SE'],
-                'Table 7. Linear versus non-linear Z-to-X mapping (n=2000, K=5, z=1.0, zx=1.0).',
+                'Table 3. Linear versus non-linear Z-to-X mapping (n=2000, K=5, z=1.0, zx=1.0).',
                 {
                     'Method': 'method',
                     'Linear RE bias': 'linear_abs_bias_re_mean',
@@ -280,6 +198,130 @@ def main():
                                    'Linear rel reduction': 3, 'Linear rel reduction SE': 3,
                                    'Non-linear rel reduction': 3, 'Non-linear rel reduction SE': 3}
             )
+
+    # Supplementary Table S1: Strata count sensitivity
+    if full is not None and not full.empty:
+        _add_table(
+            doc, full[full['method'].isin(top_methods)],
+            ['K', 'Method', 'ARI', 'RE bias', 'Relative reduction RE'],
+            'Supplementary Table S1. Sensitivity of random-effects ATE bias reduction to the number of strata.',
+            {
+                'K': 'n_strata', 'Method': 'method', 'ARI': 'ARI_mean',
+                'RE bias': 'abs_bias_re_mean', 'Relative reduction RE': 'bias_reduction_relative_re_mean'
+            },
+            decimal_overrides={'RE bias': 5, 'Relative reduction RE': 3}
+        )
+
+    # Supplementary Tables S2-S4: sensitivity scenarios
+    sample_df = _sens_df(sensitivity, top_methods, [
+        {'label': 'n=500', 'n': 500, 'z': 1.0, 'zx': 1.0, 'k': 5},
+        {'label': 'n=2000', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
+        {'label': 'n=10000', 'n': 10000, 'z': 1.0, 'zx': 1.0, 'k': 5},
+    ])
+    if not sample_df.empty:
+        _add_table(
+            doc, sample_df,
+            ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE',
+             'Relative reduction RE', 'Relative reduction RE SE', 'RE I2'],
+            'Supplementary Table S2. Sample-size sensitivity (K=5, z=1.0, zx=1.0): means over 30 simulations.',
+            {
+                'Condition': 'condition', 'Method': 'method', 'ARI': 'ARI_mean', 'ARI SE': 'ARI_se',
+                'C1': 'C1_heterogeneity_mean', 'C1 SE': 'C1_heterogeneity_se',
+                'W_est': 'W_est_mean', 'W_est SE': 'W_est_se',
+                'RE bias': 'abs_bias_re_mean', 'RE bias SE': 'abs_bias_re_se',
+                'Relative reduction RE': 'bias_reduction_relative_re_mean',
+                'Relative reduction RE SE': 'bias_reduction_relative_re_se',
+                'RE I2': 're_I2_mean'
+            },
+            decimal_overrides={'RE bias': 5, 'RE bias SE': 5, 'Relative reduction RE': 3, 'Relative reduction RE SE': 3}
+        )
+
+    zx_df = _sens_df(sensitivity, top_methods, [
+        {'label': 'zx=0.2', 'n': 2000, 'z': 1.0, 'zx': 0.2, 'k': 5},
+        {'label': 'zx=0.5', 'n': 2000, 'z': 1.0, 'zx': 0.5, 'k': 5},
+        {'label': 'zx=1.0', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
+    ])
+    if not zx_df.empty:
+        _add_table(
+            doc, zx_df,
+            ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE',
+             'Relative reduction RE', 'Relative reduction RE SE', 'RE I2'],
+            'Supplementary Table S3. Sensitivity to Z-to-X influence strength (n=2000, K=5, z=1.0, zx=0.2, 0.5, 1.0): means over 30 simulations.',
+            {
+                'Condition': 'condition', 'Method': 'method', 'ARI': 'ARI_mean', 'ARI SE': 'ARI_se',
+                'C1': 'C1_heterogeneity_mean', 'C1 SE': 'C1_heterogeneity_se',
+                'W_est': 'W_est_mean', 'W_est SE': 'W_est_se',
+                'RE bias': 'abs_bias_re_mean', 'RE bias SE': 'abs_bias_re_se',
+                'Relative reduction RE': 'bias_reduction_relative_re_mean',
+                'Relative reduction RE SE': 'bias_reduction_relative_re_se',
+                'RE I2': 're_I2_mean'
+            },
+            decimal_overrides={'RE bias': 5, 'RE bias SE': 5, 'Relative reduction RE': 3, 'Relative reduction RE SE': 3}
+        )
+
+    z_df = _sens_df(sensitivity, top_methods, [
+        {'label': 'z=0.5', 'n': 2000, 'z': 0.5, 'zx': 1.0, 'k': 5},
+        {'label': 'z=1.0', 'n': 2000, 'z': 1.0, 'zx': 1.0, 'k': 5},
+        {'label': 'z=2.0', 'n': 2000, 'z': 2.0, 'zx': 1.0, 'k': 5},
+    ])
+    if not z_df.empty:
+        _add_table(
+            doc, z_df,
+            ['Condition', 'Method', 'ARI', 'ARI SE', 'C1', 'C1 SE', 'W_est', 'W_est SE', 'RE bias', 'RE bias SE',
+             'Relative reduction RE', 'Relative reduction RE SE', 'RE I2'],
+            'Supplementary Table S4. Sensitivity to Z-to-Y effect strength (n=2000, K=5, zx=1.0, z=0.5, 1.0, 2.0): means over 30 simulations.',
+            {
+                'Condition': 'condition', 'Method': 'method', 'ARI': 'ARI_mean', 'ARI SE': 'ARI_se',
+                'C1': 'C1_heterogeneity_mean', 'C1 SE': 'C1_heterogeneity_se',
+                'W_est': 'W_est_mean', 'W_est SE': 'W_est_se',
+                'RE bias': 'abs_bias_re_mean', 'RE bias SE': 'abs_bias_re_se',
+                'Relative reduction RE': 'bias_reduction_relative_re_mean',
+                'Relative reduction RE SE': 'bias_reduction_relative_re_se',
+                'RE I2': 're_I2_mean'
+            },
+            decimal_overrides={'RE bias': 5, 'RE bias SE': 5, 'Relative reduction RE': 3, 'Relative reduction RE SE': 3}
+        )
+
+    # Supplementary Table S5: empirical null distribution
+    if null_summary is not None and not null_summary.empty:
+        null_cols = {
+            'Method': 'method',
+            'C1 mean': 'C1_heterogeneity_mean',
+            'C1 SE': 'C1_heterogeneity_se',
+            'C1 5th': 'C1_heterogeneity_5pct',
+            'C1 95th': 'C1_heterogeneity_95pct',
+            'W_est mean': 'W_est_mean',
+            'W_est SE': 'W_est_se',
+            'W_est 5th': 'W_est_5pct',
+            'W_est 95th': 'W_est_95pct',
+        }
+        _add_table(
+            doc, null_summary,
+            list(null_cols.keys()),
+            'Supplementary Table S5. Empirical null distribution of C1 and W_est (n=2000, K=5, 200 replications, no true Z-by-A interaction).',
+            null_cols
+        )
+
+    # Supplementary Table S6: W_est misspecification
+    if misspec_summary is not None and not misspec_summary.empty:
+        misspec_cols = {
+            'Method': 'method',
+            'ARI': 'ARI_mean',
+            'C1': 'C1_heterogeneity_mean',
+            'W_true': 'W_true_mean',
+            'W_est (main)': 'W_est_main_mean',
+            'W_est (interact)': 'W_est_mean',
+            'W_est (poly)': 'W_est_polynomial_mean',
+            'RE bias': 'abs_bias_re_mean',
+            'Relative reduction RE': 'bias_reduction_relative_re_mean',
+        }
+        _add_table(
+            doc, misspec_summary,
+            list(misspec_cols.keys()),
+            'Supplementary Table S6. Sensitivity of W_est to outcome-model specification (n=2000, K=5, 50 replications).',
+            misspec_cols,
+            decimal_overrides={'RE bias': 5, 'Relative reduction RE': 3}
+        )
 
     out = os.path.join(OUT_DIR, 'biostatistics_tables_separate.docx')
     doc.save(out)
