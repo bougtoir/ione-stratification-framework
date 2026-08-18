@@ -242,6 +242,7 @@ _MATH_PATTERNS = [
     (r'\|Y - p\^\|', 'absphat'),
     (r'tau\^2', 'tausq'),
     (r'W_(true|est)', 'wsub'),
+    (r'K_(true|est)', 'ksub'),
     (r'I\^2', 'isq'),
     (r'(?<![A-Za-z0-9])p\^', 'phat'),
 ]
@@ -317,6 +318,8 @@ def _make_math_omath(kind, match):
         _math_superscript(oMath, 'τ', '2')
     elif kind == 'wsub':
         _math_subscript(oMath, 'W', match.group(1))
+    elif kind == 'ksub':
+        _math_subscript(oMath, 'K', match.group(1))
     elif kind == 'diff':
         _math_text(oMath, f'|bias_{match.group(1)}| - |bias_{match.group(2)}|')
     elif kind == 'frac':

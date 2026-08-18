@@ -17,6 +17,9 @@ def _mc_stats(s: pd.Series):
     s = s.dropna()
     if len(s) == 0:
         return (np.nan, np.nan, np.nan, np.nan)
+    if len(s) < 2:
+        mean = float(s.iloc[0])
+        return (mean, np.nan, np.nan, np.nan)
     mean = s.mean()
     std = s.std(ddof=1)
     se = std / np.sqrt(len(s))
@@ -52,17 +55,20 @@ def _summarise(df: pd.DataFrame, group_cols: list, metric_cols: list) -> pd.Data
             abs_strat = abs_strat_ser.mean()
             row['abs_bias_crude_mean'] = float(abs_crude)
             row['abs_bias_stratified_mean'] = float(abs_strat)
-            row['abs_bias_crude_se'] = float(abs_crude_ser.std(ddof=1) / np.sqrt(n))
-            row['abs_bias_stratified_se'] = float(abs_strat_ser.std(ddof=1) / np.sqrt(n))
+            row['abs_bias_crude_se'] = float(abs_crude_ser.std(ddof=1) / np.sqrt(n)) if n > 1 else np.nan
+            row['abs_bias_stratified_se'] = float(abs_strat_ser.std(ddof=1) / np.sqrt(n)) if n > 1 else np.nan
             if abs_crude > 1e-12:
                 r = 1.0 - abs_strat / abs_crude
                 row['bias_reduction_relative_mean'] = float(r)
-                cov = np.cov(abs_crude_ser.values, abs_strat_ser.values, ddof=1)
-                var_c = cov[0, 0] / n
-                var_s = cov[1, 1] / n
-                cov_cs = cov[0, 1] / n
-                var_r = (var_s / abs_crude**2) + (abs_strat**2 * var_c / abs_crude**4) - 2 * (abs_strat * cov_cs / abs_crude**3)
-                row['bias_reduction_relative_se'] = float(np.sqrt(max(var_r, 0.0)))
+                if n > 1:
+                    cov = np.cov(abs_crude_ser.values, abs_strat_ser.values, ddof=1)
+                    var_c = cov[0, 0] / n
+                    var_s = cov[1, 1] / n
+                    cov_cs = cov[0, 1] / n
+                    var_r = (var_s / abs_crude**2) + (abs_strat**2 * var_c / abs_crude**4) - 2 * (abs_strat * cov_cs / abs_crude**3)
+                    row['bias_reduction_relative_se'] = float(np.sqrt(max(var_r, 0.0)))
+                else:
+                    row['bias_reduction_relative_se'] = np.nan
             else:
                 row['bias_reduction_relative_mean'] = float(np.nan)
                 row['bias_reduction_relative_se'] = float(np.nan)
@@ -70,16 +76,19 @@ def _summarise(df: pd.DataFrame, group_cols: list, metric_cols: list) -> pd.Data
                 abs_re_ser = sub['bias_re'].abs()
                 abs_re = abs_re_ser.mean()
                 row['abs_bias_re_mean'] = float(abs_re)
-                row['abs_bias_re_se'] = float(abs_re_ser.std(ddof=1) / np.sqrt(len(abs_re_ser)))
+                row['abs_bias_re_se'] = float(abs_re_ser.std(ddof=1) / np.sqrt(len(abs_re_ser))) if len(abs_re_ser) > 1 else np.nan
                 if abs_crude > 1e-12:
                     r_re = 1.0 - abs_re / abs_crude
                     row['bias_reduction_relative_re_mean'] = float(r_re)
-                    cov_re = np.cov(abs_crude_ser.values, abs_re_ser.values, ddof=1)
-                    var_c = cov_re[0, 0] / n
-                    var_re = cov_re[1, 1] / n
-                    cov_cre = cov_re[0, 1] / n
-                    var_r_re = (var_re / abs_crude**2) + (abs_re**2 * var_c / abs_crude**4) - 2 * (abs_re * cov_cre / abs_crude**3)
-                    row['bias_reduction_relative_re_se'] = float(np.sqrt(max(var_r_re, 0.0)))
+                    if n > 1 and len(abs_re_ser) > 1:
+                        cov_re = np.cov(abs_crude_ser.values, abs_re_ser.values, ddof=1)
+                        var_c = cov_re[0, 0] / n
+                        var_re = cov_re[1, 1] / n
+                        cov_cre = cov_re[0, 1] / n
+                        var_r_re = (var_re / abs_crude**2) + (abs_re**2 * var_c / abs_crude**4) - 2 * (abs_re * cov_cre / abs_crude**3)
+                        row['bias_reduction_relative_re_se'] = float(np.sqrt(max(var_r_re, 0.0)))
+                    else:
+                        row['bias_reduction_relative_re_se'] = np.nan
                 else:
                     row['bias_reduction_relative_re_mean'] = float(np.nan)
                     row['bias_reduction_relative_re_se'] = float(np.nan)
