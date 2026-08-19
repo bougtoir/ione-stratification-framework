@@ -1,4 +1,4 @@
-# Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: a simulation benchmark of stratification approaches
+# Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: IONE (Incoherence-Oriented Neutralisation and Extraction) and a simulation benchmark of stratification approaches
 
 {{PAGE}}
 

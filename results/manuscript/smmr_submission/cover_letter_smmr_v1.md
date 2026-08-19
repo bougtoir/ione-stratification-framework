@@ -11,7 +11,7 @@ SAGE Publications
 
 Dear Editors,
 
-We wish to submit our manuscript, **“Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: a simulation benchmark of stratification approaches,”** for consideration by *Statistical Methods in Medical Research*.
+We wish to submit our manuscript, **“Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: IONE (Incoherence-Oriented Neutralisation and Extraction) and a simulation benchmark of stratification approaches,”** for consideration by *Statistical Methods in Medical Research*.
 
 **Fit with the journal.**
 The manuscript develops and benchmarks descriptive diagnostics for a core medical-statistics problem: hidden effect modification in individual participant data (IPD) meta-analysis. The proposed C1 and W statistics quantify between- and within-stratum treatment-effect heterogeneity, and the simulation systematically compares stratification approaches against established medical-statistics tools, including propensity-score stratification, prognostic-score stratification, Gaussian mixture models, outcome-residual stratification and clustering. We therefore believe the work will be of interest to the readership of *Statistical Methods in Medical Research*.

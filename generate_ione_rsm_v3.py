@@ -32,7 +32,7 @@ TARGET_JOURNAL = 'Statistical Methods in Medical Research'
 SUBMISSION_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'smmr_submission')
 os.makedirs(SUBMISSION_DIR, exist_ok=True)
 
-MANUSCRIPT_TITLE = 'Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: a simulation benchmark of stratification approaches'
+MANUSCRIPT_TITLE = 'Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: IONE (Incoherence-Oriented Neutralisation and Extraction) and a simulation benchmark of stratification approaches'
 
 # Date range for AI declaration (kept identical in title page and declarations)
 AI_DATES = 'August 2025 through August 2026'
