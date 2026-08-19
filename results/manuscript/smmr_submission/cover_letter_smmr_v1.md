@@ -1,11 +1,15 @@
-[Your name and address]
-[Date]
+Onishi Tatsuki
+Data Science AI Innovation Research Promotion Center, Shiga University
+1-1-1 Bamba, Hikone, Shiga 522-8522, Japan
+bougtoir@gmail.com
 
-Professor [Editor-in-Chief name], Editor-in-Chief
+19 August 2026
+
+The Editors
 *Statistical Methods in Medical Research*
 SAGE Publications
 
-Dear Professor [Name],
+Dear Editors,
 
 We wish to submit our manuscript, **“Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: a simulation benchmark of stratification approaches,”** for consideration by *Statistical Methods in Medical Research*.
 
@@ -29,7 +33,7 @@ This manuscript is original and is not under consideration elsewhere. The author
 **Conflicts and funding.**
 The authors declare no competing interests. No external funding supported this work.
 
-Suggested reviewers: [names and emails to be added].
+Suggested reviewers: [To be added: 3–5 names with institutions and email addresses.]
 
 Thank you for considering our submission.
 
