@@ -53,7 +53,7 @@ class CiteManager:
         doc.add_heading('References', level=1)
         for i, key in enumerate(self._cited, 1):
             p = doc.add_paragraph()
-            p.add_run(f'[{i}] {self._refs[key]["full"]}')
+            p.add_run(f'{i}. {self._refs[key]["full"]}')
 
 
 def _apply_inline(runs, text, cite_manager=None):
@@ -65,21 +65,30 @@ def _apply_inline(runs, text, cite_manager=None):
             text
         )
     parts = re.split(r'(\*\*[^*]+\*\*|\*[^*]+\*|\`[^`]+\`|\[\d+\])', text)
+    prev_was_cite = False
     for part in parts:
         if part.startswith('**') and part.endswith('**'):
             run = runs.add_run(part[2:-2])
             run.bold = True
+            prev_was_cite = False
         elif part.startswith('*') and part.endswith('*') and len(part) > 2:
             run = runs.add_run(part[1:-1])
             run.italic = True
+            prev_was_cite = False
         elif part.startswith('`') and part.endswith('`'):
             run = runs.add_run(part[1:-1])
             run.font.name = 'Courier New'
+            prev_was_cite = False
         elif re.fullmatch(r'\[\d+\]', part):
-            run = runs.add_run(part)
+            n = part[1:-1]
+            if prev_was_cite:
+                runs.add_run(',')
+            run = runs.add_run(n)
             run.font.superscript = True
+            prev_was_cite = True
         else:
             runs.add_run(part)
+            prev_was_cite = False
 
 
 def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
