@@ -213,8 +213,26 @@ def _scenario_values():
         vals['n10000_re_bias'] = _fmt(n10, 5) if not pd.isna(n10) else '—'
         n10_rel = _sens_row(ipd_sensitivity, '1B_residual', 10000, 1.0, 1.0, 5, 'bias_reduction_relative_re_mean')
         vals['n10000_rel_re'] = _fmt(n10_rel, 3) if not pd.isna(n10_rel) else '—'
+
+        n5 = _sens_row(ipd_sensitivity, '1B_residual', 500, 1.0, 1.0, 5, 'abs_bias_re_mean')
+        vals['n500_re_bias'] = _fmt(n5, 5) if not pd.isna(n5) else '—'
+        n2s = _sens_row(ipd_sensitivity, '1B_residual', 2000, 1.0, 1.0, 5, 'abs_bias_re_mean')
+        vals['n2000_sens_re_bias'] = _fmt(n2s, 5) if not pd.isna(n2s) else '—'
+
+        others = []
+        for method in ['PS_propensity_score', 'Prognostic_score', '2B_clustering']:
+            other_rel = _sens_row(ipd_sensitivity, method, 10000, 1.0, 1.0, 5, 'bias_reduction_relative_re_mean')
+            if not pd.isna(other_rel):
+                others.append(other_rel)
+        if others:
+            vals['n10000_nonresid_rel_min'] = _fmt(min(others), 3)
+            vals['n10000_nonresid_rel_max'] = _fmt(max(others), 3)
+        else:
+            vals['n10000_nonresid_rel_min'] = vals['n10000_nonresid_rel_max'] = '—'
     else:
         vals['n10000_re_bias'] = vals['n10000_rel_re'] = '—'
+        vals['n500_re_bias'] = vals['n2000_sens_re_bias'] = '—'
+        vals['n10000_nonresid_rel_min'] = vals['n10000_nonresid_rel_max'] = '—'
 
     return vals
 
@@ -737,7 +755,7 @@ Table S6 compares W_est computed under three outcome-model specifications. A mai
 
 ### Primary IPD scenario
 
-Table 1 reports the primary scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']}). Agreement with the constructed true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}). Methods closer to the Oracle had C1 nearer to 1 and higher W_true, while random stratification yielded C1 {v['random_c1']}; W_true exceeded W_est, reflecting that the estimated CATE captures only part of the true CATE variation. The best ATE bias reduction came from {v['best_method']}: crude bias {v['crude_bias']}, stratified bias {v['strat_bias']} (relative reduction {v['rel_strat']}) and random-effects bias {v['re_bias']} (relative reduction {v['rel_re']}). {study_footnote} Pooling strata with DerSimonian-Laird improved over the fixed-effect summary, confirming that stratum-specific effects should be allowed to vary. Null-centred excess diagnostics for the best method were modest (C1_excess {v['best_method_c1_excess']}; W_est_excess {v['best_method_west_excess']}).
+Table 1 reports the primary scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']}). Agreement with the constructed true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}). Oracle and residual methods had the highest W_true values, but C1 was high across most methods (even random stratification yielded C1 {v['random_c1']}), indicating that C1 alone did not separate useful from chance stratifications; W_true separated the methods better. W_true exceeded W_est, reflecting that the estimated CATE captures only part of the true CATE variation. The best ATE bias reduction came from {v['best_method']}: crude bias {v['crude_bias']}, stratified bias {v['strat_bias']} (relative reduction {v['rel_strat']}) and random-effects bias {v['re_bias']} (relative reduction {v['rel_re']}). {study_footnote} Pooling strata with DerSimonian-Laird improved over the fixed-effect summary, confirming that stratum-specific effects should be allowed to vary. Null-centred excess diagnostics for the best method were modest (C1_excess {v['best_method_c1_excess']}; W_est_excess {v['best_method_west_excess']}).
 
 {table1}
 *Table 1. Primary IPD scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']}): means over 50 simulations.*
@@ -765,7 +783,7 @@ Figure 3 displays ARI by dataset and method for the semi-synthetic examples.
 
 ### Sensitivity to sample size
 
-Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). Crude bias declined with n; the largest relative reductions for leading methods occurred at n = 10 000. At n = 10 000 the residual method had random-effects ATE bias {v['n10000_re_bias']} (relative reduction {v['n10000_rel_re']}), compared with {v['re_bias']} at n = {v['n_ipd']}. The residual method showed an absolute floor near 0.008-0.009, so its relative reduction decreased with n. This pattern indicates that stratification can remove the estimable part of confounding-driven aggregation bias, but it cannot fully adjust for unmodelled hidden effect modification.
+Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). Crude bias declined with n. The residual method's absolute random-effects ATE bias plateaued near 0.008–0.009 across the three sample sizes ({v['n500_re_bias']} at n=500, {v['n2000_sens_re_bias']} at n=2000 and {v['n10000_re_bias']} at n=10 000), so its relative reduction fell as the crude marginal estimate became more precise. Propensity-score, prognostic-score and clustering-based methods achieved larger relative reductions at n=10 000 (range {v['n10000_nonresid_rel_min']}–{v['n10000_nonresid_rel_max']}), confirming that performance depends on the method as well as sample size. This pattern indicates that stratification can remove the estimable part of confounding-driven aggregation bias, but it cannot fully adjust for unmodelled hidden effect modification.
 
 ![Figure 4. Sample-size sensitivity of random-effects ATE bias reduction (K=5).](fig4_rsm_ipd_sample_size.png)
 
@@ -951,7 +969,7 @@ W is a ratio whose denominator is the overall CATE variance. When effect modific
 
 ### Large-sample behaviour
 
-At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias ({v['n10000_re_bias']}; relative reduction {v['n10000_rel_re']}), although the absolute bias fell compared with n = {v['n_ipd']}. This floor is consistent with the ARI ceiling: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
+At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias ({v['n10000_re_bias']}; relative reduction {v['n10000_rel_re']}), similar to the absolute floor observed at n=500 ({v['n500_re_bias']}) and n=2000 ({v['n2000_sens_re_bias']}). This floor is consistent with the ARI ceiling: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
 
 ### Relevance to SMMR readers
 
@@ -1021,7 +1039,7 @@ def generate_v3_manuscript():
         f"We report ARI, C1, W and ATE bias reduction, calibrating C1 and W against their empirical null distributions.\n\n"
         f"**Results:** At n={v['n_ipd']} and K={v['k_ipd']}, C1 and W_est discriminated the alternative from the empirical null only at chance level (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}; TPR up to {v['c1_tpr_max']} at 5% FPR). "
         f"The best method reduced random-effects ATE bias by more than half (from {v['crude_bias']} to {v['re_bias']}; relative reduction {v['rel_re']}). "
-        f"Bias reduction improved with larger samples and stronger effect modification, while null-centred W confirmed weak discrimination.\n\n"
+        f"Relative bias reduction improved as the Z-to-Y effect strengthened, while sample-size gains were method-specific; null-centred W confirmed weak discrimination.\n\n"
         f"**Conclusions:** IONE is a descriptive sensitivity tool, not an inferential test for hidden effect modification. It should be reported alongside conventional meta-analytic models and covariate adjustment."
     )
     keywords = "individual participant data meta-analysis; evidence synthesis; heterogeneity; hidden effect modification; stratification; simulation"
