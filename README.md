@@ -8,7 +8,7 @@ IONE proposes two exploratory diagnostics for observational treatment-effect est
 - **C1** (between-stratum heterogeneity): 1 − I² from stratum-specific log odds ratios of treatment on outcome.
 - **W** (within-stratum homogeneity): variance ratio of estimated or true conditional average treatment effects within strata.
 
-The repository implements the data-generating mechanism, stratification methods, evaluation metrics and manuscript-generation pipeline used in the revised submission to *Research Synthesis Methods* (RSM), with an additional IPD meta-analysis scenario and manuscript generated under the `devin/ione-rsm-reframe` branch.
+The repository implements the data-generating mechanism, stratification methods, evaluation metrics and manuscript-generation pipeline used in the current submission to *Statistical Methods in Medical Research* (SMMR).
 
 ## Repository structure
 
@@ -21,10 +21,10 @@ The repository implements the data-generating mechanism, stratification methods,
 ├── run_rsm_ipd_extended.py     # RSM IPD sample-size, Z-to-Y, Z-to-X and non-linearity robustness simulations
 ├── real_data_analysis.py       # Semi-synthetic illustrations from 5 Simpson's-paradox examples
 ├── generate_summary.py         # Aggregate simulation/real-data CSVs into summary tables
-├── generate_ione_rsm_v3.py     # Generate full RSM Word manuscript, title page, cover letter and figures
-├── generate_full_rsm_manuscript.py # Generate RSM figures and widescreen figures .pptx
+├── generate_ione_rsm_v3.py     # Generate full SMMR Word manuscript, title page, cover letter and figures
+├── generate_full_rsm_manuscript.py # Generate SMMR figures and widescreen figures .pptx
 ├── generate_rsm_tables.py      # Generate separate editable tables .docx
-├── md_to_rsm_docx.py           # Markdown-to-docx converter with author-date citations and OMML math
+├── md_to_rsm_docx.py           # Markdown-to-docx converter with Vancouver citations and OMML math
 ├── requirements.txt            # Python dependencies
 └── results/
     ├── rsm_ipd_results.csv
@@ -34,7 +34,7 @@ The repository implements the data-generating mechanism, stratification methods,
     │   └── real_data_results.csv
     ├── summary/                # Tidy summary tables with Monte Carlo SEs
     ├── figures/                  # PNG/EPS figures + editable PowerPoint
-    └── manuscript/rsm_submission/  # RSM submission package (docx, pptx, zip)
+    └── manuscript/smmr_submission/  # SMMR submission package (docx, pptx, zip)
 ```
 
 ## Reproduction
@@ -51,20 +51,20 @@ python3 generate_ione_rsm_v3.py            # main manuscript, title page, cover 
 python3 generate_rsm_tables.py             # separate editable tables docx
 ```
 
-To regenerate the full RSM submission package from the committed summary CSVs only:
+To regenerate the full SMMR submission package from the committed summary CSVs only:
 
 ```bash
 python3 generate_summary.py
-python3 generate_ione_rsm_v3.py
 python3 generate_rsm_tables.py
+python3 generate_ione_rsm_v3.py
 ```
 
-All numbers in `results/manuscript/rsm_submission/IONE_rsm_v3.docx` are read from `results/summary/*.csv`; no estimates are hard-coded in the manuscript generator.
+All numbers in `results/manuscript/smmr_submission/IONE_smmr_v1.docx` are read from `results/summary/*.csv`; no estimates are hard-coded in the manuscript generator.
 
 ## Target journal
 
-- **Primary:** *Research Synthesis Methods* (Wiley/Cambridge)
-- **Alternatives:** *Journal of Causal Inference* (de Gruyter), *Statistics in Medicine* (Wiley)
+- **Primary:** *Statistical Methods in Medical Research* (SAGE)
+- **Previously considered:** *Research Synthesis Methods* (Wiley), *Biostatistics* (Oxford)
 
 ## Key methods
 
