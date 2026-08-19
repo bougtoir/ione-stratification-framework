@@ -8,7 +8,7 @@
 
 **Methods:** We simulated an IPD meta-analysis with 10 studies, a binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. Methods stratified pooled IPD and synthesised stratum-specific risk differences with fixed-effect and DerSimonian-Laird random-effects meta-analysis. We report ARI, C1, W and ATE bias reduction, calibrating C1 and W against their empirical null distributions.
 
-**Results:** At n=2000 and K=5, C1 and W_est discriminated the alternative from the empirical null only at chance level (C1 AUC 0.460-0.545; W AUC 0.427-0.561; TPR up to 0.060 at 5% FPR). The best method reduced random-effects ATE bias by more than half (from 0.01865 to 0.00816; relative reduction 0.563). Bias reduction improved with larger samples and stronger effect modification, while null-centred W confirmed weak discrimination.
+**Results:** At n=2000 and K=5, C1 and W_est discriminated the alternative from the empirical null only at chance level (C1 AUC 0.460-0.545; W AUC 0.427-0.561; TPR up to 0.060 at 5% FPR). The best method reduced random-effects ATE bias by more than half (from 0.01865 to 0.00816; relative reduction 0.563). Relative bias reduction improved as the Z-to-Y effect strengthened, while sample-size gains were method-specific; null-centred W confirmed weak discrimination.
 
 **Conclusions:** IONE is a descriptive sensitivity tool, not an inferential test for hidden effect modification. It should be reported alongside conventional meta-analytic models and covariate adjustment.
 
@@ -95,7 +95,7 @@ The design followed ADEMP [morris2019]; checklists are in Additional files 2 and
 
 ### Primary IPD scenario
 
-Table 1 reports the primary scenario (n=2000, 10 studies, K=5). Agreement with the constructed true-Z partition was modest (Oracle ARI 0.372; best non-Oracle 1B_residual 0.032). Methods closer to the Oracle had C1 nearer to 1 and higher W_true, while random stratification yielded C1 0.883; W_true exceeded W_est, reflecting that the estimated CATE captures only part of the true CATE variation. The best ATE bias reduction came from 1B_residual: crude bias 0.01865, stratified bias 0.01345 (relative reduction 0.279) and random-effects bias 0.00816 (relative reduction 0.563). For comparison, random-effects pooling across the true study identifiers (i.e. a study-level meta-analysis) gave an absolute ATE bias of 0.01568 (reduction 0.00296 from crude 0.01865). Pooling strata with DerSimonian-Laird improved over the fixed-effect summary, confirming that stratum-specific effects should be allowed to vary. Null-centred excess diagnostics for the best method were modest (C1_excess 0.054; W_est_excess 0.036).
+Table 1 reports the primary scenario (n=2000, 10 studies, K=5). Agreement with the constructed true-Z partition was modest (Oracle ARI 0.372; best non-Oracle 1B_residual 0.032). Oracle and residual methods had the highest W_true values, but C1 was high across most methods (even random stratification yielded C1 0.883), indicating that C1 alone did not separate useful from chance stratifications; W_true separated the methods better. W_true exceeded W_est, reflecting that the estimated CATE captures only part of the true CATE variation. The best ATE bias reduction came from 1B_residual: crude bias 0.01865, stratified bias 0.01345 (relative reduction 0.279) and random-effects bias 0.00816 (relative reduction 0.563). For comparison, random-effects pooling across the true study identifiers (i.e. a study-level meta-analysis) gave an absolute ATE bias of 0.01568 (reduction 0.00296 from crude 0.01865). Pooling strata with DerSimonian-Laird improved over the fixed-effect summary, confirming that stratum-specific effects should be allowed to vary. Null-centred excess diagnostics for the best method were modest (C1_excess 0.054; W_est_excess 0.036).
 
 | Method | ARI | C1 | W_true | W_est | Crude bias | Stratified bias | RE bias | Rel reduction strat | Rel reduction RE | RE I2 |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -143,7 +143,7 @@ Figure 3 displays ARI by dataset and method for the semi-synthetic examples.
 
 ### Sensitivity to sample size
 
-Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). Crude bias declined with n; the largest relative reductions for leading methods occurred at n = 10 000. At n = 10 000 the residual method had random-effects ATE bias 0.00864 (relative reduction 0.348), compared with 0.00816 at n = 2000. The residual method showed an absolute floor near 0.008-0.009, so its relative reduction decreased with n. This pattern indicates that stratification can remove the estimable part of confounding-driven aggregation bias, but it cannot fully adjust for unmodelled hidden effect modification.
+Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). Crude bias declined with n. The residual method's absolute random-effects ATE bias plateaued near 0.008–0.009 across the three sample sizes (0.00824 at n=500, 0.00852 at n=2000 and 0.00864 at n=10 000), so its relative reduction fell as the crude marginal estimate became more precise. Propensity-score, prognostic-score and clustering-based methods achieved larger relative reductions at n=10 000 (range 0.533–0.669), confirming that performance depends on the method as well as sample size. This pattern indicates that stratification can remove the estimable part of confounding-driven aggregation bias, but it cannot fully adjust for unmodelled hidden effect modification.
 
 ![Figure 4. Sample-size sensitivity of random-effects ATE bias reduction (K=5).](fig4_rsm_ipd_sample_size.png)
 
@@ -222,7 +222,7 @@ W is a ratio whose denominator is the overall CATE variance. When effect modific
 
 ### Large-sample behaviour
 
-At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias (0.00864; relative reduction 0.348), although the absolute bias fell compared with n = 2000. This floor is consistent with the ARI ceiling: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
+At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias (0.00864; relative reduction 0.348), similar to the absolute floor observed at n=500 (0.00824) and n=2000 (0.00852). This floor is consistent with the ARI ceiling: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
 
 ### Relevance to SMMR readers
 
