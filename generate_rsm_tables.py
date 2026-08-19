@@ -212,6 +212,20 @@ def main():
             }
         )
 
+    # Supplementary Table S7: absolute-deviation ROC calibration
+    if diagnostic_roc is not None and not diagnostic_roc.empty:
+        _add_table(
+            doc, diagnostic_roc,
+            ['Method', 'C1 abs-AUC', 'C1 abs TPR@5% FPR', 'W_est abs-AUC', 'W_est abs TPR@5% FPR'],
+            'Supplementary Table S7. Absolute-deviation diagnostic discrimination of C1 and W_est against the empirical null distribution (n=2000, K=5, 200 null and 50 alternative replications).',
+            {
+                'Method': 'method', 'C1 abs-AUC': 'c1_abs_auc',
+                'C1 abs TPR@5% FPR': 'c1_abs_tpr_95pct',
+                'W_est abs-AUC': 'w_abs_auc',
+                'W_est abs TPR@5% FPR': 'w_abs_tpr_95pct'
+            }
+        )
+
     # Supplementary Table S1: Strata count sensitivity
     if full is not None and not full.empty:
         _add_table(

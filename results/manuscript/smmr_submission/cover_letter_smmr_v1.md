@@ -33,7 +33,7 @@ This manuscript is original and is not under consideration elsewhere. The author
 **Conflicts and funding.**
 The authors declare no competing interests. No external funding supported this work.
 
-Suggested reviewers: [To be added: 3–5 names with institutions and email addresses.]
+Suggested reviewers: the corresponding author will enter 3–5 names with institutions and email addresses through the journal submission system.
 
 Thank you for considering our submission.
 

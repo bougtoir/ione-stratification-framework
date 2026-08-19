@@ -129,7 +129,7 @@ Table S1 presents how random-effects ATE bias reduction and ARI changed as the n
 
 ### Sensitivity to sample size
 
-Table S2 summarises the primary scenario repeated with n = 500, 2000 and 10 000, fixing K = 5 and the moderate Z-to-X and Z-to-Y effects. Because this extended sensitivity used 30 replications per cell, the point estimates are still noisier than the primary scenario; Monte Carlo SEs are reported to help gauge this uncertainty. The crude marginal ATE bias decreased with sample size, as expected from a more precisely estimated risk difference. The absolute random-effects bias declined for propensity-score, prognostic-score and clustering-based approaches, and these methods achieved their largest relative bias reductions at n = 10 000. In contrast, the outcome-residual approach showed a floor near 0.008-0.009 and its relative bias reduction therefore decreased with n, while GMM improved only gradually. This mixed pattern confirms that the practical value of IONE depends on the interplay between sample size and method choice: with small samples, estimation error dominates; with large samples, remaining bias reflects structural limits of the selected stratification.
+Table S2 summarises the primary scenario repeated with n = 500, 2000 and 10 000, fixing K = 5 and the moderate Z-to-X and Z-to-Y effects. Because this extended sensitivity used 30 replications per cell, the point estimates are still noisier than the primary scenario; Monte Carlo SEs are reported to help gauge this uncertainty. The crude marginal ATE bias decreased with sample size, as expected from a more precisely estimated risk difference. The absolute random-effects bias declined for propensity-score, prognostic-score and clustering-based approaches, and these methods achieved their largest relative bias reductions at n = 10 000. In contrast, the outcome-residual approach showed a floor near 0.008-0.009 and its relative bias reduction therefore decreased with n, while GMM improved only gradually. This mixed pattern shows that the practical value of IONE depends on the interplay between sample size and method choice: with small samples, estimation error dominates; with large samples, remaining bias reflects structural limits of the selected stratification.
 
 | Condition | Method | ARI | ARI SE | C1 | C1 SE | W_est | W_est SE | RE bias | RE bias SE | Rel reduction RE | Rel reduction RE SE | RE I2 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
@@ -238,4 +238,24 @@ Table S6 compares W_est computed under three outcome-model specifications. A mai
 | baseline_random | -0.000 | 0.857 | 0.004 | 0.004 | 0.004 | 0.005 | 0.02024 | 0.040 |
 
 *Table S6. Sensitivity of W_est to outcome-model specification (n=2000, K=5, 50 replications).*
+
+### Absolute-deviation diagnostic calibration
+
+Table S7 uses absolute distance from the empirical null mean as the diagnostic score, so that neither a lower C1 nor a higher W is assumed a priori. C1 abs-AUC ranged from 0.419 to 0.532 and W_est abs-AUC from 0.470 to 0.589; the residual method's C1 abs-AUC was 0.473. These values remained at or near chance level, showing that the weak one-sided ROC discrimination in Table 4 is not an artifact of the chosen tail.
+
+| Method | C1 abs-AUC | C1 abs TPR@5% FPR | W_est abs-AUC | W_est abs TPR@5% FPR |
+|---|---|---|---|---|
+| 1A_predicted_prob | 0.520 | 0.060 | 0.518 | 0.080 |
+| 1B_residual | 0.473 | 0.060 | 0.519 | 0.060 |
+| 1C_cv_decision | 0.520 | 0.060 | 0.518 | 0.080 |
+| 2A_PCA_cum60 | 0.530 | 0.060 | 0.487 | 0.060 |
+| 2B_clustering | 0.510 | 0.020 | 0.470 | 0.060 |
+| GMM | 0.492 | 0.060 | 0.488 | 0.080 |
+| PS_propensity_score | 0.532 | 0.060 | 0.485 | 0.020 |
+| Prognostic_score | 0.523 | 0.020 | 0.589 | 0.040 |
+| baseline_oracle_kmeans | 0.419 | 0.000 | 0.478 | 0.040 |
+| baseline_oracle_quantile | 0.471 | 0.000 | 0.538 | 0.060 |
+| baseline_random | 0.460 | 0.040 | 0.525 | 0.040 |
+
+*Table S7. Absolute-deviation diagnostic discrimination of C1 and W_est against the empirical null distribution (n=2000, K=5, 200 null and 50 alternative replications).*
 

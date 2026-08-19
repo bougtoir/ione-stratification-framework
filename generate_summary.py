@@ -391,20 +391,45 @@ def summarise_diagnostic_roc():
         s_w = np.concatenate([w_null, w_alt])  # higher W_est more abnormal
         auc_w = float(roc_auc_score(y_w, s_w)) if len(np.unique(y_w)) == 2 else np.nan
 
+        # Absolute-deviation from the null mean: neither assumes lower C1 nor higher W.
+        c1_null_mean = float(c1_null.mean())
+        w_null_mean = float(w_null.mean())
+        abs_c1_null = np.abs(c1_null - c1_null_mean)
+        abs_c1_alt = np.abs(c1_alt - c1_null_mean)
+        abs_w_null = np.abs(w_null - w_null_mean)
+        abs_w_alt = np.abs(w_alt - w_null_mean)
+
+        c1_abs_95 = float(np.percentile(abs_c1_null, 95))
+        w_abs_95 = float(np.percentile(abs_w_null, 95))
+        tpr_c1_abs = float((abs_c1_alt > c1_abs_95).mean())
+        tpr_w_abs = float((abs_w_alt > w_abs_95).mean())
+
+        s_c1_abs = np.concatenate([abs_c1_null, abs_c1_alt])
+        auc_c1_abs = float(roc_auc_score(y_c1, s_c1_abs)) if len(np.unique(y_c1)) == 2 else np.nan
+
+        s_w_abs = np.concatenate([abs_w_null, abs_w_alt])
+        auc_w_abs = float(roc_auc_score(y_w, s_w_abs)) if len(np.unique(y_w)) == 2 else np.nan
+
         rows.append({
             'method': method,
             'n_null': len(n),
             'n_alt': len(a),
-            'c1_null_mean': float(c1_null.mean()),
+            'c1_null_mean': c1_null_mean,
             'c1_alt_mean': float(c1_alt.mean()),
             'c1_5pct_threshold': c1_5,
             'c1_tpr_5pct': tpr_c1,
             'c1_auc': auc_c1,
-            'w_null_mean': float(w_null.mean()),
+            'c1_abs_95pct_threshold': c1_abs_95,
+            'c1_abs_tpr_95pct': tpr_c1_abs,
+            'c1_abs_auc': auc_c1_abs,
+            'w_null_mean': w_null_mean,
             'w_alt_mean': float(w_alt.mean()),
             'w_95pct_threshold': w_95,
             'w_tpr_95pct': tpr_w,
             'w_auc': auc_w,
+            'w_abs_95pct_threshold': w_abs_95,
+            'w_abs_tpr_95pct': tpr_w_abs,
+            'w_abs_auc': auc_w_abs,
         })
 
     if not rows:
