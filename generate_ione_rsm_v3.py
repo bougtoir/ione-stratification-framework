@@ -426,7 +426,7 @@ def _adapt_background(old_bg, cm, v):
         'The goal is not to recover hidden variables but to reduce misleading marginal summaries when the IPD contains hidden effect modification.\n\n'
         'Hidden population structure is documented across medicine and social science: kidney-stone treatments [charig1986], university admissions [bickel1975], COVID-19 case-fatality comparisons [vonkuegelgen2021], national vaccine-surveillance data [haas2021], and smoking-mortality studies [appleton1996]. '
         'Established methods adjust for measured confounders but do not detect unmeasured population structure. '
-        'We operationalise IONE through two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total CATE variance explained by the stratification. '
+        'We operationalise IONE through two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total conditional average treatment effect (CATE) variance explained by the stratification. '
         'Stratum-specific risk differences are synthesised with fixed-effect or DerSimonian-Laird random-effects meta-analysis. '
         'C1 measures the coherence of a stratification after it has been formed; W is a ratio whose denominator is the overall CATE variance and is therefore unstable when the modification signal is weak.'
     )
@@ -476,7 +476,7 @@ To contextualise within-study and between-study heterogeneity, we also formed a 
 
 ### Empirical null distribution and null-centred reporting
 
-We ran 200 additional replications under the primary DGM with Z-by-A interaction coefficients set to zero. This retains confounding and covariate traces but has no true effect modification. For each method we recorded C1 and W_est and report the 5th, 50th and 95th percentiles in Supplementary Table S5. Values below the 5th percentile (C1) or above the 95th percentile (W_est) provide method-specific thresholds for flagging incoherence. In addition, we computed excess diagnostics by subtracting the empirical null mean, producing more stable summaries than raw W and C1.
+We ran 200 additional replications under the primary data-generating mechanism (DGM) with Z-by-A interaction coefficients set to zero. This retains confounding and covariate traces but has no true effect modification. For each method we recorded C1 and W_est and report the 5th, 50th and 95th percentiles in Supplementary Table S5. Values below the 5th percentile (C1) or above the 95th percentile (W_est) provide method-specific thresholds for flagging incoherence. In addition, we computed excess diagnostics by subtracting the empirical null mean, producing more stable summaries than raw W and C1.
 
 ### W_est outcome-model misspecification sensitivity
 
@@ -1077,11 +1077,11 @@ def generate_v3_manuscript():
 
     # Build sections
     abstract = (
-        f"**Background:** In IPD meta-analysis, marginal treatment-effect estimates can be biased by hidden effect modifiers. "
+        f"**Background:** In individual participant data (IPD) meta-analysis, marginal effect estimates can be biased by hidden effect modifiers. "
         f"We introduce coherence diagnostics C1 and W and evaluate them in a simulation benchmark of stratification approaches.\n\n"
-        f"**Methods:** We simulated an IPD meta-analysis with {v['n_studies']} studies, a binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. "
+        f"**Methods:** We simulated an IPD meta-analysis with {v['n_studies']} studies, binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. "
         f"Methods stratified pooled IPD and synthesised stratum-specific risk differences with fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
-        f"We report ARI, C1, W and ATE bias reduction, calibrating C1 and W against their empirical null distributions.\n\n"
+        f"We report ARI, C1, W and ATE bias reduction, calibrating C1 and W against empirical null distributions.\n\n"
         f"**Results:** At n={v['n_ipd']} and K={v['k_ipd']}, C1 and W_est discriminated the alternative from the empirical null only at chance level (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}; TPR up to {v['c1_tpr_max']} at 5% FPR). "
         f"The best method reduced random-effects ATE bias by more than half (from {v['crude_bias']} to {v['re_bias']}; relative reduction {v['rel_re']}). "
         f"Relative bias reduction improved as the Z-to-Y effect strengthened, while sample-size gains were method-specific; W excess showed weak discrimination.\n\n"
