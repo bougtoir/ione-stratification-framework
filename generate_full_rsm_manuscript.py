@@ -127,7 +127,8 @@ def _add_paragraph_narrative(doc, text):
 
 
 def generate_rsm_figures(ipd_primary, ipd_full, real_data,
-                         ipd_sensitivity=None, ipd_nonlinearity=None):
+                         ipd_sensitivity=None, ipd_nonlinearity=None,
+                         diagnostic_roc=None):
     """Generate the RSM figures and the editable PPTX deck."""
     os.makedirs(os.path.join(FIG_DIR, 'pptx'), exist_ok=True)
     figs = []
@@ -294,6 +295,50 @@ def generate_rsm_figures(ipd_primary, ipd_full, real_data,
             fig.savefig(os.path.join(FIG_DIR, 'fig5_rsm_ipd_nonlinearity.eps'), format='eps', bbox_inches='tight')
             plt.close(fig)
             figs.append(('Figure 5', 'Non-linear Z->X robustness: random-effects ATE bias reduction (n=2000, K=5).', png))
+
+    # Figure 6: diagnostic calibration of C1 and W_est (AUC against empirical null)
+    if diagnostic_roc is not None and not diagnostic_roc.empty:
+        roc = diagnostic_roc.copy()
+        # order by W_est AUC, best methods first
+        roc = roc.sort_values('w_auc', ascending=True)
+        y = np.arange(len(roc))
+        fig, ax = plt.subplots(figsize=(8, 5))
+        width = 0.35
+        ax.barh(y - width / 2, roc['c1_auc'], width, label='C1 AUC', color='tab:orange')
+        ax.barh(y + width / 2, roc['w_auc'], width, label='W_est AUC', color='tab:red')
+        ax.axvline(0.5, color='black', linewidth=0.8, linestyle='--', label='Chance (AUC=0.5)')
+        ax.set_yticks(y)
+        ax.set_yticklabels(roc['method'])
+        ax.set_xlabel('Area under the ROC curve')
+        ax.set_xlim(0.35, 0.65)
+        ax.set_title('Diagnostic calibration: discrimination of alternative from null')
+        ax.legend(loc='lower right')
+        fig.tight_layout()
+        png = os.path.join(FIG_DIR, 'fig6_rsm_diagnostic_calibration.png')
+        fig.savefig(png, dpi=300)
+        fig.savefig(os.path.join(FIG_DIR, 'fig6_rsm_diagnostic_calibration.eps'), format='eps', bbox_inches='tight')
+        plt.close(fig)
+        figs.append(('Figure 6', 'Diagnostic calibration of C1 and W_est: AUC for discriminating the alternative DGM from the empirical null distribution (n=2000, K=5).', png))
+
+    # Figure 7: CATE variance explained (eta^2 = W_true) by method
+    if ipd_primary is not None and not ipd_primary.empty:
+        df = ipd_primary.copy().sort_values('W_true_mean', ascending=True)
+        y = np.arange(len(df))
+        fig, ax = plt.subplots(figsize=(8, 5))
+        width = 0.35
+        ax.barh(y - width / 2, df['W_true_mean'], width, label='eta^2 (W_true)', color='tab:blue')
+        ax.barh(y + width / 2, df['W_est_mean'], width, label='W_est', color='tab:green')
+        ax.set_yticks(y)
+        ax.set_yticklabels(df['method'])
+        ax.set_xlabel('CATE variance explained')
+        ax.set_title('CATE variance explained by stratification (primary scenario)')
+        ax.legend(loc='lower right')
+        fig.tight_layout()
+        png = os.path.join(FIG_DIR, 'fig7_cate_variance_explained.png')
+        fig.savefig(png, dpi=300)
+        fig.savefig(os.path.join(FIG_DIR, 'fig7_cate_variance_explained.eps'), format='eps', bbox_inches='tight')
+        plt.close(fig)
+        figs.append(('Figure 7', 'CATE variance explained (eta^2 = W_true) and estimated W_est by method in the primary scenario (n=2000, K=5).', png))
 
     prs = Presentation()
     prs.slide_width = PptxInches(13.333)

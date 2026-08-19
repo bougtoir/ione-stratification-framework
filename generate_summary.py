@@ -6,6 +6,7 @@ All numbers written to results/summary/ are the source for the manuscript.
 import os
 import numpy as np
 import pandas as pd
+from sklearn.metrics import roc_auc_score
 
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), 'results')
 OUT_DIR = os.path.join(RESULTS_DIR, 'summary')
@@ -25,6 +26,53 @@ def _mc_stats(s: pd.Series):
     se = std / np.sqrt(len(s))
     ci = 1.96 * se
     return (mean, std, se, ci)
+
+
+def _read_summary(name: str):
+    path = os.path.join(OUT_DIR, name)
+    if not os.path.exists(path):
+        return None
+    return pd.read_csv(path)
+
+
+def _add_null_centered_metrics(df: pd.DataFrame, null_summary: pd.DataFrame):
+    """Add null-mean-centered metrics: excess C1 and W above the empirical null mean.
+
+    Because W is a ratio whose denominator (overall CATE variance) is small under
+    the null, raw W values can be unstable. Centering by the empirical null mean
+    gives a diagnostic of how much a value exceeds what is expected when no true
+    effect modification is present.
+    """
+    if null_summary is None or null_summary.empty or df is None or df.empty:
+        df['C1_excess'] = np.nan
+        df['W_true_excess'] = np.nan
+        df['W_est_excess'] = np.nan
+        return df
+    maps = {
+        'C1_excess': ('C1_heterogeneity', 'C1_heterogeneity_mean', True),
+        'W_true_excess': ('W_true', 'W_true_mean', False),
+        'W_est_excess': ('W_est', 'W_est_mean', False),
+    }
+    # Force default float dtype for new columns
+    for new_col in maps:
+        df[new_col] = np.nan
+    for method, sub_null in null_summary.groupby('method'):
+        mask = df['method'] == method
+        if not mask.any():
+            continue
+        for new_col, (src, null_mean_col, invert) in maps.items():
+            if src not in df.columns or null_mean_col not in sub_null.columns:
+                continue
+            null_mean = sub_null[null_mean_col].mean()
+            if pd.isna(null_mean):
+                continue
+            vals = df.loc[mask, src].astype(float)
+            if invert:
+                diff = null_mean - vals
+            else:
+                diff = vals - null_mean
+            df.loc[mask, new_col] = np.where(diff > 0, diff, 0.0)
+    return df
 
 
 def _summarise(df: pd.DataFrame, group_cols: list, metric_cols: list) -> pd.DataFrame:
@@ -163,8 +211,10 @@ def summarise_rsm_ipd():
 
     df = pd.read_csv(path)
     df = df[df['error'].isna()].copy()
-    metric_cols = ['ARI', 'C1_heterogeneity', 'W_true', 'W_est',
-                   'bias_crude', 'bias_stratified', 'bias_re',
+    null_summary = _read_summary('rsm_ipd_null_summary.csv')
+    df = _add_null_centered_metrics(df, null_summary)
+    metric_cols = ['ARI', 'C1_heterogeneity', 'C1_excess', 'W_true', 'W_true_excess',
+                   'W_est', 'W_est_excess', 'bias_crude', 'bias_stratified', 'bias_re',
                    'bias_reduction', 'bias_reduction_relative',
                    'bias_reduction_re', 'bias_reduction_relative_re',
                    're_tau2', 're_I2']
@@ -209,8 +259,10 @@ def _summarise_rsm_ipd_file(path: str, label: str):
 
     df = pd.read_csv(path)
     df = df[df['error'].isna()].copy()
-    metric_cols = ['ARI', 'C1_heterogeneity', 'W_true', 'W_est',
-                   'bias_crude', 'bias_stratified', 'bias_re',
+    null_summary = _read_summary('rsm_ipd_null_summary.csv')
+    df = _add_null_centered_metrics(df, null_summary)
+    metric_cols = ['ARI', 'C1_heterogeneity', 'C1_excess', 'W_true', 'W_true_excess',
+                   'W_est', 'W_est_excess', 'bias_crude', 'bias_stratified', 'bias_re',
                    'bias_reduction', 'bias_reduction_relative',
                    'bias_reduction_re', 'bias_reduction_relative_re',
                    're_tau2', 're_I2']
@@ -273,7 +325,10 @@ def summarise_w_est_misspec():
         return
     df = pd.read_csv(path)
     df = df[df['error'].isna()].copy()
-    metric_cols = ['ARI', 'C1_heterogeneity', 'W_true', 'W_est', 'W_est_main', 'W_est_polynomial',
+    null_summary = _read_summary('rsm_ipd_null_summary.csv')
+    df = _add_null_centered_metrics(df, null_summary)
+    metric_cols = ['ARI', 'C1_heterogeneity', 'C1_excess', 'W_true', 'W_true_excess',
+                   'W_est', 'W_est_excess', 'W_est_main', 'W_est_polynomial',
                    'bias_crude', 'bias_stratified', 'bias_re',
                    'bias_reduction', 'bias_reduction_relative',
                    'bias_reduction_re', 'bias_reduction_relative_re',
@@ -283,16 +338,94 @@ def summarise_w_est_misspec():
     print(f'[generate_summary] w_est_misspec summary: {len(summary)} rows')
 
 
+def summarise_diagnostic_roc():
+    """Compute diagnostic ROC/AUC/TPR for C1 and W_est using the empirical null distribution."""
+    alt_path = os.path.join(RESULTS_DIR, 'rsm_ipd_results.csv')
+    null_path = os.path.join(RESULTS_DIR, 'rsm_ipd_null_results.csv')
+    if not os.path.exists(alt_path) or not os.path.exists(null_path):
+        print('[generate_summary] rsm_ipd_results.csv or rsm_ipd_null_results.csv not found; skipping ROC')
+        return
+
+    alt = pd.read_csv(alt_path).dropna(subset=['C1_heterogeneity', 'W_est'])
+    null = pd.read_csv(null_path).dropna(subset=['C1_heterogeneity', 'W_est'])
+
+    cond = {
+        'n': 2000,
+        'n_strata': 5,
+        'z_effect_scale': 1.0,
+        'zx_influence_scale': 1.0,
+        'n_studies': 10,
+        'study_effect_scale': 0.6,
+    }
+    for k, v in cond.items():
+        if k in alt.columns:
+            alt = alt[alt[k] == v]
+        if k in null.columns:
+            null = null[null[k] == v]
+    if 'nonlinear' in alt.columns:
+        alt = alt[alt['nonlinear'] == False]
+    if 'nonlinear' in null.columns:
+        null = null[null['nonlinear'] == False]
+
+    rows = []
+    for method in sorted(alt['method'].unique()):
+        a = alt[alt['method'] == method]
+        n = null[null['method'] == method]
+        if a.empty or n.empty:
+            continue
+        c1_null = n['C1_heterogeneity'].values
+        c1_alt = a['C1_heterogeneity'].values
+        w_null = n['W_est'].values
+        w_alt = a['W_est'].values
+
+        c1_5 = float(np.percentile(c1_null, 5))
+        w_95 = float(np.percentile(w_null, 95))
+        tpr_c1 = float((c1_alt < c1_5).mean())
+        tpr_w = float((w_alt > w_95).mean())
+
+        y_c1 = np.array([0] * len(c1_null) + [1] * len(c1_alt))
+        s_c1 = np.concatenate([-c1_null, -c1_alt])  # lower C1 more abnormal
+        auc_c1 = float(roc_auc_score(y_c1, s_c1)) if len(np.unique(y_c1)) == 2 else np.nan
+
+        y_w = np.array([0] * len(w_null) + [1] * len(w_alt))
+        s_w = np.concatenate([w_null, w_alt])  # higher W_est more abnormal
+        auc_w = float(roc_auc_score(y_w, s_w)) if len(np.unique(y_w)) == 2 else np.nan
+
+        rows.append({
+            'method': method,
+            'n_null': len(n),
+            'n_alt': len(a),
+            'c1_null_mean': float(c1_null.mean()),
+            'c1_alt_mean': float(c1_alt.mean()),
+            'c1_5pct_threshold': c1_5,
+            'c1_tpr_5pct': tpr_c1,
+            'c1_auc': auc_c1,
+            'w_null_mean': float(w_null.mean()),
+            'w_alt_mean': float(w_alt.mean()),
+            'w_95pct_threshold': w_95,
+            'w_tpr_95pct': tpr_w,
+            'w_auc': auc_w,
+        })
+
+    if not rows:
+        print('[generate_summary] no diagnostic ROC rows produced')
+        return
+    df = pd.DataFrame(rows)
+    df.to_csv(os.path.join(OUT_DIR, 'rsm_ipd_diagnostic_roc_summary.csv'), index=False)
+    print(f'[generate_summary] diagnostic ROC summary: {len(df)} methods')
+
+
 def main():
     summarise_phase1()
     summarise_sensitivity('sensitivity')
     summarise_sensitivity('nonlinearity')
     summarise_real_data()
+    summarise_rsm_ipd_null()  # needed as a reference for null-centered metrics
     summarise_rsm_ipd()
     summarise_rsm_ipd_sensitivity()
     summarise_rsm_ipd_nonlinearity()
-    summarise_rsm_ipd_null()
     summarise_w_est_misspec()
+    summarise_diagnostic_roc()
     print('[generate_summary] all summaries written to', OUT_DIR)
 
 

@@ -1,4 +1,4 @@
-"""Generate a separate editable .docx containing all Biostatistics tables."""
+"""Generate a separate editable .docx containing all SMMR tables."""
 
 import os
 import numpy as np
@@ -7,7 +7,7 @@ from docx import Document
 from docx.shared import Pt
 
 SUMMARY_DIR = os.path.join(os.path.dirname(__file__), 'results', 'summary')
-OUT_DIR = os.path.join(os.path.dirname(__file__), 'results', 'manuscript', 'biostatistics_submission')
+OUT_DIR = os.path.join(os.path.dirname(__file__), 'results', 'manuscript', 'smmr_submission')
 os.makedirs(OUT_DIR, exist_ok=True)
 
 
@@ -109,6 +109,7 @@ def main():
     nonlinearity = _read('rsm_ipd_nonlinearity_full_summary.csv')
     null_summary = _read('rsm_ipd_null_summary.csv')
     misspec_summary = _read('w_est_misspec_summary.csv')
+    diagnostic_roc = _read('rsm_ipd_diagnostic_roc_summary.csv')
 
     top_methods = ['1B_residual', 'PS_propensity_score', 'GMM', 'Prognostic_score', '2B_clustering']
     if primary is not None and not primary.empty:
@@ -198,6 +199,18 @@ def main():
                                    'Linear rel reduction': 3, 'Linear rel reduction SE': 3,
                                    'Non-linear rel reduction': 3, 'Non-linear rel reduction SE': 3}
             )
+
+    # Table 4: Diagnostic ROC calibration
+    if diagnostic_roc is not None and not diagnostic_roc.empty:
+        _add_table(
+            doc, diagnostic_roc,
+            ['Method', 'C1 AUC', 'C1 TPR@5% FPR', 'W_est AUC', 'W_est TPR@5% FPR'],
+            'Table 4. Diagnostic discrimination of C1 and W_est against the empirical null distribution (n=2000, K=5, 200 null and 50 alternative replications).',
+            {
+                'Method': 'method', 'C1 AUC': 'c1_auc', 'C1 TPR@5% FPR': 'c1_tpr_5pct',
+                'W_est AUC': 'w_auc', 'W_est TPR@5% FPR': 'w_tpr_95pct'
+            }
+        )
 
     # Supplementary Table S1: Strata count sensitivity
     if full is not None and not full.empty:
@@ -323,7 +336,7 @@ def main():
             decimal_overrides={'RE bias': 5, 'Relative reduction RE': 3}
         )
 
-    out = os.path.join(OUT_DIR, 'biostatistics_tables_separate.docx')
+    out = os.path.join(OUT_DIR, 'smmr_tables_separate.docx')
     doc.save(out)
     print(f'[generate_rsm_tables] {out}')
 
