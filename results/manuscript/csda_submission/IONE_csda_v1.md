@@ -60,6 +60,18 @@ To contextualise within-study and between-study heterogeneity, we also formed a 
 
 ### Evaluation metrics
 
+#### Formal definitions
+
+For a stratification with K strata, let theta_k be the stratum-specific log odds ratio and tau^2 the DerSimonian-Laird between-stratum variance. Let v_w denote a typical within-stratum sampling variance. Then
+
+C1 = 1 - I^2 = 1 - tau^2 / (tau^2 + v_w),
+
+where lower C1 indicates greater between-stratum heterogeneity of stratum-specific log odds ratios. For estimated individual CATEs tau(X_i), let tau_k be the mean CATE in stratum k and tau the overall mean. The proportion of total CATE variance explained by the stratification is
+
+W = sum_k n_k (tau_k - tau)^2 / sum_i (tau_i - tau)^2,
+
+where the numerator is the between-stratum variance weighted by stratum size and the denominator is the total variance of estimated individual CATEs. Both C1 and W are descriptive indices; they flag incoherence but are not inferential tests for hidden effect modification.
+
 **ARI** [hubert1985]: agreement between estimated strata and an operational approximation of the true-Z partition, corrected for chance. Because the true hidden modifier is multidimensional and has no unique clinical representation, the reference partition was formed by k-means clustering of standardised Z-space into K strata. ARI therefore measures how well a method recovers this k-means approximation, not recovery of a clinically validated true subgroup structure. Values near zero indicate chance agreement; the Oracle and true-CATE-quantile references provide computational upper bounds relative to this approximation.
 
 **C1** = 1 - I^2 applied to stratum-specific log odds ratios [higgins2002]. Lower C1 indicates greater between-stratum heterogeneity of stratum-specific log odds ratios. Because C1 is computed on the log-odds scale while ATE bias is on the risk-difference scale, it is an indirect diagnostic of bias; it summarises the coherence of the selected partition, not the magnitude of hidden modification.

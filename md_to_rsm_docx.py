@@ -31,8 +31,8 @@ class CiteManager:
         self._cited = []
         self._key_to_num = {}
 
-    def register(self, key, author_short, year, full_ref):
-        self._refs[key] = {'author': author_short, 'year': year, 'full': full_ref}
+    def register(self, key, author_short, year, full_ref, doi=None):
+        self._refs[key] = {'author': author_short, 'year': year, 'full': full_ref, 'doi': doi}
         return key
 
     def cite(self, key, narrative=False):
@@ -53,7 +53,12 @@ class CiteManager:
         doc.add_heading('References', level=1)
         for i, key in enumerate(self._cited, 1):
             p = doc.add_paragraph()
-            p.add_run(f'{i}. {self._refs[key]["full"]}')
+            ref = self._refs[key]
+            text = f'{i}. {ref["full"]}'
+            doi = ref.get('doi')
+            if doi:
+                text += f' doi: {doi}'
+            p.add_run(text)
 
 
 def _apply_inline(runs, text, cite_manager=None):
@@ -244,6 +249,8 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
 
 _MATH_PATTERNS = [
     (r'P\(Y=1\|A=1\) - P\(Y=1\|A=0\)', 'riskdiff'),
+    (r'C1 = 1 - I\^2 = 1 - tau\^2 / \(tau\^2 \+ v_w\)', 'c1eq'),
+    (r'W = sum_k n_k \(tau_k - tau\)\^2 / sum_i \(tau_i - tau\)\^2', 'weq'),
     (r'C1 = 1 - I\^2', 'c1def'),
     (r'Y ~ X \+ A \+ X\*A', 'ymodel'),
     (r'1 - \|bias_([a-z_]+)\| / \|bias_([a-z_]+)\|', 'frac'),
@@ -316,6 +323,58 @@ def _make_math_omath(kind, match):
     oMath = OxmlElement('m:oMath')
     if kind == 'riskdiff':
         _math_text(oMath, 'P(Y=1|A=1) - P(Y=1|A=0)')
+    elif kind == 'c1eq':
+        _math_text(oMath, 'C1 = 1 - ')
+        _math_superscript(oMath, 'I', '2')
+        _math_text(oMath, ' = 1 - ')
+        f = OxmlElement('m:f')
+        num = OxmlElement('m:num')
+        _math_superscript(num, 'τ', '2')
+        den = OxmlElement('m:den')
+        _math_superscript(den, 'τ', '2')
+        _math_text(den, ' + ')
+        _math_subscript(den, 'v', 'w')
+        f.append(num)
+        f.append(den)
+        oMath.append(f)
+    elif kind == 'weq':
+        _math_text(oMath, 'W = ')
+        f = OxmlElement('m:f')
+        num = OxmlElement('m:num')
+        _math_subscript(num, 'Σ', 'k')
+        _math_text(num, ' ')
+        _math_subscript(num, 'n', 'k')
+        _math_text(num, ' ')
+        group = OxmlElement('m:e')
+        _math_text(group, '(')
+        _math_subscript(group, 'τ', 'k')
+        _math_text(group, ' - ')
+        _math_text(group, 'τ')
+        _math_text(group, ')')
+        ssup = OxmlElement('m:sSup')
+        ssup.append(group)
+        sup2 = OxmlElement('m:sup')
+        _math_text(sup2, '2')
+        ssup.append(sup2)
+        num.append(ssup)
+        den = OxmlElement('m:den')
+        _math_subscript(den, 'Σ', 'i')
+        _math_text(den, ' ')
+        group2 = OxmlElement('m:e')
+        _math_text(group2, '(')
+        _math_subscript(group2, 'τ', 'i')
+        _math_text(group2, ' - ')
+        _math_text(group2, 'τ')
+        _math_text(group2, ')')
+        ssup2 = OxmlElement('m:sSup')
+        ssup2.append(group2)
+        sup2b = OxmlElement('m:sup')
+        _math_text(sup2b, '2')
+        ssup2.append(sup2b)
+        den.append(ssup2)
+        f.append(num)
+        f.append(den)
+        oMath.append(f)
     elif kind == 'c1def':
         _math_text(oMath, 'C1 = 1 - ')
         _math_superscript(oMath, 'I', '2')

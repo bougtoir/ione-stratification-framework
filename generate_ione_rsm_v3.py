@@ -286,7 +286,8 @@ def _register_citations(cm):
     cm.register('vanderweele2013', 'VanderWeele and Shpitser', 2013,
                 'VanderWeele TJ, Shpitser I. On the definition of a confounder. Ann Stat. 2013;41(1):196–220.')
     cm.register('simpson1951', 'Simpson', 1951,
-                'Simpson EH. The interpretation of interaction in contingency tables. J R Stat Soc Ser B. 1951;13(2):238–241.')
+                'Simpson EH. The interpretation of interaction in contingency tables. J R Stat Soc Ser B. 1951;13(2):238–241.',
+                doi='10.1111/j.2517-6161.1951.tb00088.x')
     cm.register('rojanaworarit2020', 'Rojanaworarit', 2020,
                 'Rojanaworarit C. Misleading epidemiological and statistical evidence in the presence of Simpson\'s paradox: an illustrative study using simulated scenarios. J Med Life. 2020;13(1):37–44.')
     cm.register('vanderweele2014', 'VanderWeele and Knol', 2014,
@@ -294,7 +295,8 @@ def _register_citations(cm):
     cm.register('robinson1950', 'Robinson', 1950,
                 'Robinson WS. Ecological correlations and the behavior of individuals. Am Sociol Rev. 1950;15(3):351–357.')
     cm.register('greenland1999', 'Greenland et al.', 1999,
-                'Greenland S, Robins JM, Pearl J. Confounding and collapsibility in causal inference. Stat Sci. 1999;14(1):29–46.')
+                'Greenland S, Robins JM, Pearl J. Confounding and collapsibility in causal inference. Stat Sci. 1999;14(1):29–46.',
+                doi='10.1214/ss/1009211805')
     cm.register('charig1986', 'Charig et al.', 1986,
                 'Charig CR, Webb DR, Payne SR, Wickham JE. Comparison of treatment of renal calculi by open surgery, percutaneous nephrolithotomy, and extracorporeal shockwave lithotripsy. BMJ. 1986;292(6521):879–882.')
     cm.register('bickel1975', 'Bickel et al.', 1975,
@@ -306,9 +308,11 @@ def _register_citations(cm):
     cm.register('appleton1996', 'Appleton et al.', 1996,
                 'Appleton DR, French NR, Vanderpump MP. Ignoring a covariate: an example of Simpson\'s paradox. Am Stat. 1996;50(4):340–341.')
     cm.register('rosenbaum1983', 'Rosenbaum and Rubin', 1983,
-                'Rosenbaum PR, Rubin DB. The central role of the propensity score in observational studies for causal effects. Biometrika. 1983;70(1):41–55.')
+                'Rosenbaum PR, Rubin DB. The central role of the propensity score in observational studies for causal effects. Biometrika. 1983;70(1):41–55.',
+                doi='10.1093/biomet/70.1.41')
     cm.register('hansen2008', 'Hansen', 2008,
-                'Hansen BB. The prognostic analogue of the propensity score. Biometrika. 2008;95(2):481–488.')
+                'Hansen BB. The prognostic analogue of the propensity score. Biometrika. 2008;95(2):481–488.',
+                doi='10.1093/biomet/asn004')
     cm.register('miettinen1976', 'Miettinen', 1976,
                 'Miettinen OS. Stratification by a multivariate confounder score. Am J Epidemiol. 1976;104(6):609–620.')
     cm.register('angrist1996', 'Angrist et al.', 1996,
@@ -322,31 +326,40 @@ def _register_citations(cm):
     cm.register('tchetgen2024', 'Tchetgen Tchetgen et al.', 2024,
                 'Tchetgen Tchetgen EJ, Ying A, Cui Y, Shi X, Miao W. An introduction to proximal causal inference. Stat Sci. 2024;39(3):375–390.')
     cm.register('mclachlan2000', 'McLachlan and Peel', 2000,
-                'McLachlan GJ, Peel D. Finite Mixture Models. New York: Wiley; 2000.')
+                'McLachlan GJ, Peel D. Finite Mixture Models. New York: Wiley; 2000.',
+                doi='10.1002/0471721182')
     cm.register('hayeslarson2019', 'Hayes-Larson et al.', 2019,
                 'Hayes-Larson E, Kezios KL, Mooney SJ, Lovasi G. Who is in this study, anyway? Guidelines for a useful Table 1. J Clin Epidemiol. 2019;114:125–132.')
     cm.register('higgins2002', 'Higgins and Thompson', 2002,
-                'Higgins JPT, Thompson SG. Quantifying heterogeneity in a meta-analysis. Stat Med. 2002;21(11):1539–1558.')
+                'Higgins JPT, Thompson SG. Quantifying heterogeneity in a meta-analysis. Stat Med. 2002;21(11):1539–1558.',
+                doi='10.1002/sim.1186')
     cm.register('morris2019', 'Morris et al.', 2019,
-                'Morris TP, White IR, Crowther MJ. Using simulation studies to evaluate statistical methods. Stat Med. 2019;38(11):2074–2102.')
+                'Morris TP, White IR, Crowther MJ. Using simulation studies to evaluate statistical methods. Stat Med. 2019;38(11):2074–2102.',
+                doi='10.1002/sim.8086')
     cm.register('hubert1985', 'Hubert and Arabie', 1985,
-                'Hubert L, Arabie P. Comparing partitions. J Classif. 1985;2(1):193–218.')
+                'Hubert L, Arabie P. Comparing partitions. J Classif. 1985;2(1):193–218.',
+                doi='10.1007/bf01908075')
 
     # Additional RSM / meta-analysis / causal references
     cm.register('borenstein2009', 'Borenstein et al.', 2009,
-                'Borenstein M, Hedges LV, Higgins JPT, Rothstein HR. Introduction to Meta-Analysis. Chichester: John Wiley & Sons; 2009.')
+                'Borenstein M, Hedges LV, Higgins JPT, Rothstein HR. Introduction to Meta-Analysis. Chichester: John Wiley & Sons; 2009.',
+                doi='10.1002/9780470743386')
     cm.register('dersimonian1986', 'DerSimonian and Laird', 1986,
-                'DerSimonian R, Laird N. Meta-analysis in clinical trials. Control Clin Trials. 1986;7(3):177–188.')
+                'DerSimonian R, Laird N. Meta-analysis in clinical trials. Control Clin Trials. 1986;7(3):177–188.',
+                doi='10.1016/0197-2456(86)90046-2')
     cm.register('riley2010', 'Riley et al.', 2010,
-                'Riley RD, Lambert PC, Abo-Zaid G. Meta-analysis of individual participant data: rationale, conduct, and reporting. BMJ. 2010;340:c221.')
+                'Riley RD, Lambert PC, Abo-Zaid G. Meta-analysis of individual participant data: rationale, conduct, and reporting. BMJ. 2010;340:c221.',
+                doi='10.1136/bmj.c221')
     cm.register('riley2011', 'Riley et al.', 2011,
                 'Riley RD, Higgins JPT, Deeks JJ. Interpretation of random effects meta-analyses. BMJ. 2011;342:d549.')
     cm.register('simmonds2005', 'Simmonds et al.', 2005,
-                'Simmonds MC, Higgins JPT, Stewart LA, Tierney JF, Clarke MJ, Thompson SG. Meta-analysis of individual patient data from randomized trials: a review of methods used in practice. Clin Trials. 2005;2(3):209–217.')
+                'Simmonds MC, Higgins JPT, Stewart LA, Tierney JF, Clarke MJ, Thompson SG. Meta-analysis of individual patient data from randomized trials: a review of methods used in practice. Clin Trials. 2005;2(3):209–217.',
+                doi='10.1191/1740774505cn087oa')
     cm.register('austin2015', 'Austin and Stuart', 2015,
                 'Austin PC, Stuart EA. Moving towards best practice when using inverse probability of treatment weighting (IPTW) using the propensity score to estimate causal treatment effects in observational studies. Stat Med. 2015;34(28):3661–3679.')
     cm.register('pearl2009', 'Pearl', 2009,
-                'Pearl J. Causality. 2nd ed. Cambridge: Cambridge University Press; 2009.')
+                'Pearl J. Causality. 2nd ed. Cambridge: Cambridge University Press; 2009.',
+                doi='10.1017/cbo9780511803161')
     cm.register('rubin1974', 'Rubin', 1974,
                 'Rubin DB. Estimating causal effects of treatments in randomized and nonrandomized studies. J Educ Psychol. 1974;66(5):688–701.')
     cm.register('vanderweele2015', 'VanderWeele', 2015,
@@ -467,6 +480,18 @@ Several caveats apply. Discovered strata are not independent estimates; they are
 To contextualise within-study and between-study heterogeneity, we also formed a study-level summary: we pooled crude study-specific risk differences with a DerSimonian-Laird random-effects meta-analysis and compared its ATE bias with the IPD stratified analyses. This benchmark shows how much heterogeneity is captured by conventional study-level pooling before any covariate-based stratification is applied.
 
 ### Evaluation metrics
+
+#### Formal definitions
+
+For a stratification with K strata, let theta_k be the stratum-specific log odds ratio and tau^2 the DerSimonian-Laird between-stratum variance. Let v_w denote a typical within-stratum sampling variance. Then
+
+C1 = 1 - I^2 = 1 - tau^2 / (tau^2 + v_w),
+
+where lower C1 indicates greater between-stratum heterogeneity of stratum-specific log odds ratios. For estimated individual CATEs tau(X_i), let tau_k be the mean CATE in stratum k and tau the overall mean. The proportion of total CATE variance explained by the stratification is
+
+W = sum_k n_k (tau_k - tau)^2 / sum_i (tau_i - tau)^2,
+
+where the numerator is the between-stratum variance weighted by stratum size and the denominator is the total variance of estimated individual CATEs. Both C1 and W are descriptive indices; they flag incoherence but are not inferential tests for hidden effect modification.
 
 **ARI** [hubert1985]: agreement between estimated strata and an operational approximation of the true-Z partition, corrected for chance. Because the true hidden modifier is multidimensional and has no unique clinical representation, the reference partition was formed by k-means clustering of standardised Z-space into K strata. ARI therefore measures how well a method recovers this k-means approximation, not recovery of a clinically validated true subgroup structure. Values near zero indicate chance agreement; the Oracle and true-CATE-quantile references provide computational upper bounds relative to this approximation.
 
@@ -938,6 +963,12 @@ def _additional_files(v):
     return f"""### Additional file 1: Supplementary Methods
 
 Detailed algebraic description of the IPD data-generating mechanism. For each of the {v['n_studies']} studies, a study-specific intercept is drawn for baseline risk and treatment propensity. The critical variables are Z1 (continuous, mean 60, standard deviation 12, truncated to 20–95), Z2 (binary, probability 0.5) and Z3 (ordered, levels 0/1/2 with probabilities 0.3, 0.4, 0.3). The ten general variables X1-X10 are linear or non-linear functions of Z plus independent Gaussian noise. The treatment indicator A is generated from a logistic model with intercept, Z main effects, X main effects and a random study intercept. The outcome Y is generated from a logistic model with Z main effects, X main effects, an A main effect, Z-by-A interaction effects and a random study intercept. The true individual CATE is the difference in outcome probabilities under A=1 versus A=0 at the realised Z values. The true population ATE is the average of these CATEs over the super-population.
+
+### Additional file 4: Semi-synthetic pseudo-IPD reconstruction
+
+The five Simpson-paradox examples were reconstructed from published aggregate tables as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. The reconstruction is deterministic: each cell in the published treatment (or exposure) by outcome table is expanded to the reported number of records, and outcomes are assigned in the exact proportions shown in the source table (the first n_event records in a cell are events, the remainder are non-events). Covariates are obtained by mapping each cell to a representative value (e.g. age midpoint) plus a small amount of random noise so that the marginal distribution approximates the published totals while preserving the deterministic cell sizes.
+
+For the Israel vaccination example [haas2021], the source table in `data/haas_2021_israel_hospitalization_counts.csv` gives age- and vaccination-stratified population sizes and COVID-19-related hospitalisation counts. Because the full population exceeds six million, we first down-sampled to 100,000 records by stratified random sampling that preserved the age-vaccination cell proportions. Hospitalisation status within each down-sampled cell was then generated by binomial sampling with the observed cell hospitalisation rate followed by deterministic event assignment. The low hospitalisation rate (~0.09% in the down-sampled data) means that several down-sampled cells contain zero or very few events. In such cells, logistic models used by outcome-informed stratification methods were fitted with L2 regularisation, and any degenerate one-class fit was handled by returning the observed cell mean probability. The same deterministic reconstruction and small-cell handling applies to the kidney-stone, Berkeley, smoking and COVID-19 CFR examples.
 
 ### Additional file 2: ADEMP checklist
 

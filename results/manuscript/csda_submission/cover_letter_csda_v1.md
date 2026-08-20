@@ -24,6 +24,8 @@ The authors declare no competing interests. No external funding supported this w
 
 Suggested reviewers: the corresponding author will enter 3–5 names with institutions and email addresses through the journal submission system.
 
+**Figures.** Figures 1–7 were prepared in colour and are intended for colour reproduction in the online and print editions of the journal.
+
 Thank you for considering our submission.
 
 Sincerely,
