@@ -1,0 +1,7 @@
+Highlights
+
+- We introduce IONE diagnostics for hidden effect modification in IPD meta-analysis.
+- A simulation benchmark compares seven data-driven stratification methods.
+- Residual-based stratification gives the best ARI and ATE bias reduction.
+- C1 and W are sensitivity indices, not standalone tests.
+- All code, data and results are reproducible from a public repository.
