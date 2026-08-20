@@ -428,7 +428,9 @@ def _adapt_background(old_bg, cm, v):
         'Established methods adjust for measured confounders but do not detect unmeasured population structure. '
         'We operationalise IONE through two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total conditional average treatment effect (CATE) variance explained by the stratification. '
         'Stratum-specific risk differences are synthesised with fixed-effect or DerSimonian-Laird random-effects meta-analysis. '
-        'C1 measures the coherence of a stratification after it has been formed; W is a ratio whose denominator is the overall CATE variance and is therefore unstable when the modification signal is weak.'
+        'C1 measures the coherence of a stratification after it has been formed; W is a ratio whose denominator is the overall CATE variance and is therefore unstable when the modification signal is weak.\n\n'
+        'Because the finite-sample distributions of discovered-stratum risk differences depend on the unknown joint distribution of unmeasured modifiers and measured covariates, closed-form theoretical comparisons of the competing stratification methods are not available. '
+        'We therefore use an ADEMP-based simulation benchmark to quantify relative performance and the operating characteristics of C1 and W.'
     )
 def _new_methods(v):
     """Return markdown string for the Methods section."""
@@ -466,7 +468,7 @@ To contextualise within-study and between-study heterogeneity, we also formed a 
 
 ### Evaluation metrics
 
-**ARI** [hubert1985]: agreement between estimated strata and a constructed true-Z reference partition, corrected for chance. The true-Z partition is a k-means clustering of standardised Z-space with K strata, so ARI measures agreement with an operational reference rather than clinical validity.
+**ARI** [hubert1985]: agreement between estimated strata and an operational approximation of the true-Z partition, corrected for chance. Because the true hidden modifier is multidimensional and has no unique clinical representation, the reference partition was formed by k-means clustering of standardised Z-space into K strata. ARI therefore measures how well a method recovers this k-means approximation, not recovery of a clinically validated true subgroup structure. Values near zero indicate chance agreement; the Oracle and true-CATE-quantile references provide computational upper bounds relative to this approximation.
 
 **C1** = 1 - I^2 applied to stratum-specific log odds ratios [higgins2002]. Lower C1 indicates greater between-stratum heterogeneity of stratum-specific log odds ratios. Because C1 is computed on the log-odds scale while ATE bias is on the risk-difference scale, it is an indirect diagnostic of bias; it summarises the coherence of the selected partition, not the magnitude of hidden modification.
 
@@ -494,9 +496,13 @@ As a reference for sorting performance, we computed a true-CATE-quantile oracle 
 
 Five Simpson-paradox examples were reconstructed as pseudo-individual records from published aggregate statistics [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. The Israeli vaccination example used pseudo-IPD reconstructed from age- and vaccination-stratified COVID-19-related hospitalisation counts published by Haas et al. [haas2021]. We chose hospitalisation rather than infection counts because the age-vaccination stratification table in the source publication provides age- and vaccination-stratified counts for a severe endpoint where age confounding is pronounced, and because the low event rate (~0.09% in the down-sampled data) creates a stress-test for rare outcomes. Because the published counts cover approximately 6.5 million people, we used a stratified random down-sample of 100,000 records preserving the age- and vaccination-specific hospitalisation rates. In the down-sampled pseudo-IPD, some cells contained very few or zero hospitalisation events; logistic models used for outcome-informed methods were fitted with L2 regularisation, and any degenerate one-class fit was handled by returning the observed mean probability. Pseudo-general variables mimicked proxies of the known confounder and the number of strata K was selected from the set {{2, 3, min(K_true, 4), K_true}}, where K_true is the true number of published strata, keeping the value that maximised ARI. These are illustrations, not real-IPD validation.
 
+### Computational implementation
+
+All simulations and manuscript generation were implemented in Python 3.11 using NumPy 2.x, SciPy, scikit-learn 1.5, pandas, statsmodels and python-docx. Pseudo-random numbers were generated with `numpy.random.default_rng`, with independent seeds for each replication and scenario stored in the repository scripts and `results/summary/` metadata. Stratification used quantile-based equal-frequency bins, k-means clustering (scikit-learn, 10 random initializations, maximum 300 iterations) and Gaussian mixture models (scikit-learn, full covariance, 10 EM initializations, maximum 100 iterations). Logistic regressions were fit with `scikit-learn.linear_model.LogisticRegression` (L2 penalty, C=1.0, lbfgs solver, maximum 1000 iterations). DerSimonian-Laird random-effects summaries used `statsmodels.stats.meta_analysis`. The primary scenario required approximately 5–10 minutes of wall-clock time on a single modern CPU core; the full benchmark—primary scenario, strata/sample-size/Z-to-X/Z-to-Y sensitivities, 200-replication empirical null, W_est misspecification and semi-synthetic illustrations—completed in approximately 2–3 hours on a single core. Exact dependency versions are pinned in `requirements-lock.txt` and the code commit used for the submission package is recorded in `results/commit_hash.txt`.
+
 ### Reporting and reproducibility
 
-The design followed ADEMP [morris2019]; checklists are in Additional files 2 and 3. The pipeline is version-controlled and every manuscript number is read from repository CSV outputs. Simulations used Python 3.11; the exact dependency versions are in `requirements-lock.txt` and the commit hash used for the submission package is in `results/commit_hash.txt`.
+The design followed ADEMP [morris2019]; checklists are in Additional files 2 and 3. The pipeline is version-controlled and every manuscript number is read from repository CSV outputs. `generate_summary.py`, `generate_rsm_tables.py` and `generate_ione_rsm_v3.py` regenerate all results, figures, tables and submission files in a Python 3.11 environment with the pinned dependencies.
 """.format(n_ipd=v['n_ipd'], n_studies=v['n_studies'], study_effect=v['study_effect'], k_ipd=v['k_ipd'], n_sims_per_scenario=50)
     return md
 def _new_results(v, supplementary=False):
@@ -800,7 +806,7 @@ Table S7 uses absolute distance from the empirical null mean as the diagnostic s
 
 ### Primary IPD scenario
 
-Table 1 reports the primary scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']}). Agreement with the constructed true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}). Oracle and residual methods had the highest W_true values, but C1 was high across most methods (even random stratification yielded C1 {v['random_c1']}), indicating that C1 alone did not separate useful from chance stratifications; W_true separated the methods better. W_true exceeded W_est, reflecting that the estimated CATE captures only part of the true CATE variation. The best ATE bias reduction came from {v['best_method']}: crude bias {v['crude_bias']}, stratified bias {v['strat_bias']} (relative reduction {v['rel_strat']}) and random-effects bias {v['re_bias']} (relative reduction {v['rel_re']}). {study_footnote} Pooling strata with DerSimonian-Laird improved over the fixed-effect summary, indicating that stratum-specific effects should be allowed to vary. Null-centred excess diagnostics for the best method were modest (C1_excess {v['best_method_c1_excess']}; W_est_excess {v['best_method_west_excess']}).
+Table 1 reports the primary scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']}). Agreement with the operational k-means true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}). Oracle and residual methods had the highest W_true values, but C1 was high across most methods (even random stratification yielded C1 {v['random_c1']}), indicating that C1 alone did not separate useful from chance stratifications; W_true separated the methods better. W_true exceeded W_est, reflecting that the estimated CATE captures only part of the true CATE variation. The best ATE bias reduction came from {v['best_method']}: crude bias {v['crude_bias']}, stratified bias {v['strat_bias']} (relative reduction {v['rel_strat']}) and random-effects bias {v['re_bias']} (relative reduction {v['rel_re']}). {study_footnote} Pooling strata with DerSimonian-Laird improved over the fixed-effect summary, indicating that stratum-specific effects should be allowed to vary. Null-centred excess diagnostics for the best method were modest (C1_excess {v['best_method_c1_excess']}; W_est_excess {v['best_method_west_excess']}).
 
 {table1}
 *Table 1. Primary IPD scenario (n={v['n_ipd']}, {v['n_studies']} studies, K={v['k_ipd']}): means over 50 simulations.*
@@ -830,7 +836,7 @@ Figure 3 displays ARI by dataset and method for the semi-synthetic examples.
 
 Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). Crude bias declined with n. The residual method's absolute random-effects ATE bias plateaued near 0.008–0.009 across the three sample sizes ({v['n500_re_bias']} at n=500, {v['n2000_sens_re_bias']} at n=2000 and {v['n10000_re_bias']} at n=10 000), so its relative reduction fell as the crude marginal estimate became more precise. Propensity-score, prognostic-score and clustering-based methods achieved larger relative reductions at n=10 000 (range {v['n10000_nonresid_rel_min']}–{v['n10000_nonresid_rel_max']}), showing that performance depends on the method as well as sample size. This pattern indicates that stratification can remove the estimable part of confounding-driven aggregation bias, but it cannot fully adjust for unmodelled hidden effect modification.
 
-![Figure 4. Sample-size sensitivity of random-effects ATE bias reduction (K=5).](fig4_rsm_ipd_sample_size.png)
+![Figure 4. Sample-size sensitivity of random-effects ATE bias reduction (K=5). The residual method reaches a structural bias floor that does not vanish with sample size; propensity-score, prognostic-score and clustering approaches overtake it at n = 10 000 once finite-sample error is small relative to structural mismatch.](fig4_rsm_ipd_sample_size.png)
 
 ### Sensitivity to Z-to-X and Z-to-Y effects
 
@@ -854,13 +860,27 @@ Table 4 and Figure 6 summarise the diagnostic calibration of C1 and W_est agains
 {table_roc}
 *Table 4. Diagnostic discrimination of C1 and W_est against the empirical null distribution (n=2000, K=5, 200 null replications and 50 alternative replications).*
 
-![Figure 6. Diagnostic calibration of C1 and W_est: AUC for discriminating the alternative DGM from the empirical null distribution (n=2000, K=5).](fig6_rsm_diagnostic_calibration.png)
+![Figure 6. Diagnostic calibration of C1 and W_est: AUC for discriminating the alternative DGM from the empirical null distribution (n=2000, K=5). C1 and W_est do not provide reliable classification on their own in the primary scenario; they should be used only as descriptive flags calibrated to the empirical null.](fig6_rsm_diagnostic_calibration.png)
 
 ### CATE variance explained
 
 Figure 7 shows CATE variance explained (eta^2, represented by W_true) and the corresponding estimated value (W_est) for each method. Methods that produced stratum-specific effects close to the true CATE quantiles achieved higher eta^2, but no data-driven method reached the Oracle level. The gap between W_true and W_est shows that the residual and predicted-probability models capture only part of the true CATE variation.
 
 ![Figure 7. CATE variance explained (eta^2 = W_true) and estimated W_est by method in the primary scenario (n=2000, K=5).](fig7_cate_variance_explained.png)
+
+### Recommendations for method choice
+
+Table 5 translates the simulation results into practical guidance. It links scenario characteristics to the method that performed best in the benchmark, states the rationale, and notes the key caveat. The recommendations reflect the patterns in Tables 1–4 and Supplementary Tables S1–S4; they are not derived from a new optimisation and should be treated as heuristics for sensitivity analysis rather than prescriptive rules.
+
+| Scenario characteristic | Recommended method | Rationale | Caveat |
+|---|---|---|---|
+| Strong covariate trace of a hidden modifier and moderate-to-large sample | Residual-based IONE (1B) | Highest random-effects ATE bias reduction and W_true in the primary scenario | Hits a structural bias floor that does not vanish with sample size; requires a correctly specified outcome model with treatment-covariate interactions |
+| Small sample (n ≈ 500) with moderate modification | Residual-based IONE (1B) | Achieved the largest relative bias reduction and the smallest absolute bias floor at n = 500 | Relative reduction partly reflects large crude bias; residual model can overfit when events are sparse |
+| Large sample (n ≈ 10 000) and strong measured confounding | Propensity-score, prognostic-score or clustering stratification | Largest relative reductions after finite-sample error was dominated by structural differences | Residual-based stratification is overtaken once crude bias is small; method-specific performance still varies |
+| Outcome model unavailable, misspecified or rare events | Outcome-free methods (PCA or k-means) or prognostic-score stratification | Do not use the outcome for stratification, so avoid degenerate logistic fits and overfitting | ATE bias reduction is generally smaller; C1 and W discrimination remains near chance |
+| Need a descriptive flag for internal incoherence | Report C1_excess and W_est_excess alongside the primary analysis | Empirically calibrated against a no-modification null | Do not use as a standalone inferential test; thresholds are method-specific and DGM-conditional |
+
+*Table 5. Recommendations for choosing a stratification method in an IPD meta-analysis sensitivity analysis.*
 
 ### Empirical null distribution and W_est misspecification
 
@@ -998,7 +1018,7 @@ def _new_discussion(v):
 
 ### Principal findings
 
-This study frames Incoherence-Oriented Neutralisation and Extraction (IONE) as a descriptive sensitivity tool for hidden effect modification in IPD meta-analysis. C1 and W flag whether a pooled IPD is internally coherent with respect to treatment effect: methods that captured more of the true Z structure produced C1 values close to the Oracle and higher W_true, especially the residual-based method. Agreement with the constructed true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}), and the C1 and W_est diagnostics did not reliably discriminate the alternative DGM from the empirical null (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}). Nevertheless, the best data-driven stratification reduced crude ATE bias from {v['crude_bias']} to {v['re_bias']} (relative reduction {v['rel_re']}) with DerSimonian-Laird pooling. These findings show that separating a pooled IPD into more homogeneous strata can partially reduce marginal bias, and that stratum-specific effects should be allowed to vary once incoherence is suggested.
+This study frames Incoherence-Oriented Neutralisation and Extraction (IONE) as a descriptive sensitivity tool for hidden effect modification in IPD meta-analysis. C1 and W flag whether a pooled IPD is internally coherent with respect to treatment effect: methods that captured more of the true Z structure produced C1 values close to the Oracle and higher W_true, especially the residual-based method. Agreement with the operational k-means true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}), and the C1 and W_est diagnostics did not reliably discriminate the alternative DGM from the empirical null (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}). Nevertheless, the best data-driven stratification reduced crude ATE bias from {v['crude_bias']} to {v['re_bias']} (relative reduction {v['rel_re']}) with DerSimonian-Laird pooling. These findings show that separating a pooled IPD into more homogeneous strata can partially reduce marginal bias, and that stratum-specific effects should be allowed to vary once incoherence is suggested.
 
 ### Detection versus subgroup recovery
 
@@ -1078,14 +1098,15 @@ def generate_v3_manuscript():
     # Build sections
     abstract = (
         f"**Background:** In individual participant data (IPD) meta-analysis, marginal effect estimates can be biased by hidden effect modifiers. "
-        f"We introduce coherence diagnostics C1 and W and evaluate them in a simulation benchmark of stratification approaches.\n\n"
-        f"**Methods:** We simulated an IPD meta-analysis with {v['n_studies']} studies, binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. "
-        f"Methods stratified pooled IPD and synthesised stratum-specific risk differences with fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
-        f"We report ARI, C1, W and ATE bias reduction, calibrating C1 and W against empirical null distributions.\n\n"
-        f"**Results:** At n={v['n_ipd']} and K={v['k_ipd']}, C1 and W_est discriminated the alternative from the empirical null only at chance level (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}; TPR up to {v['c1_tpr_max']} at 5% FPR). "
-        f"The best method reduced random-effects ATE bias by more than half (from {v['crude_bias']} to {v['re_bias']}; relative reduction {v['rel_re']}). "
-        f"Relative bias reduction improved as the Z-to-Y effect strengthened, while sample-size gains were method-specific; W excess showed weak discrimination.\n\n"
-        f"**Conclusions:** IONE is a descriptive sensitivity tool, not an inferential test for hidden effect modification. It should be reported alongside conventional meta-analytic models and covariate adjustment."
+        f"We introduce two coherence diagnostics, C1 and W, and present a reproducible simulation benchmark of seven stratification approaches.\n\n"
+        f"**Methods:** We simulated an IPD meta-analysis with {v['n_studies']} studies and n={v['n_ipd']} participants, binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. "
+        f"Seven methods—two outcome-informed, two outcome-free, propensity-score, prognostic-score and Gaussian-mixture stratification—were compared; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
+        f"We report ARI, C1, W and ATE bias reduction, calibrating the diagnostics against empirical null distributions.\n\n"
+        f"**Results:** At n={v['n_ipd']} and K={v['k_ipd']}, C1 and W_est discriminated the alternative from the empirical null only at chance level (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}). "
+        f"The residual-based method achieved the largest random-effects ATE bias reduction (from {v['crude_bias']} to {v['re_bias']}; relative reduction {v['rel_re']}). "
+        f"Its absolute bias plateaued near {v['n500_re_bias']} (n=500), {v['n2000_sens_re_bias']} (n=2000) and {v['n10000_re_bias']} (n=10 000), indicating a structural bias floor that persists as sample size increases.\n\n"
+        f"**Conclusions:** IONE is a descriptive sensitivity framework, not an inferential test for hidden effect modification. "
+        f"The benchmark shows that data-driven stratification can reduce marginal ATE bias when measured covariates carry strong traces of hidden effect modification, but C1 and W must be interpreted relative to method-specific empirical nulls and are not standalone decision criteria."
     )
     keywords = "individual participant data meta-analysis; evidence synthesis; heterogeneity; hidden effect modification; stratification; simulation"
 
