@@ -51,15 +51,32 @@ python3 generate_ione_rsm_v3.py            # main manuscript, title page, cover 
 python3 generate_rsm_tables.py             # separate editable tables docx
 ```
 
-To regenerate the full SMMR submission package from the committed summary CSVs only:
+To regenerate only the reproducible figures and summary numbers from the committed CSVs:
+
+```bash
+make
+```
+
+This writes `results/summary/*.csv`, `results/figures/*.{png,eps}` and `results/figures/pptx/rsm_figures.pptx`, without creating the Word/PDF/zip submission package.
+
+To build the full CSDA submission package from the same committed CSVs:
+
+```bash
+make submission
+```
+
+Equivalent commands:
 
 ```bash
 python3 generate_summary.py
+python3 generate_ione_rsm_v3.py --figures-only   # numbers + figures only
+
+python3 generate_summary.py
 python3 generate_rsm_tables.py
-python3 generate_ione_rsm_v3.py
+python3 generate_ione_rsm_v3.py                  # full CSDA submission package
 ```
 
-All numbers in `results/manuscript/smmr_submission/IONE_smmr_v1.docx` are read from `results/summary/*.csv`; no estimates are hard-coded in the manuscript generator.
+All numbers in the manuscript are read from `results/summary/*.csv`; no estimates are hard-coded in the generator.
 
 ## Target journal
 

@@ -14,6 +14,7 @@ All numbers come from results/summary/*.csv; no estimates are hard-coded.
 
 import os
 import re
+import subprocess
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
@@ -30,7 +31,6 @@ SUMMARY_DIR = os.path.join(RESULTS_DIR, 'summary')
 FIG_DIR = os.path.join(RESULTS_DIR, 'figures')
 TARGET_JOURNAL = 'Computational Statistics & Data Analysis'
 SUBMISSION_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'csda_submission')
-os.makedirs(SUBMISSION_DIR, exist_ok=True)
 
 MANUSCRIPT_TITLE = 'Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: IONE (Incoherence-Oriented Neutralisation and Extraction) and a simulation benchmark of stratification approaches'
 
@@ -1089,9 +1089,8 @@ def _make_double_spaced(src_path, dst_path):
                     p.paragraph_format.line_spacing = 1.15
     ds_doc.save(dst_path)
 
-def generate_v3_manuscript():
-    import subprocess
-    # Record the exact commit hash used to generate the submission package
+def _record_commit_hash():
+    """Record the exact commit hash used to reproduce the outputs."""
     try:
         commit_hash = subprocess.run(
             ['git', 'rev-parse', 'HEAD'], capture_output=True, text=True, check=True
@@ -1101,17 +1100,13 @@ def generate_v3_manuscript():
     with open(os.path.join(RESULTS_DIR, 'commit_hash.txt'), 'w', encoding='utf-8') as f:
         f.write(commit_hash)
 
-    # Read previous long manuscript
-    old_md_path = os.path.join(RESULTS_DIR, 'manuscript', 'IONE_manuscript.md')
-    old_md = open(old_md_path, 'r', encoding='utf-8').read()
 
-    # Compute values
+def generate_v3_figures():
+    """Generate only the figures and summary values (no manuscript/docx outputs)."""
+    _record_commit_hash()
     v = _scenario_values()
-
-    # Generate/update figures
     ipd_primary = _read_csv('rsm_ipd_primary_summary.csv')
     ipd_full = _read_csv('rsm_ipd_full_summary.csv')
-    study_summary = _read_csv('rsm_ipd_study_summary.csv')
     real_data = _read_csv('real_data_summary.csv')
     ipd_sensitivity = _read_csv('rsm_ipd_sensitivity_full_summary.csv')
     ipd_nonlinearity = _read_csv('rsm_ipd_nonlinearity_full_summary.csv')
@@ -1121,6 +1116,20 @@ def generate_v3_manuscript():
         ipd_nonlinearity=ipd_nonlinearity,
         diagnostic_roc=v['diagnostic_roc'],
     )
+    print(f'[generate_ione_rsm_v3] figures written to {FIG_DIR}')
+    print(f'[generate_ione_rsm_v3] pptx written to {pptx_path}')
+    return v, figs, pptx_path
+
+
+def generate_v3_manuscript():
+    """Generate the full CSDA submission package (markdown, docx, zip)."""
+    os.makedirs(SUBMISSION_DIR, exist_ok=True)
+
+    # Read previous long manuscript
+    old_md_path = os.path.join(RESULTS_DIR, 'manuscript', 'IONE_manuscript.md')
+    old_md = open(old_md_path, 'r', encoding='utf-8').read()
+
+    v, _figs, _pptx_path = generate_v3_figures()
 
     # Citation manager
     cm = CiteManager()
@@ -1326,4 +1335,8 @@ def generate_v3_manuscript():
 
 
 if __name__ == '__main__':
-    generate_v3_manuscript()
+    import sys
+    if '--figures-only' in sys.argv:
+        generate_v3_figures()
+    else:
+        generate_v3_manuscript()
