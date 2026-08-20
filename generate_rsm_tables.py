@@ -1,4 +1,4 @@
-"""Generate a separate editable .docx containing all SMMR tables."""
+"""Generate a separate editable .docx containing all CSDA tables."""
 
 import os
 import numpy as np
@@ -7,7 +7,7 @@ from docx import Document
 from docx.shared import Pt
 
 SUMMARY_DIR = os.path.join(os.path.dirname(__file__), 'results', 'summary')
-OUT_DIR = os.path.join(os.path.dirname(__file__), 'results', 'manuscript', 'smmr_submission')
+OUT_DIR = os.path.join(os.path.dirname(__file__), 'results', 'manuscript', 'csda_submission')
 os.makedirs(OUT_DIR, exist_ok=True)
 
 
@@ -350,7 +350,7 @@ def main():
             decimal_overrides={'RE bias': 5, 'Relative reduction RE': 3}
         )
 
-    out = os.path.join(OUT_DIR, 'smmr_tables_separate.docx')
+    out = os.path.join(OUT_DIR, 'csda_tables_separate.docx')
     doc.save(out)
     print(f'[generate_rsm_tables] {out}')
 

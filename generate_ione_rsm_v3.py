@@ -28,8 +28,8 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), 'results')
 SUMMARY_DIR = os.path.join(RESULTS_DIR, 'summary')
 FIG_DIR = os.path.join(RESULTS_DIR, 'figures')
-TARGET_JOURNAL = 'Statistical Methods in Medical Research'
-SUBMISSION_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'smmr_submission')
+TARGET_JOURNAL = 'Computational Statistics & Data Analysis'
+SUBMISSION_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'csda_submission')
 os.makedirs(SUBMISSION_DIR, exist_ok=True)
 
 MANUSCRIPT_TITLE = 'Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: IONE (Incoherence-Oriented Neutralisation and Extraction) and a simulation benchmark of stratification approaches'
@@ -908,7 +908,7 @@ Not applicable.
 
 ### Supplementary materials
 
-Supplementary methods, abbreviations, the ADEMP/STROBE-Sim checklists, the four extended sensitivity tables, and the empirical null-distribution and W_est misspecification sensitivity tables are provided in `smmr_supplementary_v1.docx`.
+Supplementary methods, abbreviations, the ADEMP/STROBE-Sim checklists, the four extended sensitivity tables, and the empirical null-distribution and W_est misspecification sensitivity tables are provided in `csda_supplementary_v1.docx`.
 
 ### Artificial intelligence
 
@@ -1016,9 +1016,9 @@ W is a ratio whose denominator is the overall CATE variance. When effect modific
 
 At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias ({v['n10000_re_bias']}; relative reduction {v['n10000_rel_re']}), similar to the absolute floor observed at n=500 ({v['n500_re_bias']}) and n=2000 ({v['n2000_sens_re_bias']}). This floor is consistent with the ARI ceiling: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
 
-### Relevance to SMMR readers
+### Relevance to CSDA readers
 
-IONE sits between heterogeneity diagnostics and model-based effect modification in medical research. C1 re-purposes the I^2 statistic for discovered strata and W connects a partition to explained CATE variance. Both are descriptive sensitivity indices, not inferential tests. The empirical null distribution (Supplementary Table S5) calibrates the diagnostics under no true effect modification, and the misspecification sensitivity (Supplementary Table S6) checks whether W_est is robust to the outcome-model specification. IONE is best reported alongside conventional IPD meta-analysis and covariate adjustment, with standard adjustment applied within strata.
+IONE sits between computational stratification diagnostics and model-based effect modification for individual participant data meta-analysis. C1 re-purposes the I^2 statistic for discovered strata and W connects a partition to explained conditional average treatment effect variance. Both are descriptive sensitivity indices, not inferential tests. The empirical null distribution (Supplementary Table S5) calibrates the diagnostics under no true effect modification, and the misspecification sensitivity (Supplementary Table S6) checks whether W_est is robust to the outcome-model specification. The simulation code, analysis scripts and generated tables are publicly available so readers can reproduce every numerical result.
 
 ### Strengths and limitations
 
@@ -1136,11 +1136,11 @@ def generate_v3_manuscript():
     md = _old_to_keys(md, cm)
 
     # Save markdown and convert to docx
-    md_path = os.path.join(SUBMISSION_DIR, 'IONE_smmr_v1.md')
+    md_path = os.path.join(SUBMISSION_DIR, 'IONE_csda_v1.md')
     with open(md_path, 'w', encoding='utf-8') as f:
         f.write(md)
 
-    docx_path = os.path.join(SUBMISSION_DIR, 'IONE_smmr_v1.docx')
+    docx_path = os.path.join(SUBMISSION_DIR, 'IONE_csda_v1.docx')
     convert(md_path, docx_path, cite_manager=cm, figure_dir=FIG_DIR)
 
     # Compute title-page metadata from the generated manuscript
@@ -1179,10 +1179,10 @@ def generate_v3_manuscript():
 
 { _new_results(v, supplementary=True) }
 """
-    supp_md_path = os.path.join(SUBMISSION_DIR, 'smmr_supplementary_v1.md')
+    supp_md_path = os.path.join(SUBMISSION_DIR, 'csda_supplementary_v1.md')
     with open(supp_md_path, 'w', encoding='utf-8') as f:
         f.write(supp_md)
-    supp_docx_path = os.path.join(SUBMISSION_DIR, 'smmr_supplementary_v1.docx')
+    supp_docx_path = os.path.join(SUBMISSION_DIR, 'csda_supplementary_v1.docx')
     convert(supp_md_path, supp_docx_path, cite_manager=supp_cm, figure_dir=FIG_DIR)
 
 
@@ -1215,13 +1215,13 @@ def generate_v3_manuscript():
     tp.add_paragraph('Acknowledgements: Not applicable.')
     tp.add_paragraph(f'Artificial intelligence: Manuscript text, Python code and some analyses were drafted or revised using large language models (OpenAI GPT-4 and GPT-4o, accessed {AI_DATES}) under the author\'s direct, iterative supervision. The LLMs were used for drafting prose, formatting references, generating figures and implementing the computational pipeline. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against repository outputs, and approved the final scientific content.')
     tp.add_paragraph('Data and code availability: All simulation code, analysis scripts and semi-synthetic example data are at https://github.com/bougtoir/ione-stratification-framework, with a requirements.txt and requirements-lock.txt file, fixed random seeds and a reproducible pipeline. The exact commit hash is recorded in results/commit_hash.txt. An archived Zenodo DOI will be obtained before acceptance.')
-    tp_path = os.path.join(SUBMISSION_DIR, 'title_page_smmr_v1.docx')
+    tp_path = os.path.join(SUBMISSION_DIR, 'title_page_csda_v1.docx')
     tp.save(tp_path)
 
     # Double-spaced PDF for initial submission
-    ds_docx_path = os.path.join(SUBMISSION_DIR, 'IONE_smmr_v1_double_spaced.docx')
+    ds_docx_path = os.path.join(SUBMISSION_DIR, 'IONE_csda_v1_double_spaced.docx')
     _make_double_spaced(docx_path, ds_docx_path)
-    pdf_path = os.path.join(SUBMISSION_DIR, 'IONE_smmr_v1_double_spaced.pdf')
+    pdf_path = os.path.join(SUBMISSION_DIR, 'IONE_csda_v1_double_spaced.pdf')
     try:
         import subprocess
         subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', '--outdir', SUBMISSION_DIR, ds_docx_path], check=True)
@@ -1229,22 +1229,22 @@ def generate_v3_manuscript():
         print(f'[generate_ione_rsm_v3] PDF conversion skipped: {e}')
 
     # Cover letter
-    cover_md = os.path.join(SUBMISSION_DIR, 'cover_letter_smmr_v1.md')
+    cover_md = os.path.join(SUBMISSION_DIR, 'cover_letter_csda_v1.md')
     if os.path.exists(cover_md):
         from md_to_rsm_docx import convert as _convert
-        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_smmr_v1.docx')
+        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_csda_v1.docx')
         _convert(cover_md, cover_docx)
 
     # Submission package zip
     import zipfile
-    zip_path = os.path.join(SUBMISSION_DIR, 'v1_ione_smmr_submission_package.zip')
+    zip_path = os.path.join(SUBMISSION_DIR, 'v1_ione_csda_submission_package.zip')
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         zf.write(docx_path, os.path.basename(docx_path))
         zf.write(tp_path, os.path.basename(tp_path))
-        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_smmr_v1.docx')
+        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_csda_v1.docx')
         if os.path.exists(cover_docx):
             zf.write(cover_docx, os.path.basename(cover_docx))
-        tables_docx = os.path.join(SUBMISSION_DIR, 'smmr_tables_separate.docx')
+        tables_docx = os.path.join(SUBMISSION_DIR, 'csda_tables_separate.docx')
         if os.path.exists(tables_docx):
             zf.write(tables_docx, os.path.basename(tables_docx))
         if os.path.exists(supp_docx_path):
@@ -1253,9 +1253,15 @@ def generate_v3_manuscript():
             zf.write(ds_docx_path, os.path.basename(ds_docx_path))
         if os.path.exists(pdf_path):
             zf.write(pdf_path, os.path.basename(pdf_path))
+        highlights_txt = os.path.join(SUBMISSION_DIR, 'highlights.txt')
+        if os.path.exists(highlights_txt):
+            zf.write(highlights_txt, os.path.basename(highlights_txt))
+        highlights_docx = os.path.join(SUBMISSION_DIR, 'highlights.docx')
+        if os.path.exists(highlights_docx):
+            zf.write(highlights_docx, os.path.basename(highlights_docx))
         pptx_path = os.path.join(FIG_DIR, 'pptx', 'rsm_figures.pptx')
         if os.path.exists(pptx_path):
-            zf.write(pptx_path, 'smmr_figures.pptx')
+            zf.write(pptx_path, 'csda_figures.pptx')
         for f in os.listdir(FIG_DIR):
             if f.endswith(('.png', '.eps')):
                 zf.write(os.path.join(FIG_DIR, f), os.path.join('figures', f))
