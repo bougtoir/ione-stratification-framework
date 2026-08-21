@@ -444,7 +444,6 @@ def _old_to_keys(text, cm=None):
         '25': 'higgins2002',
         '26': 'morris2019',
         '27': 'hubert1985',
-        '28': 'strehl2002',
     }
 
     def repl_single(m):
