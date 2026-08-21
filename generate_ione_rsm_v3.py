@@ -289,7 +289,8 @@ def _register_citations(cm):
                 'Simpson EH. The interpretation of interaction in contingency tables. J R Stat Soc Ser B. 1951;13(2):238–241.',
                 doi='10.1111/j.2517-6161.1951.tb00088.x')
     cm.register('rojanaworarit2020', 'Rojanaworarit', 2020,
-                'Rojanaworarit C. Misleading epidemiological and statistical evidence in the presence of Simpson\'s paradox: an illustrative study using simulated scenarios. J Med Life. 2020;13(1):37–44.')
+                'Rojanaworarit C. Misleading epidemiological and statistical evidence in the presence of Simpson\'s paradox: an illustrative study using simulated scenarios. J Med Life. 2020;13(1):37–44.',
+                doi='10.25122/jml-2019-0120')
     cm.register('vanderweele2014', 'VanderWeele and Knol', 2014,
                 'VanderWeele TJ, Knol MJ. A tutorial on interaction. Epidemiol Methods. 2014;3(1):33–72.')
     cm.register('robinson1950', 'Robinson', 1950,
@@ -436,12 +437,12 @@ def _adapt_background(old_bg, cm, v):
         'These approaches explain variation with measured covariates and study-level factors, and stratification by study is the standard way to share baseline risk and treatment prevalence. '
         'They do not, however, test whether the pooled participants themselves form internally homogeneous subpopulations with respect to treatment effect. '
         'We therefore frame Incoherence-Oriented Neutralisation and Extraction (IONE) as an exploratory sensitivity tool: it flags when a marginal summary may be fragile and separates the pooled IPD into more homogeneous subgroups using multivariate patterns in measured variables. '
-        'The goal is not to recover hidden variables but to reduce misleading marginal summaries when the IPD contains hidden effect modification.\n\n'
+        'The aim is not to recover hidden variables, but to flag marginal summaries that may be misleading when the IPD contains hidden effect modification.\n\n'
         'Hidden population structure is documented across medicine and social science: kidney-stone treatments [charig1986], university admissions [bickel1975], COVID-19 case-fatality comparisons [vonkuegelgen2021], national vaccine-surveillance data [haas2021], and smoking-mortality studies [appleton1996]. '
         'Established methods adjust for measured confounders but do not detect unmeasured population structure. '
-        'We operationalise IONE through two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total conditional average treatment effect (CATE) variance explained by the stratification. '
+        'We use IONE with two coherence diagnostics: C1, derived from the I^2 heterogeneity statistic [higgins2002] applied to stratum-specific log odds ratios, and W, the proportion of total conditional average treatment effect (CATE) variance explained by the stratification. '
         'Stratum-specific risk differences are synthesised with fixed-effect or DerSimonian-Laird random-effects meta-analysis. '
-        'C1 measures the coherence of a stratification after it has been formed; W is a ratio whose denominator is the overall CATE variance and is therefore unstable when the modification signal is weak.\n\n'
+        'C1 measures coherence within the formed strata; W is a ratio whose denominator is the overall CATE variance and is therefore unstable when the modification signal is weak.\n\n'
         'Because the finite-sample distributions of discovered-stratum risk differences depend on the unknown joint distribution of unmeasured modifiers and measured covariates, closed-form theoretical comparisons of the competing stratification methods are not available. '
         'We therefore use an ADEMP-based simulation benchmark to quantify relative performance and the operating characteristics of C1 and W.'
     )
@@ -483,11 +484,11 @@ To contextualise within-study and between-study heterogeneity, we also formed a 
 
 #### Formal definitions
 
-For a stratification with K strata, let theta_k be the stratum-specific log odds ratio and tau^2 the DerSimonian-Laird between-stratum variance. Let v_w denote a typical within-stratum sampling variance. Then
+For a stratification with K strata, let theta_k denote the stratum-specific log odds ratio, tau^2 the between-stratum variance, and v_w a typical within-stratum sampling variance. Then
 
 C1 = 1 - I^2 = 1 - tau^2 / (tau^2 + v_w),
 
-where lower C1 indicates greater between-stratum heterogeneity of stratum-specific log odds ratios. For estimated individual CATEs tau(X_i), let tau_k be the mean CATE in stratum k and tau the overall mean. The proportion of total CATE variance explained by the stratification is
+where lower C1 indicates greater between-stratum heterogeneity of stratum-specific log odds ratios. For estimated individual CATEs tau(X_i), let tau_k be the stratum mean and tau the overall mean. The proportion of total CATE variance explained by the stratification is
 
 W = sum_k n_k (tau_k - tau)^2 / sum_i (tau_i - tau)^2,
 
@@ -497,7 +498,7 @@ where the numerator is the between-stratum variance weighted by stratum size and
 
 **C1** = 1 - I^2 applied to stratum-specific log odds ratios [higgins2002]. Lower C1 indicates greater between-stratum heterogeneity of stratum-specific log odds ratios. Because C1 is computed on the log-odds scale while ATE bias is on the risk-difference scale, it is an indirect diagnostic of bias; it summarises the coherence of the selected partition, not the magnitude of hidden modification.
 
-**W_true / W_est:** proportion of total conditional average treatment effect (CATE) variance explained by the stratification, i.e. the between-stratum CATE variance divided by the overall CATE variance. W_est requires a correctly specified individual-level outcome model. Because W is a ratio whose denominator is the overall CATE variance, it can be unstable when effect modification is weak (small denominators) and should be interpreted relative to its empirical null distribution. We therefore report null-mean-centred excess values: C1_excess = max(null mean C1 - C1, 0), W_excess = max(W - null mean W, 0) and proportion metrics such as eta^2 = between-stratum CATE variance / overall CATE variance as an alternative scale-free summary.
+**W_true / W_est:** proportion of total conditional average treatment effect (CATE) variance explained by the stratification, i.e. the between-stratum CATE variance divided by the overall CATE variance. W_est requires a correctly specified individual-level outcome model. Because W is a ratio whose denominator is the overall CATE variance, it can be unstable when effect modification is weak (small denominators) and should be interpreted relative to its empirical null distribution. We therefore report excess values centred on the empirical null mean (C1_excess and W_excess) and include eta^2, the ratio of between-stratum CATE variance to overall CATE variance, as an alternative scale-free summary.
 
 **ATE bias reduction:** absolute differences between crude, stratified and random-effects estimates, plus relative ratios. Monte Carlo SE and 95% CI accompany every mean.
 
@@ -859,7 +860,7 @@ Figure 3 displays ARI by dataset and method for the semi-synthetic examples.
 
 ### Sensitivity to sample size
 
-Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). Crude bias declined with n. The residual method's absolute random-effects ATE bias plateaued near 0.008–0.009 across the three sample sizes ({v['n500_re_bias']} at n=500, {v['n2000_sens_re_bias']} at n=2000 and {v['n10000_re_bias']} at n=10 000), so its relative reduction fell as the crude marginal estimate became more precise. Propensity-score, prognostic-score and clustering-based methods achieved larger relative reductions at n=10 000 (range {v['n10000_nonresid_rel_min']}–{v['n10000_nonresid_rel_max']}), showing that performance depends on the method as well as sample size. This pattern indicates that stratification can remove the estimable part of confounding-driven aggregation bias, but it cannot fully adjust for unmodelled hidden effect modification.
+Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). Crude bias declined with n. The residual method's absolute random-effects ATE bias plateaued near 0.008–0.009 across the three sample sizes ({v['n500_re_bias']} at n=500, {v['n2000_sens_re_bias']} at n=2000 and {v['n10000_re_bias']} at n=10 000), so its relative reduction fell as the crude marginal estimate became more precise. Propensity-score, prognostic-score and clustering-based methods achieved larger relative reductions at n=10 000 (range {v['n10000_nonresid_rel_min']}–{v['n10000_nonresid_rel_max']}), showing that performance depends on the method as well as sample size. This pattern indicates that stratification can reduce the component of aggregation bias that is predictable from measured covariates, but it cannot fully adjust for unmodelled hidden effect modification.
 
 ![Figure 4. Sample-size sensitivity of random-effects ATE bias reduction (K=5). The residual method reaches a structural bias floor that does not vanish with sample size; propensity-score, prognostic-score and clustering approaches overtake it at n = 10 000 once finite-sample error is small relative to structural mismatch.](fig4_rsm_ipd_sample_size.png)
 
@@ -1049,7 +1050,7 @@ def _new_discussion(v):
 
 ### Principal findings
 
-This study frames Incoherence-Oriented Neutralisation and Extraction (IONE) as a descriptive sensitivity tool for hidden effect modification in IPD meta-analysis. C1 and W flag whether a pooled IPD is internally coherent with respect to treatment effect: methods that captured more of the true Z structure produced C1 values close to the Oracle and higher W_true, especially the residual-based method. Agreement with the operational k-means true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}), and the C1 and W_est diagnostics did not reliably discriminate the alternative DGM from the empirical null (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}). Nevertheless, the best data-driven stratification reduced crude ATE bias from {v['crude_bias']} to {v['re_bias']} (relative reduction {v['rel_re']}) with DerSimonian-Laird pooling. These findings show that separating a pooled IPD into more homogeneous strata can partially reduce marginal bias, and that stratum-specific effects should be allowed to vary once incoherence is suggested.
+We treat Incoherence-Oriented Neutralisation and Extraction (IONE) as a descriptive sensitivity tool for hidden effect modification in IPD meta-analysis. C1 and W flag whether a pooled IPD is internally coherent with respect to treatment effect: methods that captured more of the true Z structure produced C1 values close to the Oracle and higher W_true, especially the residual-based method. Agreement with the operational k-means true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}), and the C1 and W_est diagnostics did not reliably discriminate the alternative DGM from the empirical null (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}). Nevertheless, the best data-driven stratification reduced crude ATE bias from {v['crude_bias']} to {v['re_bias']} (relative reduction {v['rel_re']}) with DerSimonian-Laird pooling. These findings show that separating a pooled IPD into more homogeneous strata can partially reduce marginal bias, and that stratum-specific effects should be allowed to vary once incoherence is suggested.
 
 ### Detection versus subgroup recovery
 
@@ -1069,7 +1070,7 @@ At n = 10 000 the residual method still showed a non-negligible random-effects A
 
 ### Relevance to CSDA readers
 
-IONE sits between computational stratification diagnostics and model-based effect modification for individual participant data meta-analysis. C1 re-purposes the I^2 statistic for discovered strata and W connects a partition to explained conditional average treatment effect variance. Both are descriptive sensitivity indices, not inferential tests. The empirical null distribution (Supplementary Table S5) calibrates the diagnostics under no true effect modification, and the misspecification sensitivity (Supplementary Table S6) checks whether W_est is robust to the outcome-model specification. The simulation code, analysis scripts and generated tables are publicly available so readers can reproduce every numerical result.
+IONE sits between computational stratification diagnostics and model-based effect modification for individual participant data meta-analysis. C1 applies the I^2 statistic to discovered strata, and W measures how much CATE variance a partition explains. Both are descriptive sensitivity indices, not inferential tests. The empirical null distribution (Supplementary Table S5) calibrates the diagnostics under no true effect modification, and the misspecification sensitivity (Supplementary Table S6) checks whether W_est is robust to the outcome-model specification. The simulation code, analysis scripts and generated tables are publicly available so readers can reproduce every numerical result.
 
 ### Strengths and limitations
 

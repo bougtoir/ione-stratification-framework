@@ -248,6 +248,15 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
 # ---------------------------------------------------------------------------
 
 _MATH_PATTERNS = [
+    (r'C1_excess', 'c1excess'),
+    (r'W_(true|est)_excess', 'wexcess'),
+    (r'W_excess', 'wexcess2'),
+    (r'eta\^2', 'etasq'),
+    (r'theta_k', 'thetasub'),
+    (r'tau_k', 'tausub'),
+    (r'tau\(X_i\)', 'tauxi'),
+    (r'v_w', 'vsub'),
+    (r'n_k', 'nsub'),
     (r'P\(Y=1\|A=1\) - P\(Y=1\|A=0\)', 'riskdiff'),
     (r'C1 = 1 - I\^2 = 1 - tau\^2 / \(tau\^2 \+ v_w\)', 'c1eq'),
     (r'W = sum_k n_k \(tau_k - tau\)\^2 / sum_i \(tau_i - tau\)\^2', 'weq'),
@@ -399,6 +408,26 @@ def _make_math_omath(kind, match):
         _math_text(oMath, '|Y - ')
         _math_accent(oMath, 'p', accent='^')
         _math_text(oMath, '|')
+    elif kind == 'thetasub':
+        _math_subscript(oMath, 'θ', 'k')
+    elif kind == 'tausub':
+        _math_subscript(oMath, 'τ', 'k')
+    elif kind == 'tauxi':
+        _math_text(oMath, 'τ(')
+        _math_subscript(oMath, 'X', 'i')
+        _math_text(oMath, ')')
+    elif kind == 'vsub':
+        _math_subscript(oMath, 'v', 'w')
+    elif kind == 'nsub':
+        _math_subscript(oMath, 'n', 'k')
+    elif kind == 'etasq':
+        _math_superscript(oMath, 'η', '2')
+    elif kind == 'c1excess':
+        _math_subscript(oMath, 'C1', 'excess')
+    elif kind == 'wexcess':
+        _math_subscript(oMath, 'W', match.group(1) + ' excess')
+    elif kind == 'wexcess2':
+        _math_subscript(oMath, 'W', 'excess')
     return oMath
 
 
