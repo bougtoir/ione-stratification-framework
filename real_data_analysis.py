@@ -247,7 +247,7 @@ def prepare_israel_vaccine_data():
     Z = df[['age', 'comorbidity_score']].values
 
     print(f"  N = {len(df)}, Hospitalization rate = {Y.mean():.4f}")
-    _print_paradox(A, Y, 'Vaccinated', 'Unvaccinated')
+    _print_paradox(A, Y, 'Unvaccinated', 'Vaccinated')
     return X, A, Y, true_labels, Z, 'Israel Vaccine'
 
 
@@ -299,7 +299,7 @@ def prepare_smoking_data():
     Z = df[['age']].values
 
     print(f"  N = {len(df)}, Mortality rate = {Y.mean():.4f}")
-    _print_paradox(A, Y, 'Smoker', 'Non-smoker')
+    _print_paradox(A, Y, 'Non-smoker', 'Smoker')
     return X, A, Y, true_labels, Z, 'Smoking Mortality'
 
 
