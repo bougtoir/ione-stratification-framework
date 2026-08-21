@@ -115,6 +115,7 @@ def _scenario_values():
     random_row = ipd_primary[ipd_primary['method'] == 'baseline_random']
     vals['random_c1'] = _fmt(random_row['C1_heterogeneity_mean'].iloc[0], 3) if not random_row.empty else '—'
     vals['hardware'] = _hardware_info()
+    vals['python_version'] = platform.python_version()
 
     # study-level meta-analysis comparator
     if study_summary is not None and not study_summary.empty:
@@ -940,7 +941,7 @@ Table 5 translates the simulation results into practical guidance. It links scen
 |---|---|---|---|
 | Strong covariate trace of a hidden modifier and moderate-to-large sample (n ~ 2000) | Residual-based IONE (1B) | Highest random-effects ATE bias reduction and W_true in the primary scenario | Hits a structural bias floor that does not vanish with sample size; requires a correctly specified outcome model with treatment-covariate interactions |
 | Small sample (n ~ 500) with moderate modification | Residual-based IONE (1B) | Achieved the largest relative bias reduction and the smallest absolute random-effects bias at n = 500 | Relative reduction partly reflects large crude bias; residual models can overfit when events are sparse |
-| Large sample (n ~ 10 000) and strong measured confounding | Prognostic-score or predicted-probability stratification (1A) | Largest relative reductions at n = 10 000 once finite-sample error was small | Residual-based stratification retains the smallest absolute RE bias; relative reductions become noisy when the crude bias is small; method-specific performance still varies |
+| Large sample (n ~ 10 000) and strong measured confounding | Prognostic-score or predicted-probability stratification (1A) | Largest relative reductions and smallest absolute RE biases at n = 10 000 once finite-sample error was small | The residual method remained at its absolute bias floor, so relative reduction alone is not enough to rank methods; choose the metric that matches the clinical question |
 | Outcome model unavailable, misspecified or rare events | Outcome-free methods (PCA or k-means) or prognostic-score stratification | Do not use the outcome for stratification, so avoid degenerate logistic fits and overfitting | ATE bias reduction is generally smaller; C1 and W discrimination remains near chance |
 | Need a descriptive flag for internal incoherence in real IPD | Report C1_excess and W_est_excess, calibrated against a permutation or residual null | Empirically centred on a no-modification null; use one of the three recipes described in the Methods | Do not use as a standalone inferential test; thresholds are method-specific and DGM-conditional; cross-check at least two nulls |
 
@@ -955,7 +956,7 @@ Under the primary DGM with no Z-by-A interaction, C1 was generally high and W_es
 def _new_conclusions():
     return """## 5. Conclusions
 
-IONE (Incoherence-Oriented Neutralisation and Extraction) is a descriptive sensitivity framework for hidden effect modification in IPD meta-analysis. Monte Carlo simulation and semi-synthetic examples show that the C1 and W diagnostics can flag incoherence, but they do not reliably separate the alternative data-generating mechanism from an empirical null in the primary scenario. When hidden variables leave strong traces in measured covariates, stratification can partially reduce ATE bias, but separating the data into the true hidden subgroups remains difficult. Conventional meta-analytic models and covariate adjustment should remain the primary analysis; C1 and W should be reported alongside them as sensitivity checks. Two concrete recommendations follow: (1) use C1 and W only as descriptive flags, not as inferential tests for hidden effect modification, and (2) pre-specify potential effect modifiers and reserve data-driven stratification for exploratory sensitivity analyses, not for decision-making.
+IONE (Incoherence-Oriented Neutralisation and Extraction) is a descriptive sensitivity framework for hidden effect modification in IPD meta-analysis. Monte Carlo simulation and semi-synthetic examples show that the C1 and W diagnostics can flag incoherence, but they do not reliably separate the alternative data-generating mechanism from an empirical null in the primary scenario. When hidden variables leave strong traces in measured covariates, stratification can partially reduce ATE bias, but separating the data into the true hidden subgroups remains difficult. Conventional meta-analytic models and covariate adjustment should remain the primary analysis; C1 and W should be reported alongside them as sensitivity checks. Two practical recommendations are: (1) use C1 and W only as descriptive flags, not as inferential tests for hidden effect modification, and (2) pre-specify potential effect modifiers and reserve data-driven stratification for exploratory sensitivity analyses, not for decision-making.
 """
 
 
@@ -972,7 +973,7 @@ Not applicable.
 
 ### Availability of data and materials
 
-All simulation code, analysis scripts, semi-synthetic example data, and the manuscript generator are publicly available at https://github.com/bougtoir/ione-stratification-framework. The repository contains a `requirements.txt` file and a `requirements-lock.txt` file with exact package versions, fixed random seeds for every scenario, and `generate_summary.py`, `generate_ione_rsm_v3.py` and `generate_rsm_tables.py` scripts that regenerate all manuscript numbers, figures and tables in a Python 3.11 environment. The exact Git commit hash used to create this submission package is recorded in `results/commit_hash.txt`. An archived Zenodo release with a DOI will be created before acceptance to satisfy long-term reproducibility requirements. The published aggregate datasets used for the semi-synthetic illustrations are referenced in the original publications [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996].
+All simulation code, analysis scripts, semi-synthetic example data, and the manuscript generator are publicly available at https://github.com/bougtoir/ione-stratification-framework. The repository contains a `requirements.txt` file and a `requirements-lock.txt` file with exact package versions, fixed random seeds for every scenario, and `generate_summary.py`, `generate_ione_rsm_v3.py` and `generate_rsm_tables.py` scripts that regenerate all manuscript numbers, figures and tables in a Python {platform.python_version()} environment. The exact Git commit hash used to create this submission package is recorded in `results/commit_hash.txt`. An archived Zenodo release with a DOI will be created before acceptance to satisfy long-term reproducibility requirements. The published aggregate datasets used for the semi-synthetic illustrations are referenced in the original publications [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996].
 
 ### Competing interests
 
@@ -1088,7 +1089,7 @@ def _new_discussion(v):
 
 ### Principal findings
 
-We treat Incoherence-Oriented Neutralisation and Extraction (IONE) as a descriptive sensitivity tool for hidden effect modification in IPD meta-analysis. C1 and W flag whether a pooled IPD is internally coherent with respect to treatment effect: methods that captured more of the true Z structure produced C1 values close to the Oracle and higher W_true, especially the residual-based method. Agreement with the operational k-means true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}), and the C1 and W_est diagnostics did not reliably discriminate the alternative DGM from the empirical null (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}). Nevertheless, the best data-driven stratification reduced crude ATE bias from {v['crude_bias']} to {v['re_bias']} (relative reduction {v['rel_re']}) with DerSimonian-Laird pooling. These findings show that separating a pooled IPD into more homogeneous strata can partially reduce marginal bias, and that stratum-specific effects should be allowed to vary once incoherence is suggested.
+We treat Incoherence-Oriented Neutralisation and Extraction (IONE) as a descriptive sensitivity tool for hidden effect modification in IPD meta-analysis. C1 and W flag whether a pooled IPD is internally coherent with respect to treatment effect: methods that captured more of the true Z structure produced C1 values close to the Oracle and higher W_true, especially the residual-based method. Agreement with the operational k-means true-Z partition was modest (Oracle ARI {v['best_ari']}; best non-Oracle {v['best_non_oracle_ari_method']} {v['best_non_oracle_ari']}), and the C1 and W_est diagnostics did not reliably discriminate the alternative DGM from the empirical null (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}). Nevertheless, the best data-driven stratification reduced crude ATE bias from {v['crude_bias']} to {v['re_bias']} (relative reduction {v['rel_re']}) with DerSimonian-Laird pooling. These findings show that separating a pooled IPD into more homogeneous strata can reduce some of the marginal bias that is predictable from the measured covariates. For the residual method, DerSimonian-Laird pooling improved over fixed-effect pooling, suggesting that stratum-specific effects should be allowed to vary when the selected partition shows evidence of heterogeneity.
 
 ### Detection versus subgroup recovery
 
@@ -1165,7 +1166,7 @@ def _write_highlights():
     lines = [
         'Highlights',
         '',
-        '- IONE diagnostics detect hidden effect modification in individual participant data meta-analysis.',
+        '- IONE provides coherence diagnostics for exploring hidden effect modification in individual participant data meta-analysis.',
         '- A simulation benchmark compares seven data-driven stratification methods.',
         '- Residual-based stratification gives the best subgroup agreement and treatment-effect bias reduction.',
         '- The two coherence indices are sensitivity flags, not standalone statistical tests.',

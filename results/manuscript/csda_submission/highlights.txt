@@ -1,6 +1,6 @@
 Highlights
 
-- IONE diagnostics detect hidden effect modification in individual participant data meta-analysis.
+- IONE provides coherence diagnostics for exploring hidden effect modification in individual participant data meta-analysis.
 - A simulation benchmark compares seven data-driven stratification methods.
 - Residual-based stratification gives the best subgroup agreement and treatment-effect bias reduction.
 - The two coherence indices are sensitivity flags, not standalone statistical tests.
