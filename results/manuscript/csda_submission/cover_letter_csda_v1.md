@@ -5,11 +5,12 @@ bougtoir@gmail.com
 
 20 August 2026
 
-The Editors
+Drs. Ana Maria Colubi, Erricos Kontoghiorghes and Byeong Park
+Co-Editors
 *Computational Statistics & Data Analysis*
 Elsevier
 
-Dear Editors,
+Dear Drs. Colubi, Kontoghiorghes and Park:
 
 We wish to submit our manuscript, **"Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: IONE (Incoherence-Oriented Neutralisation and Extraction) and a simulation benchmark of stratification approaches,"** for consideration by *Computational Statistics & Data Analysis*.
 
