@@ -76,7 +76,7 @@ where the numerator is the between-stratum variance weighted by stratum size and
 
 **C1** = 1 - I^2 applied to stratum-specific log odds ratios [higgins2002]. Lower C1 indicates greater between-stratum heterogeneity of stratum-specific log odds ratios. Because C1 is computed on the log-odds scale while ATE bias is on the risk-difference scale, it is an indirect diagnostic of bias; it summarises the coherence of the selected partition, not the magnitude of hidden modification.
 
-**W_true / W_est:** proportion of total conditional average treatment effect (CATE) variance explained by the stratification, i.e. the between-stratum CATE variance divided by the overall CATE variance. W_est requires a correctly specified individual-level outcome model. Because W is a ratio whose denominator is the overall CATE variance, it can be unstable when effect modification is weak (small denominators) and should be interpreted relative to its empirical null distribution. We therefore report excess values centred on the empirical null mean (C1_excess and W_excess) and include eta^2, the ratio of between-stratum CATE variance to overall CATE variance, as an alternative scale-free summary.
+**W_true / W_est:** proportion of total conditional average treatment effect (CATE) variance explained by the stratification, i.e. the between-stratum CATE variance divided by the overall CATE variance. W_est requires a correctly specified individual-level outcome model. Because W is a ratio whose denominator is the overall CATE variance, it can be unstable when effect modification is weak (small denominators) and should be interpreted relative to its empirical null distribution. We therefore report excess values centred on the empirical null mean (C1_excess and W_excess) and include eta-squared, the ratio of between-stratum CATE variance to overall CATE variance, as an alternative scale-free summary.
 
 **ATE bias reduction:** absolute differences between crude, stratified and random-effects estimates, plus relative ratios. Monte Carlo SE and 95% CI accompany every mean.
 
@@ -164,7 +164,7 @@ Figure 3 displays ARI by dataset and method for the semi-synthetic examples.
 
 ### Sensitivity to sample size
 
-Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). Crude bias declined with n. The residual method's absolute random-effects ATE bias plateaued near 0.008–0.009 across the three sample sizes (0.00824 at n=500, 0.00852 at n=2000 and 0.00864 at n=10 000), so its relative reduction fell as the crude marginal estimate became more precise. Propensity-score, prognostic-score and clustering-based methods achieved larger relative reductions at n=10 000 (range 0.533–0.669), showing that performance depends on the method as well as sample size. This pattern indicates that stratification can reduce the component of aggregation bias that is predictable from measured covariates, but it cannot fully adjust for unmodelled hidden effect modification.
+Figure 4 and Supplementary Table S2 report n = 500, 2000 and 10 000 (K=5). These estimates are from a separate 30-replication sensitivity batch, so point estimates are noisier than the primary scenario. Crude bias declined with n. The residual method's absolute random-effects ATE bias plateaued near 0.008–0.009 across the three sample sizes (0.00824 at n=500, 0.00852 at n=2000 and 0.00864 at n=10 000); the slight differences between this n=2000 value and the 50-replication primary value in Table 1 (0.00816) reflect Monte Carlo variation. Its relative reduction therefore fell as the crude marginal estimate became more precise. Propensity-score, prognostic-score and clustering-based methods achieved larger relative reductions at n=10 000 (range 0.533–0.669), showing that performance depends on the method as well as sample size. This pattern indicates that stratification can reduce the component of aggregation bias that is predictable from measured covariates, but it cannot fully adjust for unmodelled hidden effect modification.
 
 ![Figure 4. Sample-size sensitivity of random-effects ATE bias reduction (K=5). The residual method reaches a structural bias floor that does not vanish with sample size; propensity-score, prognostic-score and clustering approaches overtake it at n = 10 000 once finite-sample error is small relative to structural mismatch.](fig4_rsm_ipd_sample_size.png)
 
@@ -188,7 +188,7 @@ Table 3 compares random-effects bias under linear and non-linear Z-to-X mappings
 
 Figure 5 shows random-effects ATE bias reduction under the non-linear mapping.
 
-![Figure 5. Non-linear Z->X robustness: random-effects ATE bias reduction (n=2000, K=5).](fig5_rsm_ipd_nonlinearity.png)
+![Figure 5. Non-linear Z-to-X robustness: random-effects ATE bias reduction (n=2000, K=5).](fig5_rsm_ipd_nonlinearity.png)
 
 ### Diagnostic discrimination against the empirical null
 
@@ -213,9 +213,9 @@ Table 4 and Figure 6 summarise the diagnostic calibration of C1 and W_est agains
 
 ### CATE variance explained
 
-Figure 7 shows CATE variance explained (eta^2, represented by W_true) and the corresponding estimated value (W_est) for each method. Methods that produced stratum-specific effects close to the true CATE quantiles achieved higher eta^2, but no data-driven method reached the Oracle level. The gap between W_true and W_est shows that the residual and predicted-probability models capture only part of the true CATE variation.
+Figure 7 shows CATE variance explained (eta-squared, represented by W_true) and the corresponding estimated value (W_est) for each method. Methods that produced stratum-specific effects close to the true CATE quantiles achieved higher eta-squared, but no data-driven method reached the Oracle level. The gap between W_true and W_est shows that the residual and predicted-probability models capture only part of the true CATE variation.
 
-![Figure 7. CATE variance explained (eta^2 = W_true) and estimated W_est by method in the primary scenario (n=2000, K=5).](fig7_cate_variance_explained.png)
+![Figure 7. CATE variance explained (eta-squared = W_true) and estimated W_est by method in the primary scenario (n=2000, K=5).](fig7_cate_variance_explained.png)
 
 ### Recommendations for method choice
 
@@ -225,7 +225,7 @@ Table 5 translates the simulation results into practical guidance. It links scen
 |---|---|---|---|
 | Strong covariate trace of a hidden modifier and moderate-to-large sample (n ~ 2000) | Residual-based IONE (1B) | Highest random-effects ATE bias reduction and W_true in the primary scenario | Hits a structural bias floor that does not vanish with sample size; requires a correctly specified outcome model with treatment-covariate interactions |
 | Small sample (n ~ 500) with moderate modification | Residual-based IONE (1B) | Achieved the largest relative bias reduction and the smallest absolute random-effects bias at n = 500 | Relative reduction partly reflects large crude bias; residual models can overfit when events are sparse |
-| Large sample (n ~ 10 000) and strong measured confounding | Prognostic-score or predicted-probability stratification (1A) | Largest relative reductions and smallest absolute RE biases at n = 10 000 once finite-sample error was small | The residual method remained at its absolute bias floor, so relative reduction alone is not enough to rank methods; choose the metric that matches the clinical question |
+| Large sample (n ~ 10 000) and strong measured confounding | Prognostic-score stratification (1A predicted-probability as a close alternative) | Smallest absolute RE bias and largest relative reduction at n = 10 000; predicted-probability stratification was second and comparable | Relative ranking depends on the sample size and chosen metric; choose the method whose constraints match the clinical question |
 | Outcome model unavailable, misspecified or rare events | Outcome-free methods (PCA or k-means) or prognostic-score stratification | Do not use the outcome for stratification, so avoid degenerate logistic fits and overfitting | ATE bias reduction is generally smaller; C1 and W discrimination remains near chance |
 | Need a descriptive flag for internal incoherence in real IPD | Report C1_excess and W_est_excess, calibrated against a permutation or residual null | Empirically centred on a no-modification null; use one of the three recipes described in the Methods | Do not use as a standalone inferential test; thresholds are method-specific and DGM-conditional; cross-check at least two nulls |
 
@@ -256,11 +256,7 @@ W is a ratio whose denominator is the overall CATE variance. When effect modific
 
 ### Large-sample behaviour
 
-At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias (0.00864; relative reduction 0.348), similar to the absolute floor observed at n=500 (0.00824) and n=2000 (0.00852). This floor is consistent with the ARI ceiling: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
-
-### Relevance to JCMDS readers
-
-IONE sits between computational stratification diagnostics and model-based effect modification for individual participant data meta-analysis. C1 applies the I^2 statistic to discovered strata, and W measures how much CATE variance a partition explains. Both are descriptive sensitivity indices, not inferential tests. The empirical null distribution (Supplementary Table S5) calibrates the diagnostics under no true effect modification, and the misspecification sensitivity (Supplementary Table S6) checks whether W_est is robust to the outcome-model specification. The simulation code, analysis scripts and generated tables are publicly available so readers can reproduce every numerical result.
+At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias (0.00864; relative reduction 0.348), similar to the absolute floor observed at n=500 (0.00824) and n=2000 (0.00852). This floor is consistent with the bounded sorting accuracy reflected in the modest ARI values: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
 
 ### Strengths and limitations
 
@@ -313,7 +309,7 @@ Supplementary methods, abbreviations, the ADEMP/STROBE-Sim checklists, the four 
 
 ### Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
 
-During the preparation of this work the author(s) used OpenAI GPT-4 and GPT-4o (accessed August 2025 through August 2026) to draft and revise prose, format references, generate figures, and implement the computational pipeline. After using these tools, the author reviewed and edited the content as needed and takes full responsibility for the content of the published article. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against the repository outputs, and approved the final scientific content. No AI-generated text was used without human review.
+During the preparation of this work the author(s) used OpenAI GPT-4 and GPT-4o (accessed August 2025 through the date of submission) to draft and revise prose, format references, generate figures, and implement the computational pipeline. After using these tools, the author reviewed and edited the content as needed and takes full responsibility for the content of the published article. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against the repository outputs, and approved the final scientific content. No AI-generated text was used without human review.
 
 
 {{PAGE}}
