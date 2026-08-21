@@ -13,6 +13,7 @@ All numbers come from results/summary/*.csv; no estimates are hard-coded.
 """
 
 import os
+import platform
 import re
 import subprocess
 import numpy as np
@@ -32,10 +33,36 @@ FIG_DIR = os.path.join(RESULTS_DIR, 'figures')
 TARGET_JOURNAL = 'Computational Statistics & Data Analysis'
 SUBMISSION_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'csda_submission')
 
-MANUSCRIPT_TITLE = 'Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: IONE (Incoherence-Oriented Neutralisation and Extraction) and a simulation benchmark of stratification approaches'
+MANUSCRIPT_TITLE = 'IONE: Coherence diagnostics for hidden effect modification in individual participant data meta-analysis'
 
 # Date range for AI declaration (kept identical in title page and declarations)
 AI_DATES = 'August 2025 through August 2026'
+
+
+def _hardware_info():
+    """Return a short string describing the execution environment."""
+    cpu_model = 'unknown'
+    n_cpus = 'unknown'
+    if os.path.exists('/proc/cpuinfo'):
+        with open('/proc/cpuinfo') as f:
+            for line in f:
+                if line.startswith('model name'):
+                    cpu_model = line.split(':', 1)[1].strip()
+                    break
+    try:
+        n_cpus = str(subprocess.run(['nproc'], capture_output=True, text=True, check=False).stdout.strip())
+    except Exception:
+        pass
+    mem_gb = 'unknown'
+    if os.path.exists('/proc/meminfo'):
+        with open('/proc/meminfo') as f:
+            for line in f:
+                if line.startswith('MemTotal:'):
+                    mem_kb = int(line.split()[1])
+                    mem_gb = f'{mem_kb / 1024 / 1024:.1f}'
+                    break
+    py_version = platform.python_version()
+    return f"The submission package was generated on a Devin-managed VM with {n_cpus} vCPUs ({cpu_model}), {mem_gb} GB RAM and Python {py_version}."
 
 
 def _scenario_values():
@@ -87,6 +114,7 @@ def _scenario_values():
     vals['mean_west'] = _fmt(ipd_primary['W_est_mean'].mean(), 3)
     random_row = ipd_primary[ipd_primary['method'] == 'baseline_random']
     vals['random_c1'] = _fmt(random_row['C1_heterogeneity_mean'].iloc[0], 3) if not random_row.empty else '—'
+    vals['hardware'] = _hardware_info()
 
     # study-level meta-analysis comparator
     if study_summary is not None and not study_summary.empty:
@@ -299,15 +327,20 @@ def _register_citations(cm):
                 'Greenland S, Robins JM, Pearl J. Confounding and collapsibility in causal inference. Stat Sci. 1999;14(1):29–46.',
                 doi='10.1214/ss/1009211805')
     cm.register('charig1986', 'Charig et al.', 1986,
-                'Charig CR, Webb DR, Payne SR, Wickham JE. Comparison of treatment of renal calculi by open surgery, percutaneous nephrolithotomy, and extracorporeal shockwave lithotripsy. BMJ. 1986;292(6521):879–882.')
+                'Charig CR, Webb DR, Payne SR, Wickham JE. Comparison of treatment of renal calculi by open surgery, percutaneous nephrolithotomy, and extracorporeal shockwave lithotripsy. BMJ. 1986;292(6524):879–882.',
+                doi='10.1136/bmj.292.6524.879')
     cm.register('bickel1975', 'Bickel et al.', 1975,
-                'Bickel PJ, Hammel EA, O\'Connell JW. Sex bias in graduate admissions: data from Berkeley. Science. 1975;187(4175):398–404.')
+                'Bickel PJ, Hammel EA, O\'Connell JW. Sex bias in graduate admissions: data from Berkeley. Science. 1975;187(4175):398–404.',
+                doi='10.1126/science.187.4175.398')
     cm.register('vonkuegelgen2021', 'von Kügelgen et al.', 2021,
-                'von Kügelgen J, Gresele L, Schölkopf B. Simpson\'s paradox in Covid-19 case fatality rates: a mediation analysis of age-related causal effects. IEEE Trans Artif Intell. 2021;2(1):18–27.')
+                'von Kügelgen J, Gresele L, Schölkopf B. Simpson\'s paradox in Covid-19 case fatality rates: a mediation analysis of age-related causal effects. IEEE Trans Artif Intell. 2021;2(1):18–27.',
+                doi='10.1109/TAI.2021.3073088')
     cm.register('haas2021', 'Haas et al.', 2021,
-                'Haas EJ, Angulo FJ, McLaughlin JM, et al. Impact and effectiveness of mRNA BNT162b2 vaccine against SARS-CoV-2 infections and COVID-19 cases, hospitalisations, and deaths following a nationwide vaccination campaign in Israel: an observational study using national surveillance data. Lancet. 2021;397(10287):1819–1829.')
+                'Haas EJ, Angulo FJ, McLaughlin JM, et al. Impact and effectiveness of mRNA BNT162b2 vaccine against SARS-CoV-2 infections and COVID-19 cases, hospitalisations, and deaths following a nationwide vaccination campaign in Israel: an observational study using national surveillance data. Lancet. 2021;397(10287):1819–1829.',
+                doi='10.1016/S0140-6736(21)00947-8')
     cm.register('appleton1996', 'Appleton et al.', 1996,
-                'Appleton DR, French NR, Vanderpump MP. Ignoring a covariate: an example of Simpson\'s paradox. Am Stat. 1996;50(4):340–341.')
+                'Appleton DR, French NR, Vanderpump MP. Ignoring a covariate: an example of Simpson\'s paradox. Am Stat. 1996;50(4):340–341.',
+                doi='10.1080/00031305.1996.10473563')
     cm.register('rosenbaum1983', 'Rosenbaum and Rubin', 1983,
                 'Rosenbaum PR, Rubin DB. The central role of the propensity score in observational studies for causal effects. Biometrika. 1983;70(1):41–55.',
                 doi='10.1093/biomet/70.1.41')
@@ -352,7 +385,8 @@ def _register_citations(cm):
                 'Riley RD, Lambert PC, Abo-Zaid G. Meta-analysis of individual participant data: rationale, conduct, and reporting. BMJ. 2010;340:c221.',
                 doi='10.1136/bmj.c221')
     cm.register('riley2011', 'Riley et al.', 2011,
-                'Riley RD, Higgins JPT, Deeks JJ. Interpretation of random effects meta-analyses. BMJ. 2011;342:d549.')
+                'Riley RD, Higgins JPT, Deeks JJ. Interpretation of random effects meta-analyses. BMJ. 2011;342:d549.',
+                doi='10.1136/bmj.d549')
     cm.register('simmonds2005', 'Simmonds et al.', 2005,
                 'Simmonds MC, Higgins JPT, Stewart LA, Tierney JF, Clarke MJ, Thompson SG. Meta-analysis of individual patient data from randomized trials: a review of methods used in practice. Clin Trials. 2005;2(3):209–217.',
                 doi='10.1191/1740774505cn087oa')
@@ -464,7 +498,7 @@ The primary scenario used n={n_ipd}, {n_studies} studies and K={k_ipd} strata. W
 
 ### Stratification methods
 
-**Proposed Family 1 (outcome-informed).** Method 1A: predicted probability of Y from logistic Y~X, stratified by quantiles. Method 1B: absolute residual from the same model. Method 1C: K-fold cross-validated predictions before stratification.
+**Proposed Family 1 (outcome-informed).** Method 1A: predicted probability of Y from logistic Y~X, stratified by quantiles. Method 1B: absolute residual from the same model.
 
 **Proposed Family 2 (outcome-free).** Method 2A: first principal component of standardised X. Method 2B: K-means on standardised X.
 
@@ -514,6 +548,10 @@ W_est is computed from an estimated individual-level CATE. Omitting treatment-co
 
 We used the 200 null replications together with the 50 alternative replications of the primary scenario to compute, for each method, the area under the ROC curve (AUC) and the true-positive rate (TPR) at a method-specific 5% false-positive rate (C1 below its null 5th percentile, W_est above its null 95th percentile). Because the null distribution preserves confounding and covariate traces but removes true effect modification, these metrics quantify how well the diagnostics distinguish absence from presence of the simulated modification. AUC near 0.5 and low TPR indicate that the diagnostics do not provide reliable classification on their own in the primary scenario; for some methods C1 AUC fell below 0.5, indicating that the alternative DGM shifted C1 in the opposite direction to the lower-tail hypothesis, so the one-sided threshold is not universally valid.
 
+### Practical recipes for real individual participant data
+
+In real IPD studies the empirical null must be reconstructed because the true no-modification DGM is unknown. We recommend three operational recipes. (1) *Permutation null*: randomly permute the treatment indicator within studies and re-compute C1 and W_est for the chosen stratification. This destroys any true treatment-by-covariate interaction while preserving the covariate distribution and study structure; repeating this B = 200–1000 times yields method-specific null percentiles. (2) *Parametric residual null*: fit the no-modification outcome model Y ~ X + A + study indicators to the data, simulate outcomes from the fitted probabilities, and compute the diagnostics on the simulated data. This null is fast and convenient but relies on the correctness of the main-effects model. (3) *Bootstrap null*: resample participants (or study clusters, when studies are few) with replacement, refit the stratification model, and compute C1 and W_est on each bootstrap sample to obtain a sampling null. The excess diagnostics C1_excess and W_est_excess are reported as the observed value minus the mean of the chosen null. We report percentiles in Supplementary Table S5 and recommend cross-checking at least two of the three nulls before interpreting a flag.
+
 ### True-CATE-quantile oracle reference
 
 As a reference for sorting performance, we computed a true-CATE-quantile oracle that assigns participants to strata by the true conditional average treatment effect. This oracle is not a practical method (it uses the true CATE) but it provides an upper bound on how well any covariate-based stratification could separate heterogeneous subgroups. We include the oracle in sensitivity summaries to bound optimism and to illustrate the gap between empirical methods and the true sorting benchmark.
@@ -524,12 +562,12 @@ Five Simpson-paradox examples were reconstructed as pseudo-individual records fr
 
 ### Computational implementation
 
-All simulations and manuscript generation were implemented in Python 3.11 using NumPy 2.x, SciPy, scikit-learn 1.5, pandas, statsmodels and python-docx. Pseudo-random numbers were generated with `numpy.random.default_rng`, with independent seeds for each replication and scenario stored in the repository scripts and `results/summary/` metadata. Stratification used quantile-based equal-frequency bins, k-means clustering (scikit-learn, 10 random initializations, maximum 300 iterations) and Gaussian mixture models (scikit-learn, full covariance, 10 EM initializations, maximum 100 iterations). Logistic regressions were fit with `scikit-learn.linear_model.LogisticRegression` (L2 penalty, C=1.0, lbfgs solver, maximum 1000 iterations). DerSimonian-Laird random-effects summaries used `statsmodels.stats.meta_analysis`. The primary scenario required approximately 5–10 minutes of wall-clock time on a single modern CPU core; the full benchmark—primary scenario, strata/sample-size/Z-to-X/Z-to-Y sensitivities, 200-replication empirical null, W_est misspecification and semi-synthetic illustrations—completed in approximately 2–3 hours on a single core. Exact dependency versions are pinned in `requirements-lock.txt` and the code commit used for the submission package is recorded in `results/commit_hash.txt`.
+All simulations and manuscript generation were implemented in Python using NumPy, SciPy, scikit-learn, pandas, statsmodels and python-docx. {hardware} Pseudo-random numbers were generated with `numpy.random.default_rng`, with independent seeds for each replication and scenario stored in the repository scripts and `results/summary/` metadata. Stratification used quantile-based equal-frequency bins, k-means clustering (scikit-learn, 10 random initializations, maximum 300 iterations) and Gaussian mixture models (scikit-learn, full covariance, 10 EM initializations, maximum 100 iterations). Logistic regressions were fit with `scikit-learn.linear_model.LogisticRegression` (L2 penalty, C=1.0, lbfgs solver, maximum 1000 iterations). DerSimonian-Laird random-effects summaries used `statsmodels.stats.meta_analysis`. The primary scenario required approximately 5–10 minutes of wall-clock time on a single modern CPU core; the full benchmark—primary scenario, strata/sample-size/Z-to-X/Z-to-Y sensitivities, 200-replication empirical null, W_est misspecification and semi-synthetic illustrations—completed in approximately 2–3 hours on a single core. Exact dependency versions are pinned in `requirements-lock.txt` and the code commit used for the submission package is recorded in `results/commit_hash.txt`.
 
 ### Reporting and reproducibility
 
-The design followed ADEMP [morris2019]; checklists are in Additional files 2 and 3. The pipeline is version-controlled and every manuscript number is read from repository CSV outputs. `generate_summary.py`, `generate_rsm_tables.py` and `generate_ione_rsm_v3.py` regenerate all results, figures, tables and submission files in a Python 3.11 environment with the pinned dependencies.
-""".format(n_ipd=v['n_ipd'], n_studies=v['n_studies'], study_effect=v['study_effect'], k_ipd=v['k_ipd'], n_sims_per_scenario=50)
+The design followed ADEMP [morris2019]; checklists are in Additional files 2 and 3. The pipeline is version-controlled and every manuscript number is read from repository CSV outputs. `generate_summary.py`, `generate_rsm_tables.py` and `generate_ione_rsm_v3.py` regenerate all results, figures, tables and submission files in a Python environment with the pinned dependencies.
+""".format(n_ipd=v['n_ipd'], n_studies=v['n_studies'], study_effect=v['study_effect'], k_ipd=v['k_ipd'], n_sims_per_scenario=50, hardware=v['hardware'])
     return md
 def _new_results(v, supplementary=False):
     """Return markdown string for the Results section with current CSV numbers."""
@@ -900,11 +938,11 @@ Table 5 translates the simulation results into practical guidance. It links scen
 
 | Scenario characteristic | Recommended method | Rationale | Caveat |
 |---|---|---|---|
-| Strong covariate trace of a hidden modifier and moderate-to-large sample | Residual-based IONE (1B) | Highest random-effects ATE bias reduction and W_true in the primary scenario | Hits a structural bias floor that does not vanish with sample size; requires a correctly specified outcome model with treatment-covariate interactions |
-| Small sample (n ≈ 500) with moderate modification | Residual-based IONE (1B) | Achieved the largest relative bias reduction and the smallest absolute bias floor at n = 500 | Relative reduction partly reflects large crude bias; residual model can overfit when events are sparse |
-| Large sample (n ≈ 10 000) and strong measured confounding | Propensity-score, prognostic-score or clustering stratification | Largest relative reductions after finite-sample error was dominated by structural differences | Residual-based stratification is overtaken once crude bias is small; method-specific performance still varies |
+| Strong covariate trace of a hidden modifier and moderate-to-large sample (n ~ 2000) | Residual-based IONE (1B) | Highest random-effects ATE bias reduction and W_true in the primary scenario | Hits a structural bias floor that does not vanish with sample size; requires a correctly specified outcome model with treatment-covariate interactions |
+| Small sample (n ~ 500) with moderate modification | Residual-based IONE (1B) | Achieved the largest relative bias reduction and the smallest absolute random-effects bias at n = 500 | Relative reduction partly reflects large crude bias; residual models can overfit when events are sparse |
+| Large sample (n ~ 10 000) and strong measured confounding | Prognostic-score or predicted-probability stratification (1A) | Largest relative reductions at n = 10 000 once finite-sample error was small | Residual-based stratification retains the smallest absolute RE bias; relative reductions become noisy when the crude bias is small; method-specific performance still varies |
 | Outcome model unavailable, misspecified or rare events | Outcome-free methods (PCA or k-means) or prognostic-score stratification | Do not use the outcome for stratification, so avoid degenerate logistic fits and overfitting | ATE bias reduction is generally smaller; C1 and W discrimination remains near chance |
-| Need a descriptive flag for internal incoherence | Report C1_excess and W_est_excess alongside the primary analysis | Empirically calibrated against a no-modification null | Do not use as a standalone inferential test; thresholds are method-specific and DGM-conditional |
+| Need a descriptive flag for internal incoherence in real IPD | Report C1_excess and W_est_excess, calibrated against a permutation or residual null | Empirically centred on a no-modification null; use one of the three recipes described in the Methods | Do not use as a standalone inferential test; thresholds are method-specific and DGM-conditional; cross-check at least two nulls |
 
 *Table 5. Recommendations for choosing a stratification method in an IPD meta-analysis sensitivity analysis.*
 
@@ -1122,6 +1160,31 @@ def generate_v3_figures():
     return v, figs, pptx_path
 
 
+def _write_highlights():
+    """Write CSDA highlights as txt and docx."""
+    lines = [
+        'Highlights',
+        '',
+        '- IONE diagnostics detect hidden effect modification in individual participant data meta-analysis.',
+        '- A simulation benchmark compares seven data-driven stratification methods.',
+        '- Residual-based stratification gives the best subgroup agreement and treatment-effect bias reduction.',
+        '- The two coherence indices are sensitivity flags, not standalone statistical tests.',
+        '- All code, data and results are reproducible from a public repository.',
+    ]
+    txt_path = os.path.join(SUBMISSION_DIR, 'highlights.txt')
+    with open(txt_path, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
+    doc = Document()
+    style = doc.styles['Normal']
+    style.font.name = 'Times New Roman'
+    style.font.size = Pt(11)
+    doc.add_heading('Highlights', level=1)
+    for line in lines[2:]:
+        p = doc.add_paragraph(line[2:], style='List Bullet')
+    docx_path = os.path.join(SUBMISSION_DIR, 'highlights.docx')
+    doc.save(docx_path)
+
+
 def generate_v3_manuscript():
     """Generate the full CSDA submission package (markdown, docx, zip)."""
     os.makedirs(SUBMISSION_DIR, exist_ok=True)
@@ -1289,6 +1352,9 @@ def generate_v3_manuscript():
         subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', '--outdir', SUBMISSION_DIR, ds_docx_path], check=True)
     except Exception as e:
         print(f'[generate_ione_rsm_v3] PDF conversion skipped: {e}')
+
+    # Highlights
+    _write_highlights()
 
     # Cover letter
     cover_md = os.path.join(SUBMISSION_DIR, 'cover_letter_csda_v1.md')

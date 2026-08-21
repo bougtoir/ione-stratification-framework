@@ -29,7 +29,6 @@ def _method_display_name(m: str) -> str:
     names = {
         '1A_predicted_prob': '1A: Pred.Prob',
         '1B_residual': '1B: Residual',
-        '1C_cv_decision': '1C: CV-Decision',
         '1D_ml_uncertainty': '1D: ML-Uncert.',
         '2A_PCA_cum40': '2A: PCA(40%)',
         '2A_PCA_cum60': '2A: PCA(60%)',

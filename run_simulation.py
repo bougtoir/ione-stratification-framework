@@ -14,7 +14,6 @@ from data_generation import generate_dataset
 from methods import (
     method_1a_predicted_probability,
     method_1b_residual,
-    method_1c_cv_decision,
     method_1d_ml_uncertainty,
     method_2a_pca,
     method_2b_clustering,
@@ -105,7 +104,7 @@ def run_scenario(
     results = []
 
     # Methods that use the outcome Y for stratification: apply discovery/evaluation split
-    outcome_informed_prefixes = ('1A_', '1B_', '1C_', '1D_', 'Prognostic_')
+    outcome_informed_prefixes = ('1A_', '1B_', '1D_', 'Prognostic_')
 
     for method_name, method_func, method_kwargs in method_specs:
         try:
@@ -162,7 +161,6 @@ def run_rsm_ipd_simulation(
     method_specs = [
         ('1A_predicted_prob', method_1a_predicted_probability, {}),
         ('1B_residual', method_1b_residual, {}),
-        ('1C_cv_decision', method_1c_cv_decision, {}),
         ('PS_propensity_score', method_ps_propensity_score, {}),
         ('GMM', method_gmm, {}),
         ('Prognostic_score', method_prognostic_score, {}),
@@ -210,7 +208,6 @@ def build_method_specs(include_slow: bool = False) -> list:
     specs = [
         ('1A_predicted_prob', method_1a_predicted_probability, {}),
         ('1B_residual', method_1b_residual, {}),
-        ('1C_cv_decision', method_1c_cv_decision, {}),
         ('1D_ml_uncertainty', method_1d_ml_uncertainty, {}),
         ('PS_propensity_score', method_ps_propensity_score, {}),
         ('GMM', method_gmm, {}),
@@ -304,7 +301,6 @@ def run_sensitivity_simulation(
     method_specs = [
         ('1A_predicted_prob', method_1a_predicted_probability, {}),
         ('1B_residual', method_1b_residual, {}),
-        ('1C_cv_decision', method_1c_cv_decision, {}),
         ('PS_propensity_score', method_ps_propensity_score, {}),
         ('GMM', method_gmm, {}),
         ('Prognostic_score', method_prognostic_score, {}),
@@ -367,7 +363,6 @@ def run_nonlinearity_simulation(
     method_specs = [
         ('1A_predicted_prob', method_1a_predicted_probability, {}),
         ('1B_residual', method_1b_residual, {}),
-        ('1C_cv_decision', method_1c_cv_decision, {}),
         ('PS_propensity_score', method_ps_propensity_score, {}),
         ('GMM', method_gmm, {}),
         ('Prognostic_score', method_prognostic_score, {}),

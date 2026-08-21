@@ -18,7 +18,6 @@ from run_simulation import run_scenario
 from methods import (
     method_1a_predicted_probability,
     method_1b_residual,
-    method_1c_cv_decision,
     method_ps_propensity_score,
     method_gmm,
     method_prognostic_score,
@@ -33,7 +32,6 @@ def _method_specs():
     return [
         ('1A_predicted_prob', method_1a_predicted_probability, {}),
         ('1B_residual', method_1b_residual, {}),
-        ('1C_cv_decision', method_1c_cv_decision, {}),
         ('PS_propensity_score', method_ps_propensity_score, {}),
         ('GMM', method_gmm, {}),
         ('Prognostic_score', method_prognostic_score, {}),

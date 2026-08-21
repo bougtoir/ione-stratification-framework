@@ -5,10 +5,10 @@ Method families:
 - Proposed IONE methods:
   1A: predicted probability (outcome-informed)
   1B: residual (outcome-informed)
-  1C: cross-validated decision power (outcome-informed, out-of-fold)
-  1D: ML uncertainty (outcome-informed)
   2A: PCA (outcome-free)
   2B: k-means on X (outcome-free)
+- Additional candidate methods (used in exploratory benchmarks):
+  1D: ML uncertainty (outcome-informed)
   2C: autoencoder (outcome-free)
   2D: RF proximity (outcome-free)
 - Active comparators:
@@ -92,15 +92,6 @@ def method_1b_residual(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: in
     p_hat = _safe_predict_proba(model, X[train], Y[train], X)
     residuals = np.abs(Y - p_hat)
     return _quantile_stratify(residuals, n_strata, discovery_idx)
-
-
-def method_1c_cv_decision(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
-                           discovery_idx: np.ndarray | None = None) -> np.ndarray:
-    """Method 1C: cross-validation-based decision power score."""
-    train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
-    model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-    p_hat_full = _safe_predict_proba(model, X[train], Y[train], X)
-    return _quantile_stratify(p_hat_full, n_strata, discovery_idx)
 
 
 def method_1d_ml_uncertainty(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
@@ -330,7 +321,6 @@ def get_all_methods() -> dict:
     return {
         '1A_predicted_prob': method_1a_predicted_probability,
         '1B_residual': method_1b_residual,
-        '1C_cv_decision': method_1c_cv_decision,
         '1D_ml_uncertainty': method_1d_ml_uncertainty,
         '2A_pca': method_2a_pca,
         '2B_clustering': method_2b_clustering,

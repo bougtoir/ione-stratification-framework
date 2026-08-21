@@ -327,7 +327,6 @@ def _make_method_specs():
     proposed = [
         ('1A_predicted_prob', methods.method_1a_predicted_probability, {}),
         ('1B_residual', methods.method_1b_residual, {}),
-        ('1C_cv_decision', methods.method_1c_cv_decision, {}),
         ('1D_ml_uncertainty', methods.method_1d_ml_uncertainty, {}),
         ('2A_PCA_cum60', methods.method_2a_pca, {'cumulative_threshold': 0.6, 'fixed_k': None}),
         ('2B_clustering', methods.method_2b_clustering, {}),

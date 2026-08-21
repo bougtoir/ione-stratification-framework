@@ -1,4 +1,4 @@
-# Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: IONE (Incoherence-Oriented Neutralisation and Extraction) and a simulation benchmark of stratification approaches
+# IONE: Coherence diagnostics for hidden effect modification in individual participant data meta-analysis
 
 {{PAGE}}
 
@@ -42,7 +42,7 @@ The primary scenario used n=2000, 10 studies and K=5 strata. We varied K (3, 5, 
 
 ### Stratification methods
 
-**Proposed Family 1 (outcome-informed).** Method 1A: predicted probability of Y from logistic Y~X, stratified by quantiles. Method 1B: absolute residual from the same model. Method 1C: K-fold cross-validated predictions before stratification.
+**Proposed Family 1 (outcome-informed).** Method 1A: predicted probability of Y from logistic Y~X, stratified by quantiles. Method 1B: absolute residual from the same model.
 
 **Proposed Family 2 (outcome-free).** Method 2A: first principal component of standardised X. Method 2B: K-means on standardised X.
 
@@ -92,6 +92,10 @@ W_est is computed from an estimated individual-level CATE. Omitting treatment-co
 
 We used the 200 null replications together with the 50 alternative replications of the primary scenario to compute, for each method, the area under the ROC curve (AUC) and the true-positive rate (TPR) at a method-specific 5% false-positive rate (C1 below its null 5th percentile, W_est above its null 95th percentile). Because the null distribution preserves confounding and covariate traces but removes true effect modification, these metrics quantify how well the diagnostics distinguish absence from presence of the simulated modification. AUC near 0.5 and low TPR indicate that the diagnostics do not provide reliable classification on their own in the primary scenario; for some methods C1 AUC fell below 0.5, indicating that the alternative DGM shifted C1 in the opposite direction to the lower-tail hypothesis, so the one-sided threshold is not universally valid.
 
+### Practical recipes for real individual participant data
+
+In real IPD studies the empirical null must be reconstructed because the true no-modification DGM is unknown. We recommend three operational recipes. (1) *Permutation null*: randomly permute the treatment indicator within studies and re-compute C1 and W_est for the chosen stratification. This destroys any true treatment-by-covariate interaction while preserving the covariate distribution and study structure; repeating this B = 200–1000 times yields method-specific null percentiles. (2) *Parametric residual null*: fit the no-modification outcome model Y ~ X + A + study indicators to the data, simulate outcomes from the fitted probabilities, and compute the diagnostics on the simulated data. This null is fast and convenient but relies on the correctness of the main-effects model. (3) *Bootstrap null*: resample participants (or study clusters, when studies are few) with replacement, refit the stratification model, and compute C1 and W_est on each bootstrap sample to obtain a sampling null. The excess diagnostics C1_excess and W_est_excess are reported as the observed value minus the mean of the chosen null. We report percentiles in Supplementary Table S5 and recommend cross-checking at least two of the three nulls before interpreting a flag.
+
 ### True-CATE-quantile oracle reference
 
 As a reference for sorting performance, we computed a true-CATE-quantile oracle that assigns participants to strata by the true conditional average treatment effect. This oracle is not a practical method (it uses the true CATE) but it provides an upper bound on how well any covariate-based stratification could separate heterogeneous subgroups. We include the oracle in sensitivity summaries to bound optimism and to illustrate the gap between empirical methods and the true sorting benchmark.
@@ -102,11 +106,11 @@ Five Simpson-paradox examples were reconstructed as pseudo-individual records fr
 
 ### Computational implementation
 
-All simulations and manuscript generation were implemented in Python 3.11 using NumPy 2.x, SciPy, scikit-learn 1.5, pandas, statsmodels and python-docx. Pseudo-random numbers were generated with `numpy.random.default_rng`, with independent seeds for each replication and scenario stored in the repository scripts and `results/summary/` metadata. Stratification used quantile-based equal-frequency bins, k-means clustering (scikit-learn, 10 random initializations, maximum 300 iterations) and Gaussian mixture models (scikit-learn, full covariance, 10 EM initializations, maximum 100 iterations). Logistic regressions were fit with `scikit-learn.linear_model.LogisticRegression` (L2 penalty, C=1.0, lbfgs solver, maximum 1000 iterations). DerSimonian-Laird random-effects summaries used `statsmodels.stats.meta_analysis`. The primary scenario required approximately 5–10 minutes of wall-clock time on a single modern CPU core; the full benchmark—primary scenario, strata/sample-size/Z-to-X/Z-to-Y sensitivities, 200-replication empirical null, W_est misspecification and semi-synthetic illustrations—completed in approximately 2–3 hours on a single core. Exact dependency versions are pinned in `requirements-lock.txt` and the code commit used for the submission package is recorded in `results/commit_hash.txt`.
+All simulations and manuscript generation were implemented in Python using NumPy, SciPy, scikit-learn, pandas, statsmodels and python-docx. The submission package was generated on a Devin-managed VM with 2 vCPUs (INTEL(R) XEON(R) PLATINUM 8559C), 7.8 GB RAM and Python 3.10.12. Pseudo-random numbers were generated with `numpy.random.default_rng`, with independent seeds for each replication and scenario stored in the repository scripts and `results/summary/` metadata. Stratification used quantile-based equal-frequency bins, k-means clustering (scikit-learn, 10 random initializations, maximum 300 iterations) and Gaussian mixture models (scikit-learn, full covariance, 10 EM initializations, maximum 100 iterations). Logistic regressions were fit with `scikit-learn.linear_model.LogisticRegression` (L2 penalty, C=1.0, lbfgs solver, maximum 1000 iterations). DerSimonian-Laird random-effects summaries used `statsmodels.stats.meta_analysis`. The primary scenario required approximately 5–10 minutes of wall-clock time on a single modern CPU core; the full benchmark—primary scenario, strata/sample-size/Z-to-X/Z-to-Y sensitivities, 200-replication empirical null, W_est misspecification and semi-synthetic illustrations—completed in approximately 2–3 hours on a single core. Exact dependency versions are pinned in `requirements-lock.txt` and the code commit used for the submission package is recorded in `results/commit_hash.txt`.
 
 ### Reporting and reproducibility
 
-The design followed ADEMP [morris2019]; checklists are in Additional files 2 and 3. The pipeline is version-controlled and every manuscript number is read from repository CSV outputs. `generate_summary.py`, `generate_rsm_tables.py` and `generate_ione_rsm_v3.py` regenerate all results, figures, tables and submission files in a Python 3.11 environment with the pinned dependencies.
+The design followed ADEMP [morris2019]; checklists are in Additional files 2 and 3. The pipeline is version-controlled and every manuscript number is read from repository CSV outputs. `generate_summary.py`, `generate_rsm_tables.py` and `generate_ione_rsm_v3.py` regenerate all results, figures, tables and submission files in a Python environment with the pinned dependencies.
 
 
 ## 3. Results
@@ -119,7 +123,6 @@ Table 1 reports the primary scenario (n=2000, 10 studies, K=5). Agreement with t
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1A_predicted_prob | 0.029 | 0.891 | 0.352 | 0.111 | 0.01865 | 0.01888 | 0.01352 | -0.013 | 0.275 | 0.142 |
 | 1B_residual | 0.032 | 0.927 | 0.363 | 0.078 | 0.01865 | 0.01345 | 0.00816 | 0.279 | 0.563 | 0.044 |
-| 1C_cv_decision | 0.029 | 0.891 | 0.352 | 0.111 | 0.01865 | 0.01888 | 0.01352 | -0.013 | 0.275 | 0.142 |
 | 2A_PCA_cum60 | 0.016 | 0.881 | 0.158 | 0.080 | 0.01865 | 0.01883 | 0.01769 | -0.010 | 0.051 | 0.130 |
 | 2B_clustering | 0.023 | 0.865 | 0.210 | 0.143 | 0.01865 | 0.01796 | 0.01651 | 0.037 | 0.115 | 0.146 |
 | GMM | 0.005 | 0.895 | 0.050 | 0.096 | 0.01865 | 0.01797 | 0.01686 | 0.036 | 0.096 | 0.127 |
@@ -195,7 +198,6 @@ Table 4 and Figure 6 summarise the diagnostic calibration of C1 and W_est agains
 |---|---|---|---|---|
 | 1A_predicted_prob | 0.506 | 0.060 | 0.541 | 0.080 |
 | 1B_residual | 0.460 | 0.060 | 0.542 | 0.060 |
-| 1C_cv_decision | 0.506 | 0.060 | 0.541 | 0.080 |
 | 2A_PCA_cum60 | 0.464 | 0.060 | 0.490 | 0.060 |
 | 2B_clustering | 0.545 | 0.020 | 0.537 | 0.060 |
 | GMM | 0.489 | 0.060 | 0.561 | 0.080 |
@@ -221,11 +223,11 @@ Table 5 translates the simulation results into practical guidance. It links scen
 
 | Scenario characteristic | Recommended method | Rationale | Caveat |
 |---|---|---|---|
-| Strong covariate trace of a hidden modifier and moderate-to-large sample | Residual-based IONE (1B) | Highest random-effects ATE bias reduction and W_true in the primary scenario | Hits a structural bias floor that does not vanish with sample size; requires a correctly specified outcome model with treatment-covariate interactions |
-| Small sample (n ≈ 500) with moderate modification | Residual-based IONE (1B) | Achieved the largest relative bias reduction and the smallest absolute bias floor at n = 500 | Relative reduction partly reflects large crude bias; residual model can overfit when events are sparse |
-| Large sample (n ≈ 10 000) and strong measured confounding | Propensity-score, prognostic-score or clustering stratification | Largest relative reductions after finite-sample error was dominated by structural differences | Residual-based stratification is overtaken once crude bias is small; method-specific performance still varies |
+| Strong covariate trace of a hidden modifier and moderate-to-large sample (n ~ 2000) | Residual-based IONE (1B) | Highest random-effects ATE bias reduction and W_true in the primary scenario | Hits a structural bias floor that does not vanish with sample size; requires a correctly specified outcome model with treatment-covariate interactions |
+| Small sample (n ~ 500) with moderate modification | Residual-based IONE (1B) | Achieved the largest relative bias reduction and the smallest absolute random-effects bias at n = 500 | Relative reduction partly reflects large crude bias; residual models can overfit when events are sparse |
+| Large sample (n ~ 10 000) and strong measured confounding | Prognostic-score or predicted-probability stratification (1A) | Largest relative reductions at n = 10 000 once finite-sample error was small | Residual-based stratification retains the smallest absolute RE bias; relative reductions become noisy when the crude bias is small; method-specific performance still varies |
 | Outcome model unavailable, misspecified or rare events | Outcome-free methods (PCA or k-means) or prognostic-score stratification | Do not use the outcome for stratification, so avoid degenerate logistic fits and overfitting | ATE bias reduction is generally smaller; C1 and W discrimination remains near chance |
-| Need a descriptive flag for internal incoherence | Report C1_excess and W_est_excess alongside the primary analysis | Empirically calibrated against a no-modification null | Do not use as a standalone inferential test; thresholds are method-specific and DGM-conditional |
+| Need a descriptive flag for internal incoherence in real IPD | Report C1_excess and W_est_excess, calibrated against a permutation or residual null | Empirically centred on a no-modification null; use one of the three recipes described in the Methods | Do not use as a standalone inferential test; thresholds are method-specific and DGM-conditional; cross-check at least two nulls |
 
 *Table 5. Recommendations for choosing a stratification method in an IPD meta-analysis sensitivity analysis.*
 
