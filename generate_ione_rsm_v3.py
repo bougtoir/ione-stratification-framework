@@ -30,10 +30,10 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), 'results')
 SUMMARY_DIR = os.path.join(RESULTS_DIR, 'summary')
 FIG_DIR = os.path.join(RESULTS_DIR, 'figures')
-TARGET_JOURNAL = 'Computational Statistics & Data Analysis'
-SUBMISSION_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'csda_submission')
+TARGET_JOURNAL = 'Journal of Computational Mathematics and Data Science'
+SUBMISSION_DIR = os.path.join(RESULTS_DIR, 'manuscript', 'jcmds_submission')
 
-MANUSCRIPT_TITLE = 'IONE: Coherence diagnostics for hidden effect modification in individual participant data meta-analysis'
+MANUSCRIPT_TITLE = 'Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: the Incoherence-Oriented Neutralisation and Extraction (IONE) framework and a simulation benchmark'
 
 # Date range for AI declaration (kept identical in title page and declarations)
 AI_DATES = 'August 2025 through August 2026'
@@ -993,22 +993,16 @@ Not applicable.
 
 ### Supplementary materials
 
-Supplementary methods, abbreviations, the ADEMP/STROBE-Sim checklists, the four extended sensitivity tables, and the empirical null-distribution and W_est misspecification sensitivity tables are provided in `csda_supplementary_v1.docx`.
+Supplementary methods, abbreviations, the ADEMP/STROBE-Sim checklists, the four extended sensitivity tables, and the empirical null-distribution and W_est misspecification sensitivity tables are provided in `jcmds_supplementary_v1.docx`.
 
-### Artificial intelligence
+### Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
 
-Manuscript text, Python code, and some analyses were drafted or revised using large language models (OpenAI GPT-4 and GPT-4o, accessed {AI_DATES}) under the direct, iterative supervision of the author. The LLMs were used for drafting prose, formatting references, generating figures, and implementing the computational pipeline. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against the repository outputs, and approved the final scientific content. No LLM-generated text was used without human review.
+During the preparation of this work the author(s) used OpenAI GPT-4 and GPT-4o (accessed {AI_DATES}) to draft and revise prose, format references, generate figures, and implement the computational pipeline. After using these tools, the author reviewed and edited the content as needed and takes full responsibility for the content of the published article. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against the repository outputs, and approved the final scientific content. No AI-generated text was used without human review.
 """
 def _additional_files(v):
     return f"""### Additional file 1: Supplementary Methods
 
 Detailed algebraic description of the IPD data-generating mechanism. For each of the {v['n_studies']} studies, a study-specific intercept is drawn for baseline risk and treatment propensity. The critical variables are Z1 (continuous, mean 60, standard deviation 12, truncated to 20–95), Z2 (binary, probability 0.5) and Z3 (ordered, levels 0/1/2 with probabilities 0.3, 0.4, 0.3). The ten general variables X1-X10 are linear or non-linear functions of Z plus independent Gaussian noise. The treatment indicator A is generated from a logistic model with intercept, Z main effects, X main effects and a random study intercept. The outcome Y is generated from a logistic model with Z main effects, X main effects, an A main effect, Z-by-A interaction effects and a random study intercept. The true individual CATE is the difference in outcome probabilities under A=1 versus A=0 at the realised Z values. The true population ATE is the average of these CATEs over the super-population.
-
-### Additional file 4: Semi-synthetic pseudo-IPD reconstruction
-
-The five Simpson-paradox examples were reconstructed from published aggregate tables as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. The reconstruction is deterministic: each cell in the published treatment (or exposure) by outcome table is expanded to the reported number of records, and outcomes are assigned in the exact proportions shown in the source table (the first n_event records in a cell are events, the remainder are non-events). Covariates are obtained by mapping each cell to a representative value (e.g. age midpoint) plus a small amount of random noise so that the marginal distribution approximates the published totals while preserving the deterministic cell sizes.
-
-For the Israel vaccination example [haas2021], the source table in `data/haas_2021_israel_hospitalization_counts.csv` gives age- and vaccination-stratified population sizes and COVID-19-related hospitalisation counts. Because the full population exceeds six million, we first down-sampled to 100,000 records by stratified random sampling that preserved the age-vaccination cell proportions. Hospitalisation status within each down-sampled cell was then generated by binomial sampling with the observed cell hospitalisation rate followed by deterministic event assignment. The low hospitalisation rate (~0.09% in the down-sampled data) means that several down-sampled cells contain zero or very few events. In such cells, logistic models used by outcome-informed stratification methods were fitted with L2 regularisation, and any degenerate one-class fit was handled by returning the observed cell mean probability. The same deterministic reconstruction and small-cell handling applies to the kidney-stone, Berkeley, smoking and COVID-19 CFR examples.
 
 ### Additional file 2: ADEMP checklist
 
@@ -1056,6 +1050,12 @@ For the Israel vaccination example [haas2021], the source table in `data/haas_20
 | 23 | Source of funding | Yes | Declarations |
 | 24 | Code availability | Yes | Declarations and Methods |
 | 25 | Role of funder | Not applicable | Declarations |
+
+### Additional file 4: Semi-synthetic pseudo-IPD reconstruction
+
+The five Simpson-paradox examples were reconstructed from published aggregate tables as pseudo-individual records [charig1986][bickel1975][vonkuegelgen2021][haas2021][appleton1996]. The reconstruction is deterministic: each cell in the published treatment (or exposure) by outcome table is expanded to the reported number of records, and outcomes are assigned in the exact proportions shown in the source table (the first n_event records in a cell are events, the remainder are non-events). Covariates are obtained by mapping each cell to a representative value (e.g. age midpoint) plus a small amount of random noise so that the marginal distribution approximates the published totals while preserving the deterministic cell sizes.
+
+For the Israel vaccination example [haas2021], the source table in `data/haas_2021_israel_hospitalization_counts.csv` gives age- and vaccination-stratified population sizes and COVID-19-related hospitalisation counts. Because the full population exceeds six million, we first down-sampled to 100,000 records by stratified random sampling that preserved the age-vaccination cell proportions. Hospitalisation status within each down-sampled cell was then generated by binomial sampling with the observed cell hospitalisation rate followed by deterministic event assignment. The low hospitalisation rate (~0.09% in the down-sampled data) means that several down-sampled cells contain zero or very few events. In such cells, logistic models used by outcome-informed stratification methods were fitted with L2 regularisation, and any degenerate one-class fit was handled by returning the observed cell mean probability. The same deterministic reconstruction and small-cell handling applies to the kidney-stone, Berkeley, smoking and COVID-19 CFR examples.
 """
 
 def _abbreviations():
@@ -1063,22 +1063,24 @@ def _abbreviations():
 
 | Abbreviation | Full term |
 |---|---|
+| ADEMP | Aims, Data-generating mechanisms, Estimands, Methods and Performance measures |
 | ARI | Adjusted Rand Index |
 | ATE | Average treatment effect |
-| BMI | Body mass index |
+| AUC | Area under the ROC curve |
 | C1 | Coherence indicator 1 (I^2-based) |
 | CATE | Conditional average treatment effect |
-| DAG | Directed acyclic graph |
-| DRS | Disease risk score |
+| CI | Confidence interval |
+| DGM | Data-generating mechanism |
+| FPR | False-positive rate |
 | GMM | Gaussian mixture model |
-| hdPS | High-dimensional propensity score |
 | IPD | Individual participant data |
 | IONE | Incoherence-Oriented Neutralisation and Extraction |
-| IV | Instrumental variable |
-| OR | Odds ratio |
 | PCA | Principal component analysis |
 | PS | Propensity score |
-| RCT | Randomised controlled trial |
+| RE | Random effects |
+| SE | Standard error |
+| STROBE-Sim | Strengthening the Reporting of Observational Studies in Epidemiology – Simulation |
+| TPR | True-positive rate |
 | W | Proportion of total CATE variance explained by the stratification |
 """
 
@@ -1107,7 +1109,7 @@ W is a ratio whose denominator is the overall CATE variance. When effect modific
 
 At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias ({v['n10000_re_bias']}; relative reduction {v['n10000_rel_re']}), similar to the absolute floor observed at n=500 ({v['n500_re_bias']}) and n=2000 ({v['n2000_sens_re_bias']}). This floor is consistent with the ARI ceiling: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
 
-### Relevance to CSDA readers
+### Relevance to JCMDS readers
 
 IONE sits between computational stratification diagnostics and model-based effect modification for individual participant data meta-analysis. C1 applies the I^2 statistic to discovered strata, and W measures how much CATE variance a partition explains. Both are descriptive sensitivity indices, not inferential tests. The empirical null distribution (Supplementary Table S5) calibrates the diagnostics under no true effect modification, and the misspecification sensitivity (Supplementary Table S6) checks whether W_est is robust to the outcome-model specification. The simulation code, analysis scripts and generated tables are publicly available so readers can reproduce every numerical result.
 
@@ -1162,13 +1164,13 @@ def generate_v3_figures():
 
 
 def _write_highlights():
-    """Write CSDA highlights as txt and docx."""
+    """Write JCMDS highlights as txt and docx."""
     lines = [
         'Highlights',
         '',
-        '- IONE provides coherence diagnostics for exploring hidden effect modification in individual participant data meta-analysis.',
+        '- Coherence diagnostics for hidden effect modification in IPD meta-analysis.',
         '- A simulation benchmark compares seven data-driven stratification methods.',
-        '- Residual-based stratification gives the best subgroup agreement and treatment-effect bias reduction.',
+        '- Residual-based stratification gives best subgroup agreement and ATE bias reduction.',
         '- The two coherence indices are sensitivity flags, not standalone statistical tests.',
         '- All code, data and results are reproducible from a public repository.',
     ]
@@ -1187,7 +1189,7 @@ def _write_highlights():
 
 
 def generate_v3_manuscript():
-    """Generate the full CSDA submission package (markdown, docx, zip)."""
+    """Generate the full JCMDS submission package (markdown, docx, zip)."""
     os.makedirs(SUBMISSION_DIR, exist_ok=True)
 
     # Read previous long manuscript
@@ -1203,17 +1205,17 @@ def generate_v3_manuscript():
     # Build sections
     abstract = (
         f"**Background:** In individual participant data (IPD) meta-analysis, marginal effect estimates can be biased by hidden effect modifiers. "
-        f"We introduce two coherence diagnostics, C1 and W, and present a reproducible simulation benchmark of seven stratification approaches.\n\n"
+        f"We introduce the Incoherence-Oriented Neutralisation and Extraction (IONE) framework, two coherence diagnostics (C1 and W), and a reproducible simulation benchmark of seven stratification approaches.\n\n"
         f"**Methods:** We simulated an IPD meta-analysis with {v['n_studies']} studies and n={v['n_ipd']} participants, binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. "
         f"Seven methods—two outcome-informed, two outcome-free, propensity-score, prognostic-score and Gaussian-mixture stratification—were compared; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. "
-        f"We report ARI, C1, W and ATE bias reduction, calibrating the diagnostics against empirical null distributions.\n\n"
+        f"We report ARI, C1, W and average treatment effect (ATE) bias reduction, calibrating the diagnostics against empirical null distributions.\n\n"
         f"**Results:** At n={v['n_ipd']} and K={v['k_ipd']}, C1 and W_est discriminated the alternative from the empirical null only at chance level (C1 AUC {v['c1_auc_min']}-{v['c1_auc_max']}; W AUC {v['w_auc_min']}-{v['w_auc_max']}). "
         f"The residual-based method achieved the largest random-effects ATE bias reduction (from {v['crude_bias']} to {v['re_bias']}; relative reduction {v['rel_re']}). "
         f"Its absolute bias plateaued near {v['n500_re_bias']} (n=500), {v['n2000_sens_re_bias']} (n=2000) and {v['n10000_re_bias']} (n=10 000), indicating a structural bias floor that persists as sample size increases.\n\n"
         f"**Conclusions:** IONE is a descriptive sensitivity framework, not an inferential test for hidden effect modification. "
         f"The benchmark shows that data-driven stratification can reduce marginal ATE bias when measured covariates carry strong traces of hidden effect modification, but C1 and W must be interpreted relative to method-specific empirical nulls and are not standalone decision criteria."
     )
-    keywords = "individual participant data meta-analysis; evidence synthesis; heterogeneity; hidden effect modification; stratification; simulation"
+    keywords = "meta-analysis; heterogeneity; effect modification; stratification; simulation; reproducibility; causal inference"
 
     # Extract and adapt Background and Discussion
     old_bg = _extract_section(old_md, 'Background')
@@ -1262,11 +1264,11 @@ def generate_v3_manuscript():
     md = _old_to_keys(md, cm)
 
     # Save markdown and convert to docx
-    md_path = os.path.join(SUBMISSION_DIR, 'IONE_csda_v1.md')
+    md_path = os.path.join(SUBMISSION_DIR, 'IONE_jcmds_v1.md')
     with open(md_path, 'w', encoding='utf-8') as f:
         f.write(md)
 
-    docx_path = os.path.join(SUBMISSION_DIR, 'IONE_csda_v1.docx')
+    docx_path = os.path.join(SUBMISSION_DIR, 'IONE_jcmds_v1.docx')
     convert(md_path, docx_path, cite_manager=cm, figure_dir=FIG_DIR)
 
     # Compute title-page metadata from the generated manuscript
@@ -1305,10 +1307,10 @@ def generate_v3_manuscript():
 
 { _new_results(v, supplementary=True) }
 """
-    supp_md_path = os.path.join(SUBMISSION_DIR, 'csda_supplementary_v1.md')
+    supp_md_path = os.path.join(SUBMISSION_DIR, 'jcmds_supplementary_v1.md')
     with open(supp_md_path, 'w', encoding='utf-8') as f:
         f.write(supp_md)
-    supp_docx_path = os.path.join(SUBMISSION_DIR, 'csda_supplementary_v1.docx')
+    supp_docx_path = os.path.join(SUBMISSION_DIR, 'jcmds_supplementary_v1.docx')
     convert(supp_md_path, supp_docx_path, cite_manager=supp_cm, figure_dir=FIG_DIR)
 
 
@@ -1320,12 +1322,21 @@ def generate_v3_manuscript():
     tp_title = tp.add_heading(MANUSCRIPT_TITLE, level=0)
     tp_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
     tp.add_paragraph()
-    tp.add_paragraph('Onishi Tatsuki')
-    tp.add_paragraph('Data Science AI Innovation Research Promotion Center, Shiga University')
-    tp.add_paragraph('1-1-1 Bamba, Hikone, Shiga 522-8522, Japan')
-    tp.add_paragraph('ORCID: 0000-0001-7261-9062')
-    tp.add_paragraph('Corresponding author: Onishi Tatsuki')
     p = tp.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r = p.add_run('Onishi Tatsuki')
+    sup = p.add_run('a')
+    sup.font.superscript = True
+    empty = p.add_run(' ')
+    p2 = tp.add_paragraph()
+    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r2 = p2.add_run('a')
+    r2.font.superscript = True
+    r2b = p2.add_run('Data Science AI Innovation Research Promotion Center, Shiga University, 1-1-1 Bamba, Hikone, Shiga 522-8522, Japan')
+    tp.add_paragraph('ORCID: 0000-0001-7261-9062').alignment = WD_ALIGN_PARAGRAPH.CENTER
+    tp.add_paragraph('Corresponding author: Onishi Tatsuki').alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p = tp.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.add_run('bougtoir@gmail.com').italic = True
     tp.add_paragraph()
     tp.add_paragraph(f'Number of figures: {num_figs}')
@@ -1339,15 +1350,15 @@ def generate_v3_manuscript():
     tp.add_paragraph('Funding: No external funding supported this work.')
     tp.add_paragraph('Authors\' contributions (CRediT): Onishi Tatsuki — Conceptualisation, methodology, software, formal analysis, writing – original draft, writing – review and editing, visualisation.')
     tp.add_paragraph('Acknowledgements: Not applicable.')
-    tp.add_paragraph(f'Artificial intelligence: Manuscript text, Python code and some analyses were drafted or revised using large language models (OpenAI GPT-4 and GPT-4o, accessed {AI_DATES}) under the author\'s direct, iterative supervision. The LLMs were used for drafting prose, formatting references, generating figures and implementing the computational pipeline. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against repository outputs, and approved the final scientific content.')
+    tp.add_paragraph(f'Generative AI and AI-assisted technologies: During the preparation of this work the author(s) used OpenAI GPT-4 and GPT-4o (accessed {AI_DATES}) to draft and revise prose, format references, generate figures and implement the computational pipeline. After using these tools, the author reviewed and edited the content as needed and takes full responsibility for the content of the published article. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against repository outputs and approved the final scientific content.')
     tp.add_paragraph('Data and code availability: All simulation code, analysis scripts and semi-synthetic example data are at https://github.com/bougtoir/ione-stratification-framework, with a requirements.txt and requirements-lock.txt file, fixed random seeds and a reproducible pipeline. The exact commit hash is recorded in results/commit_hash.txt. An archived Zenodo DOI will be obtained before acceptance.')
-    tp_path = os.path.join(SUBMISSION_DIR, 'title_page_csda_v1.docx')
+    tp_path = os.path.join(SUBMISSION_DIR, 'title_page_jcmds_v1.docx')
     tp.save(tp_path)
 
     # Double-spaced PDF for initial submission
-    ds_docx_path = os.path.join(SUBMISSION_DIR, 'IONE_csda_v1_double_spaced.docx')
+    ds_docx_path = os.path.join(SUBMISSION_DIR, 'IONE_jcmds_v1_double_spaced.docx')
     _make_double_spaced(docx_path, ds_docx_path)
-    pdf_path = os.path.join(SUBMISSION_DIR, 'IONE_csda_v1_double_spaced.pdf')
+    pdf_path = os.path.join(SUBMISSION_DIR, 'IONE_jcmds_v1_double_spaced.pdf')
     try:
         import subprocess
         subprocess.run(['libreoffice', '--headless', '--convert-to', 'pdf', '--outdir', SUBMISSION_DIR, ds_docx_path], check=True)
@@ -1358,22 +1369,22 @@ def generate_v3_manuscript():
     _write_highlights()
 
     # Cover letter
-    cover_md = os.path.join(SUBMISSION_DIR, 'cover_letter_csda_v1.md')
+    cover_md = os.path.join(SUBMISSION_DIR, 'cover_letter_jcmds_v1.md')
     if os.path.exists(cover_md):
         from md_to_rsm_docx import convert as _convert
-        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_csda_v1.docx')
+        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_jcmds_v1.docx')
         _convert(cover_md, cover_docx)
 
     # Submission package zip
     import zipfile
-    zip_path = os.path.join(SUBMISSION_DIR, 'v1_ione_csda_submission_package.zip')
+    zip_path = os.path.join(SUBMISSION_DIR, 'v1_ione_jcmds_submission_package.zip')
     with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
         zf.write(docx_path, os.path.basename(docx_path))
         zf.write(tp_path, os.path.basename(tp_path))
-        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_csda_v1.docx')
+        cover_docx = os.path.join(SUBMISSION_DIR, 'cover_letter_jcmds_v1.docx')
         if os.path.exists(cover_docx):
             zf.write(cover_docx, os.path.basename(cover_docx))
-        tables_docx = os.path.join(SUBMISSION_DIR, 'csda_tables_separate.docx')
+        tables_docx = os.path.join(SUBMISSION_DIR, 'jcmds_tables_separate.docx')
         if os.path.exists(tables_docx):
             zf.write(tables_docx, os.path.basename(tables_docx))
         if os.path.exists(supp_docx_path):
@@ -1390,7 +1401,7 @@ def generate_v3_manuscript():
             zf.write(highlights_docx, os.path.basename(highlights_docx))
         pptx_path = os.path.join(FIG_DIR, 'pptx', 'rsm_figures.pptx')
         if os.path.exists(pptx_path):
-            zf.write(pptx_path, 'csda_figures.pptx')
+            zf.write(pptx_path, 'jcmds_figures.pptx')
         for f in os.listdir(FIG_DIR):
             if f.endswith(('.png', '.eps')):
                 zf.write(os.path.join(FIG_DIR, f), os.path.join('figures', f))

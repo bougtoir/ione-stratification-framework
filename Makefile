@@ -1,6 +1,6 @@
 # Reproducible figures and numbers for the IONE stratification framework.
 # The default target only regenerates summary CSVs and figure files.
-# Use `make submission` to also build the CSDA Word/PDF/zip submission package.
+# Use `make submission` to also build the JCMDS Word/PDF/zip submission package.
 
 PYTHON ?= python3
 

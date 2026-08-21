@@ -1,18 +1,18 @@
-# IONE: Coherence diagnostics for hidden effect modification in individual participant data meta-analysis
+# Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: the Incoherence-Oriented Neutralisation and Extraction (IONE) framework and a simulation benchmark
 
 {{PAGE}}
 
 ## Abstract
 
-**Background:** In individual participant data (IPD) meta-analysis, marginal effect estimates can be biased by hidden effect modifiers. We introduce two coherence diagnostics, C1 and W, and present a reproducible simulation benchmark of seven stratification approaches.
+**Background:** In individual participant data (IPD) meta-analysis, marginal effect estimates can be biased by hidden effect modifiers. We introduce the Incoherence-Oriented Neutralisation and Extraction (IONE) framework, two coherence diagnostics (C1 and W), and a reproducible simulation benchmark of seven stratification approaches.
 
-**Methods:** We simulated an IPD meta-analysis with 10 studies and n=2000 participants, binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. Seven methods—two outcome-informed, two outcome-free, propensity-score, prognostic-score and Gaussian-mixture stratification—were compared; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. We report ARI, C1, W and ATE bias reduction, calibrating the diagnostics against empirical null distributions.
+**Methods:** We simulated an IPD meta-analysis with 10 studies and n=2000 participants, binary treatment and outcome, measured covariates carrying traces of an unmeasured modifier, and study-level variation in baseline risk and treatment prevalence. Seven methods—two outcome-informed, two outcome-free, propensity-score, prognostic-score and Gaussian-mixture stratification—were compared; stratum-specific risk differences were synthesised with fixed-effect and DerSimonian-Laird random-effects meta-analysis. We report ARI, C1, W and average treatment effect (ATE) bias reduction, calibrating the diagnostics against empirical null distributions.
 
 **Results:** At n=2000 and K=5, C1 and W_est discriminated the alternative from the empirical null only at chance level (C1 AUC 0.460-0.545; W AUC 0.427-0.561). The residual-based method achieved the largest random-effects ATE bias reduction (from 0.01865 to 0.00816; relative reduction 0.563). Its absolute bias plateaued near 0.00824 (n=500), 0.00852 (n=2000) and 0.00864 (n=10 000), indicating a structural bias floor that persists as sample size increases.
 
 **Conclusions:** IONE is a descriptive sensitivity framework, not an inferential test for hidden effect modification. The benchmark shows that data-driven stratification can reduce marginal ATE bias when measured covariates carry strong traces of hidden effect modification, but C1 and W must be interpreted relative to method-specific empirical nulls and are not standalone decision criteria.
 
-**Keywords:** individual participant data meta-analysis; evidence synthesis; heterogeneity; hidden effect modification; stratification; simulation
+**Keywords:** meta-analysis; heterogeneity; effect modification; stratification; simulation; reproducibility; causal inference
 
 {{PAGE}}
 
@@ -258,7 +258,7 @@ W is a ratio whose denominator is the overall CATE variance. When effect modific
 
 At n = 10 000 the residual method still showed a non-negligible random-effects ATE bias (0.00864; relative reduction 0.348), similar to the absolute floor observed at n=500 (0.00824) and n=2000 (0.00852). This floor is consistent with the ARI ceiling: once finite-sample error is removed, remaining bias reflects the structural mismatch between the discovered strata and the true CATE surface. The true-CATE-quantile oracle provides an upper bound on what perfect sorting could achieve; the gap between the oracle and the leading data-driven method quantifies the cost of not observing the true effect modifier.
 
-### Relevance to CSDA readers
+### Relevance to JCMDS readers
 
 IONE sits between computational stratification diagnostics and model-based effect modification for individual participant data meta-analysis. C1 applies the I^2 statistic to discovered strata, and W measures how much CATE variance a partition explains. Both are descriptive sensitivity indices, not inferential tests. The empirical null distribution (Supplementary Table S5) calibrates the diagnostics under no true effect modification, and the misspecification sensitivity (Supplementary Table S6) checks whether W_est is robust to the outcome-model specification. The simulation code, analysis scripts and generated tables are publicly available so readers can reproduce every numerical result.
 
@@ -309,11 +309,11 @@ Not applicable.
 
 ### Supplementary materials
 
-Supplementary methods, abbreviations, the ADEMP/STROBE-Sim checklists, the four extended sensitivity tables, and the empirical null-distribution and W_est misspecification sensitivity tables are provided in `csda_supplementary_v1.docx`.
+Supplementary methods, abbreviations, the ADEMP/STROBE-Sim checklists, the four extended sensitivity tables, and the empirical null-distribution and W_est misspecification sensitivity tables are provided in `jcmds_supplementary_v1.docx`.
 
-### Artificial intelligence
+### Declaration of generative AI and AI-assisted technologies in the manuscript preparation process
 
-Manuscript text, Python code, and some analyses were drafted or revised using large language models (OpenAI GPT-4 and GPT-4o, accessed August 2025 through August 2026) under the direct, iterative supervision of the author. The LLMs were used for drafting prose, formatting references, generating figures, and implementing the computational pipeline. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against the repository outputs, and approved the final scientific content. No LLM-generated text was used without human review.
+During the preparation of this work the author(s) used OpenAI GPT-4 and GPT-4o (accessed August 2025 through August 2026) to draft and revise prose, format references, generate figures, and implement the computational pipeline. After using these tools, the author reviewed and edited the content as needed and takes full responsibility for the content of the published article. The author designed the study, wrote the simulation code, selected all references, verified every numerical result against the repository outputs, and approved the final scientific content. No AI-generated text was used without human review.
 
 
 {{PAGE}}
