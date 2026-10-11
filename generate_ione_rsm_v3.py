@@ -1223,6 +1223,8 @@ def generate_v3_manuscript():
     # Build the markdown
     md = f"""# {MANUSCRIPT_TITLE}
 
+{{{{FRONTMATTER}}}}
+
 {{{{PAGE}}}}
 
 ## Abstract

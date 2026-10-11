@@ -1,5 +1,7 @@
 # Coherence diagnostics for hidden effect modification in individual participant data meta-analysis: the Incoherence-Oriented Neutralisation and Extraction (IONE) framework and a simulation benchmark
 
+{{FRONTMATTER}}
+
 {{PAGE}}
 
 ## Abstract

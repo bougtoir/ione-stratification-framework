@@ -96,6 +96,31 @@ def _apply_inline(runs, text, cite_manager=None):
             prev_was_cite = False
 
 
+AUTHOR_NAME = 'Onishi Tatsuki'
+AUTHOR_AFFILIATION = 'Data Science AI Innovation Research Promotion Center, Shiga University, 1-1-1 Bamba, Hikone, Shiga 522-8522, Japan'
+AUTHOR_ORCID = '0000-0001-7261-9062'
+AUTHOR_EMAIL = 'bougtoir@gmail.com'
+
+
+def _add_frontmatter(doc):
+    """Author + affiliation block matching the separate title page."""
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run(AUTHOR_NAME)
+    sup = p.add_run('a')
+    sup.font.superscript = True
+    p2 = doc.add_paragraph()
+    p2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    sup2 = p2.add_run('a')
+    sup2.font.superscript = True
+    p2.add_run(AUTHOR_AFFILIATION)
+    doc.add_paragraph(f'ORCID: {AUTHOR_ORCID}').alignment = WD_ALIGN_PARAGRAPH.CENTER
+    doc.add_paragraph(f'Corresponding author: {AUTHOR_NAME}').alignment = WD_ALIGN_PARAGRAPH.CENTER
+    pe = doc.add_paragraph()
+    pe.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    pe.add_run(AUTHOR_EMAIL).italic = True
+
+
 def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
     with open(md_path, 'r', encoding='utf-8') as f:
         lines = [l.rstrip('\n') for l in f]
@@ -133,6 +158,12 @@ def convert(md_path, docx_path, cite_manager=None, figure_dir=None):
         if stripped == '{{REFS}}':
             if cite_manager:
                 cite_manager.write_reference_list(doc)
+            i += 1
+            continue
+
+        # Front-matter marker: author + affiliation block after the title
+        if stripped == '{{FRONTMATTER}}':
+            _add_frontmatter(doc)
             i += 1
             continue
 
