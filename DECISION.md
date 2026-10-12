@@ -60,3 +60,11 @@ For clinicians and meta-researchers who cannot obtain IPD, `ione` makes
 the under-identification inside a published aggregate report explicit
 and orders the missing summaries by burden — turning "is this decision
 justified?" from intuition into a bounded, auditable calculation.
+
+## JOSS format check (2026-10-12)
+
+- Front matter: title/tags/authors/affiliations/date/bibliography all present; YAML parses.
+- Word count 568 (JOSS ~250–1000).
+- Sections: Summary, Statement of need, State of the field, Research use cases, Software design, AI disclosure, Acknowledgements — consistent with current JOSS template.
+- Bibliography: 5 entries, all cited in text after this fix; Manski corrected to @book; DOIs verified.
+- Missing (author-side, flagged not blocking): ORCID, `archive-doi` (added at acceptance), JOSS editorial metadata.

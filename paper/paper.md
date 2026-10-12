@@ -79,8 +79,9 @@ unexamined pooling would have concluded, not prospective validation.
 - Deciding whether to request a re-tabulation, a new measurement, or a
   new stratum-restricted trial — ordered by burden.
 - Teaching identifiability vs estimation with verified examples
-  (RECOVERY dexamethasone, ISIS-2, WHO REACT meta-analysis), where the
-  package reproduces a documented real-data borrowing failure.
+  (RECOVERY dexamethasone [@recovery2021], ISIS-2 [@isis2_1988],
+  WHO REACT meta-analysis [@react2020]), where the package reproduces a
+  documented real-data borrowing failure.
 
 # Software design
 
