@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ione-audit"
+version = "0.2.0"
+description = "IONE: hidden-population detection plus aggregate-evidence decision audits"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [{name = "Tatsuki Onishi", email = "bougtoir@gmail.com"}]
+requires-python = ">=3.9"
+dependencies = [
+    "numpy>=1.21",
+    "scipy>=1.9",
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+[project.scripts]
+ione = "ione.cli:main"
+
+[tool.setuptools]
+packages = ["ione"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
