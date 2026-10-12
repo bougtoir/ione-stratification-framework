@@ -8,16 +8,26 @@ aggregate evidence** — no IPD, no pseudo-IPD.
 - **Sufficiency audit**: crude RR/RD/OR with 95% CIs from published
   arm-level subgroup counts; non-estimable cells flagged, never
   re-normalized.
-- **Identifiability determination**: enumerates the compatible model set
-  M(T) for binary-covariate problems and returns
-  `SUFFICIENT / REVERSIBLE / UNIDENTIFIABLE` — data nonidentification,
-  not a model-based interval.
-- **Borrow check**: leave-one-subgroup-out pooling that detects the
-  documented direction-reversal failure of unexamined borrowing.
+- **Exact identifiability engine**: the compatible model set is a
+  polytope; sharp bounds on the conditional risk difference come from
+  linear programming (HiGHS), with solver status and residuals reported —
+  not finite-grid enumeration. Verdicts: `ROBUST_TREAT`,
+  `ROBUST_NO_TREAT`, `REVERSIBLE`, `INFEASIBLE`, `UNSUPPORTED`
+  (separate states; empty feasible set ≠ nonidentification). Stratum
+  prevalence and arm mixing proportions are required inputs; nonzero
+  decision thresholds and unequal arm compositions supported.
+- **Borrow check**: RETROSPECTIVE leave-one-subgroup-out demonstration —
+  not prospective validation, not a Bayesian method; crude vs adjusted
+  RR caveats enforced.
 - **Augmentation suggestion**: cost-ordered options —
-  re-tabulation → new measurement → new enrollment → abstain.
+  re-tabulation → new measurement → new enrollment → abstain — each
+  classified `sufficient_assumed / potentially_informative / irrelevant /
+  infeasible / unknown` with its assumptions; nothing claims
+  unconditional resolution.
 - **Decision-evidence proximity profile**: (status, channels,
-  margin⁻, top-z); deliberately not a scalar.
+  margin⁻, top-z); descriptive only, not a scalar or borrowing weight.
+- **Verified datasets**: RECOVERY (NEJM 2021), ISIS-2 (Lancet 1988),
+  WHO REACT (JAMA 2020).
 
 ## Differentiation
 
@@ -49,10 +59,10 @@ for o in suggest_augmentation(res):
 ## CLI
 
 ```bash
-python -m ione.cli audit --study recovery
-python -m ione.cli borrow-check --study recovery --target noO2
-python -m ione.cli audit --csv my_subgroups.csv \
-    --unmeasured-modifier
+pip install -e .[test]
+ione audit --study recovery --target noO2
+ione borrow-check --study recovery --target noO2
+ione audit --csv my_subgroups.csv --unmeasured-modifier --threshold 0.05
 ```
 
 CSV columns: `name,treat_events,treat_n,ctrl_events,ctrl_n`.
@@ -65,7 +75,9 @@ python -m pytest tests/test_aggregate_audit.py -v
 
 ## Limitations
 
-- Binary outcomes and binary covariates only in this release.
+- Binary outcomes and binary covariates only in this release;
+  nonlinear/nonconvex or unmodeled-covariate settings are abstained on,
+  never silently bounded.
 - Crude (unadjusted) estimands — adjusted published estimates cannot be
   reproduced from aggregate counts (documented limit).
 - Audit scope is restricted to studies that publish subgroup event

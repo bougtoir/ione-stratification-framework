@@ -38,6 +38,8 @@ def main(argv=None):
     a.add_argument("--target", help="target subgroup name (default: last)")
     a.add_argument("--unmeasured-modifier", action="store_true",
                    help="declare a suspected unmeasured modifier")
+    a.add_argument("--threshold", type=float, default=0.0,
+                   help="nonzero clinical benefit threshold on RD")
     b = sub.add_parser("borrow-check", help="leave-one-subgroup-out check")
     b.add_argument("--study", required=True)
     b.add_argument("--target", required=True)
@@ -58,15 +60,26 @@ def main(argv=None):
         p1 = eff.overall.treat.risk
         names = [s.name for s in eff.subgroups]
         tname = args.target or (names[-1] if names else eff.overall.name)
-        res = audit_decision((p0, p1), target_x=1)
+        tgt = next((s for s in eff.subgroups if s.name == tname), None)
+        if tgt is None:
+            res = audit_decision((p0, p1), target_x=1)  # UNSUPPORTED: no target
+        else:
+            n_target = tgt.treat.n + tgt.control.n
+            n_all = eff.overall.treat.n + eff.overall.control.n
+            q = n_target / n_all if n_all else None
+            res = audit_decision((p0, p1), target_x=1, prev1=q,
+                                 threshold=args.threshold)
         print(json.dumps({
             "decision_audit": dict(
-                verdict=res.verdict.value, n_compatible=res.n_compatible,
-                actions=res.actions, detail=res.detail)}, indent=2))
+                verdict=res.verdict.value,
+                bound_lo=res.bound_lo, bound_hi=res.bound_hi,
+                solver_status=res.solver_status, residual=res.residual,
+                detail=res.detail)}, indent=2))
         augs = suggest_augmentation(res,
                                     unmeasured_modifier=args.unmeasured_modifier)
         print(json.dumps({"augmentation": [
-            dict(kind=o.kind, label=o.label, cost_class=o.cost_class,
+            dict(kind=o.kind, label=o.label, classification=o.classification,
+                 cost_class=o.cost_class, assumption=o.assumption,
                  note=o.note) for o in augs]}, indent=2))
         prof = ProximityProfile(
             status=res.verdict.value,
