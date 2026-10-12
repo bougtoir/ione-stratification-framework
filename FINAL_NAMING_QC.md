@@ -35,8 +35,8 @@ mentions remain as history), scientific results, verdict semantics.
   RD ∈ [-1.000, +0.959], solver status 0.
 - `pip install .` verified earlier on this branch's base (pip ≥24
   required — noted in DECISION.md).
-- GitHub Actions workflow `tests.yml` exists; remote CI run on this
-  branch not yet observed — reported as unverified, not PASS.
+- GitHub Actions `tests.yml`: pytest matrix 3.9/3.11/3.12 all PASS on
+  this branch (verified via PR checks).
 
 ## JOSS author-instruction check
 
