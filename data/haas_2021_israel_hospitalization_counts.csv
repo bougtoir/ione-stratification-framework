@@ -1,0 +1,9 @@
+# Source: Haas EJ, Angulo FJ, McLaughlin JM, Anis E, Singer SR, Khan F, Brooks N, Smaja M, Mircus G, Pan K, Southern J, Swerdlow DL, Jodar L, Levy Y, Alroy-Preis S. Impact and effectiveness of mRNA BNT162b2 vaccine against SARS-CoV-2 infections and COVID-19 cases, hospitalisations, and deaths following a nationwide vaccination campaign in Israel: an observational study using national surveillance data. Lancet. 2021;397(10287):1819-1829. Table 2.
+# Population and COVID-19-related hospitalisation counts by age group and two-dose vaccination status, Jan 24 to Apr 3 2021.
+age_group,vaccinated,population,hospitalizations
+16-44,0,1356028,2043
+16-44,1,2290820,33
+45-64,0,355606,1687
+45-64,1,1408492,112
+65+,0,112345,1826
+65+,1,1015620,451

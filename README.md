@@ -1,80 +1,107 @@
 # IONE: Incoherence-Oriented Neutralisation and Extraction
 
-A framework for detecting hidden population structure in observational studies and extracting coherent subpopulations for valid within-subgroup inference.
+A simulation study of stratification-based diagnostics for hidden effect modification in individual participant data (IPD) meta-analysis.
 
 ## Overview
 
-IONE addresses multiple biases arising from hidden population structure in observational studies:
-- **Confounding bias**
-- **Simpson's paradox**
-- **Undetected effect modification**
-- **Ecological fallacy**
-- **Non-collapsibility**
+IONE proposes two exploratory diagnostics for treatment-effect estimates in IPD meta-analysis:
+- **C1** (within-stratum coherence): 1 − I² from stratum-specific log odds ratios of treatment on outcome.
+- **W** (between-stratum CATE variance explained): variance ratio of estimated or true conditional average treatment effects across strata.
 
-The framework operates in two stages:
-1. **Detection**: The C1 coherence indicator (derived from I² heterogeneity statistic) quantifies population incoherence
-2. **Extraction**: Stratification-based methods extract coherent subpopulations using routinely measured variables alone
+The repository implements the data-generating mechanism, stratification methods, evaluation metrics and manuscript-generation pipeline used in the current submission to the *Journal of Computational Mathematics and Data Science* (JCMDS).
 
-## Methods
-
-Two families of stratification methods are implemented:
-
-**Family 1: Decision power-based (outcome-informed)**
-- 1A: Predicted probability stratification
-- 1B: Residual-based stratification
-- 1C: Cross-validated decision power
-- 1D: Machine learning uncertainty (Random Forest)
-
-**Family 2: Feature score-based (outcome-free)**
-- 2A: PCA-based stratification
-- 2B: k-means clustering
-
-## Project Structure
+## Repository structure
 
 ```
-├── data_generation.py          # Monte Carlo data generation (DAG-based)
-├── methods.py                  # IONE stratification methods
-├── evaluation.py               # Performance evaluation (ARI, η², C1)
-├── run_simulation.py           # Main simulation runner (66,600 evaluations)
-├── visualization.py            # Simulation result visualisation
-├── real_data_analysis.py       # Application to 5 Simpson's paradox datasets
-├── real_data_visualization.py  # Real data result visualisation
-├── docs/                       # Specifications and background documents
-│   ├── spec_stratification_pseudo_randomization.md      # Spec v0.1
-│   ├── spec_stratification_pseudo_randomization_v0.2.md # Spec v0.2
-│   ├── prognostic_score_and_hdPS_explanation.md
-│   └── scope_check.md
-├── results/
-│   ├── figures/                # Simulation figures (10 PNG, 300 DPI colour)
-│   ├── real_data/              # Real data analysis results & figures
-│   ├── manuscript/             # Publication-ready outputs
-│   │   ├── IONE_manuscript.md / .docx          # English manuscript
-│   │   ├── IONE_manuscript_japanese_summary.md / .docx  # Japanese summary
-│   │   ├── IONE_figures_tables_EN.pptx         # English figures/tables
-│   │   ├── IONE_figures_tables_JA.pptx         # Japanese figures/tables
-│   │   ├── create_pptx_en.py / create_pptx_ja.py       # PPTX generators
-│   │   ├── create_docx.py / create_japanese_docx.py     # DOCX generators
-│   │   └── background.md
-│   ├── phase1_results.csv      # Phase 1 simulation results
-│   ├── sensitivity_results.csv # Sensitivity analysis results
-│   ├── evaluation_report.md
-│   ├── simulation_summary.md
-│   ├── journal_recommendation.md
-│   └── simpson_paradox_examples.md
+├── data_generation.py            # Monte Carlo data generation with binary treatment A and outcome Y
+├── methods.py                  # Stratification methods (IONE, active comparators, baselines)
+├── evaluation.py               # Metrics: ARI, η², C1, W, risk-difference ATE bias reduction
+├── run_simulation.py           # Phase 1, sensitivity and non-linearity simulations
+├── run_rsm_ipd_simulation.py   # RSM IPD meta-analysis primary simulation
+├── run_rsm_ipd_extended.py     # RSM IPD sample-size, Z-to-Y, Z-to-X and non-linearity robustness simulations
+├── real_data_analysis.py       # Semi-synthetic illustrations from 5 Simpson's-paradox examples
+├── generate_summary.py         # Aggregate simulation/real-data CSVs into summary tables
+├── generate_ione_rsm_v3.py     # Generate full JCMDS Word manuscript, title page, cover letter and figures
+├── generate_full_rsm_manuscript.py # Generate manuscript figures and widescreen figures .pptx
+├── generate_rsm_tables.py      # Generate separate editable tables .docx
+├── md_to_rsm_docx.py           # Markdown-to-docx converter with Vancouver citations and OMML math
+├── requirements.txt            # Python dependencies
+└── results/
+    ├── rsm_ipd_results.csv
+    ├── rsm_ipd_sensitivity_results.csv
+    ├── rsm_ipd_nonlinearity_results.csv
+    ├── real_data/
+    │   └── real_data_results.csv
+    ├── summary/                # Tidy summary tables with Monte Carlo SEs
+    ├── figures/                  # PNG/EPS figures + editable PowerPoint
+    └── manuscript/jcmds_submission/ # JCMDS submission package (docx, pptx, zip)
 ```
 
-## Target Journal
+## Reproduction
 
-**BMC Medical Research Methodology** — Special Collection "Causal inference and observational data vol. 2" (Deadline: 30 July 2026)
+With Python 3.10+:
 
-## Key Results
+```bash
+pip install -r requirements.txt
+python3 run_rsm_ipd_simulation.py          # primary IPD scenario (~2 min)
+python3 run_rsm_ipd_extended.py            # sensitivity and non-linearity robustness (~30 min)
+python3 real_data_analysis.py              # a few minutes
+python3 generate_summary.py
+python3 generate_ione_rsm_v3.py            # main manuscript, title page, cover letter, figures and .pptx
+python3 generate_rsm_tables.py             # separate editable tables docx
+```
 
-- **Simulation**: 66,600 evaluations across 1,200+ scenarios. All proposed methods significantly outperform random stratification.
-- **C1 indicator**: Reliably detects incoherent populations in both simulation and 5 real-world datasets.
-- **Real data**: Applied to kidney stone (ARI=0.851), Israeli vaccine (ARI=0.746), COVID-19 CFR, UC Berkeley admissions, and smoking-mortality datasets.
+To regenerate only the reproducible figures and summary numbers from the committed CSVs:
+
+```bash
+make
+```
+
+This writes `results/summary/*.csv`, `results/figures/*.{png,eps}` and `results/figures/pptx/rsm_figures.pptx`, without creating the Word/PDF/zip submission package.
+
+To build the full JCMDS submission package from the same committed CSVs:
+
+```bash
+make submission
+```
+
+Equivalent commands:
+
+```bash
+python3 generate_summary.py
+python3 generate_ione_rsm_v3.py --figures-only   # numbers + figures only
+
+python3 generate_summary.py
+python3 generate_rsm_tables.py
+python3 generate_ione_rsm_v3.py                  # full JCMDS submission package
+```
+
+All numbers in the manuscript are read from `results/summary/*.csv`; no estimates are hard-coded in the generator.
+
+## Target journal
+
+- **Primary:** *Journal of Computational Mathematics and Data Science* (Elsevier)
+
+## Key methods
+
+- **Proposed IONE**: 1A predicted probability, 1B residual; 2A PCA, 2B k-means on X.
+- **Active comparators**: propensity-score quintiles, Gaussian mixture model, prognostic-score stratification.
+- **Oracle baselines**: oracle k-means on Z, oracle quantile on Z1; random stratification as a chance reference.
+- Outcome-informed methods use a 50/50 discovery/evaluation split.
+- The ATE estimand is the **population risk difference** (collapsible across strata).
+
+## Key results (from the updated simulation)
+
+- Extraction performance (ARI) is modest in the primary simulation, with oracles as expected higher.
+- Bias reduction on the risk-difference scale is modest; residual-based outcome-informed methods (1B) and outcome-free clustering perform best among proposed methods.
+- Real-data illustrations show high ARI only when the pseudo-measured variables are strongly correlated with a simple, low-dimensional confounder.
 
 ## Requirements
 
-- Python 3.11+
-- numpy, pandas, scikit-learn, scipy, matplotlib, seaborn
-- python-pptx, python-docx (for manuscript generation)
+- Python 3.10+
+- numpy, pandas, scikit-learn, scipy, matplotlib
+- python-docx, python-pptx
+
+## Data and code availability
+
+Code and semi-synthetic data are available at https://github.com/bougtoir/ione-stratification-framework.

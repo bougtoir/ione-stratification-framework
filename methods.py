@@ -1,7 +1,25 @@
 """
 Stratification methods module.
-Method 1: Decision power-based (4 variants)
-Method 2: Feature score-based (4 variants)
+
+Method families:
+- Proposed IONE methods:
+  1A: predicted probability (outcome-informed)
+  1B: residual (outcome-informed)
+  2A: PCA (outcome-free)
+  2B: k-means on X (outcome-free)
+- Additional candidate methods (used in exploratory benchmarks):
+  1D: ML uncertainty (outcome-informed)
+  2C: autoencoder (outcome-free)
+  2D: RF proximity (outcome-free)
+- Active comparators:
+  PS: propensity-score quintiles
+  GMM: Gaussian mixture model on X
+  Prog: prognostic-score quintiles
+- Baselines:
+  random, oracle_kmeans, oracle_quantile
+
+All methods have a unified signature: func(X, A, Y, n_strata, **kwargs).
+Methods that do not need A or Y ignore them by convention.
 """
 
 import numpy as np
@@ -12,81 +30,93 @@ from sklearn.decomposition import PCA
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 from sklearn.manifold import MDS
+from sklearn.mixture import GaussianMixture
 import warnings
 
 warnings.filterwarnings('ignore')
 
 
+def _safe_predict_proba(model, X_train, Y_train, X_pred):
+    """Fit a classifier and return Pr(Y=1|X), handling degenerate one-class outcomes."""
+    if len(np.unique(Y_train)) < 2:
+        return np.full(len(X_pred), float(Y_train.mean()))
+    try:
+        model.fit(X_train, Y_train)
+        proba = model.predict_proba(X_pred)
+        if proba.shape[1] < 2:
+            return np.full(len(X_pred), float(Y_train.mean()))
+        return proba[:, 1]
+    except ValueError:
+        return np.full(len(X_pred), float(Y_train.mean()))
+
+
+def _tree_predict_proba_1(tree, X, n):
+    """Return class-1 probability for a single tree, tolerating one-class leaves."""
+    proba = tree.predict_proba(X)
+    if proba.shape[1] < 2:
+        return np.zeros(n, dtype=float)
+    return proba[:, 1]
+
+
+def _quantile_stratify(scores: np.ndarray, n_strata: int, discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Stratify by quantile-based equal-size groups.
+    If discovery_idx is provided, thresholds are computed on the discovery subset and applied to the full score vector."""
+    if n_strata <= 1:
+        return np.zeros(len(scores), dtype=int)
+    if discovery_idx is None:
+        ref_scores = scores
+    else:
+        ref_scores = scores[np.asarray(discovery_idx)]
+    quantiles = np.percentile(ref_scores, np.linspace(0, 100, n_strata + 1)[1:-1])
+    return np.digitize(scores, quantiles)
+
+
 # ============================================================
-# Method 1: Decision Power-based Stratification (Primary)
+# Proposed IONE methods (Family 1: outcome-informed)
 # ============================================================
 
-def method_1a_predicted_probability(X: np.ndarray, Y: np.ndarray, n_strata: int) -> np.ndarray:
-    """
-    Method 1A: Predicted probability-based stratification.
-    Stratify by predicted P(Y=1|X) quantiles.
-    """
+def method_1a_predicted_probability(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+                                    discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Method 1A: predicted probability-based stratification."""
+    train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
     model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-    model.fit(X, Y)
-    p_hat = model.predict_proba(X)[:, 1]
-    return _quantile_stratify(p_hat, n_strata)
+    p_hat = _safe_predict_proba(model, X[train], Y[train], X)
+    return _quantile_stratify(p_hat, n_strata, discovery_idx)
 
 
-def method_1b_residual(X: np.ndarray, Y: np.ndarray, n_strata: int) -> np.ndarray:
-    """
-    Method 1B: Prediction residual-based stratification.
-    Stratify by |Y - p_hat| magnitude.
-    """
+def method_1b_residual(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+                        discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Method 1B: prediction residual-based stratification."""
+    train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
     model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-    model.fit(X, Y)
-    p_hat = model.predict_proba(X)[:, 1]
+    p_hat = _safe_predict_proba(model, X[train], Y[train], X)
     residuals = np.abs(Y - p_hat)
-    return _quantile_stratify(residuals, n_strata)
+    return _quantile_stratify(residuals, n_strata, discovery_idx)
 
 
-def method_1c_cv_decision(X: np.ndarray, Y: np.ndarray, n_strata: int) -> np.ndarray:
-    """
-    Method 1C: Cross-validation-based decision power score.
-    Uses out-of-fold predictions to avoid overfitting (pilot design).
-    """
-    model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
-    cv = KFold(n_splits=5, shuffle=True, random_state=42)
-    p_hat_cv = cross_val_predict(model, X, Y, cv=cv, method='predict_proba')[:, 1]
-    return _quantile_stratify(p_hat_cv, n_strata)
-
-
-def method_1d_ml_uncertainty(X: np.ndarray, Y: np.ndarray, n_strata: int) -> np.ndarray:
-    """
-    Method 1D: ML model uncertainty-based stratification.
-    Uses RF tree variance as uncertainty measure.
-    """
+def method_1d_ml_uncertainty(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+                              discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Method 1D: ML model uncertainty-based stratification."""
+    train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
+    n = X.shape[0]
+    if len(np.unique(Y[train])) < 2:
+        return _quantile_stratify(np.zeros(n), n_strata, discovery_idx)
     model = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
-    model.fit(X, Y)
-    # Get individual tree predictions
-    tree_preds = np.array([tree.predict_proba(X)[:, 1] for tree in model.estimators_])
-    # Uncertainty = variance across trees
+    model.fit(X[train], Y[train])
+    tree_preds = np.array([_tree_predict_proba_1(tree, X, n) for tree in model.estimators_])
     uncertainty = np.var(tree_preds, axis=0)
-    return _quantile_stratify(uncertainty, n_strata)
+    return _quantile_stratify(uncertainty, n_strata, discovery_idx)
 
 
 # ============================================================
-# Method 2: Feature Score-based Stratification (Complementary)
+# Proposed IONE methods (Family 2: outcome-free)
 # ============================================================
 
-def method_2a_pca(X: np.ndarray, Y: np.ndarray, n_strata: int,
+def method_2a_pca(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
                   cumulative_threshold: float | None = None,
-                  fixed_k: int | None = None) -> np.ndarray:
-    """
-    Method 2A: PCA-based stratification.
-    Uses PC scores for stratification (Y is ignored).
-
-    Parameters
-    ----------
-    cumulative_threshold : float or None
-        Cumulative variance explained threshold (0.4, 0.6, 0.8).
-    fixed_k : int or None
-        Fixed number of components (1, 2, 3).
-    """
+                  fixed_k: int | None = None,
+                  discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Method 2A: PCA-based stratification."""
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     pca = PCA()
@@ -99,36 +129,31 @@ def method_2a_pca(X: np.ndarray, Y: np.ndarray, n_strata: int,
         k = int(np.searchsorted(cumvar, cumulative_threshold) + 1)
         k = min(k, X.shape[1])
     else:
-        k = 1  # default: PC1 only
+        k = 1
 
     if k == 1:
         score = scores[:, 0]
     else:
-        # Weighted composite: weight by explained variance ratio
         weights = pca.explained_variance_ratio_[:k]
         weights = weights / weights.sum()
         score = scores[:, :k] @ weights
 
-    return _quantile_stratify(score, n_strata)
+    return _quantile_stratify(score, n_strata, discovery_idx)
 
 
-def method_2b_clustering(X: np.ndarray, Y: np.ndarray, n_strata: int) -> np.ndarray:
-    """
-    Method 2B: Clustering-based stratification (Y is ignored).
-    Uses k-means on standardized X.
-    """
+def method_2b_clustering(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+                         discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Method 2B: clustering-based stratification."""
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
     km = KMeans(n_clusters=n_strata, n_init=10, random_state=42)
     return km.fit_predict(X_scaled)
 
 
-def method_2c_autoencoder(X: np.ndarray, Y: np.ndarray, n_strata: int,
-                          latent_dim: int = 3) -> np.ndarray:
-    """
-    Method 2C: Autoencoder latent representation-based stratification (Y is ignored).
-    Uses a simple autoencoder with PyTorch.
-    """
+def method_2c_autoencoder(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+                          latent_dim: int = 3,
+                          discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Method 2C: autoencoder latent representation-based stratification."""
     import torch
     import torch.nn as nn
 
@@ -173,39 +198,29 @@ def method_2c_autoencoder(X: np.ndarray, Y: np.ndarray, n_strata: int,
         _, latent = model(X_tensor)
         latent_np = latent.numpy()
 
-    # Cluster in latent space
     km = KMeans(n_clusters=n_strata, n_init=10, random_state=42)
     return km.fit_predict(latent_np)
 
 
-def method_2d_rf_proximity(X: np.ndarray, Y: np.ndarray, n_strata: int) -> np.ndarray:
-    """
-    Method 2D: Random Forest proximity-based stratification (Y is ignored).
-    Uses unsupervised RF with synthetic data approach.
-    """
+def method_2d_rf_proximity(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+                          discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Method 2D: random forest proximity-based stratification."""
     n = X.shape[0]
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Generate synthetic data by independently permuting each column
     rng = np.random.default_rng(42)
     X_synthetic = np.column_stack([rng.permutation(X_scaled[:, j]) for j in range(X_scaled.shape[1])])
 
-    # Combine real and synthetic
     X_combined = np.vstack([X_scaled, X_synthetic])
     Y_combined = np.concatenate([np.ones(n), np.zeros(n)])
 
-    # Train RF to distinguish real from synthetic
     rf = RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
     rf.fit(X_combined, Y_combined)
 
-    # Compute proximity via leaf co-occurrence (vectorized)
-    leaves = rf.apply(X_scaled)  # (n, n_trees)
+    leaves = rf.apply(X_scaled)
     n_trees = leaves.shape[1]
 
-    # Vectorized: use one-hot encoding per tree and dot product
-    # For memory efficiency, process in batches and accumulate PCA
-    # Instead of full n×n proximity, use leaf embeddings directly
     from scipy.sparse import csr_matrix, hstack
 
     sparse_parts = []
@@ -219,9 +234,8 @@ def method_2d_rf_proximity(X: np.ndarray, Y: np.ndarray, n_strata: int) -> np.nd
         sparse_parts.append(csr_matrix((data, (rows, cols)),
                                        shape=(n, len(unique_leaves))))
 
-    leaf_matrix = hstack(sparse_parts)  # (n, total_unique_leaves)
+    leaf_matrix = hstack(sparse_parts)
 
-    # PCA on sparse leaf embedding for dimensionality reduction
     from sklearn.decomposition import TruncatedSVD
     svd = TruncatedSVD(n_components=min(5, leaf_matrix.shape[1] - 1), random_state=42)
     coords = svd.fit_transform(leaf_matrix)
@@ -231,17 +245,75 @@ def method_2d_rf_proximity(X: np.ndarray, Y: np.ndarray, n_strata: int) -> np.nd
 
 
 # ============================================================
+# Active comparators
+# ============================================================
+
+def method_ps_propensity_score(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+                                discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Propensity-score stratification: logistic P(A=1|X) quantiles."""
+    if len(np.unique(A)) < 2:
+        return np.zeros(X.shape[0], dtype=int)
+    train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
+    model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
+    ps = _safe_predict_proba(model, X[train], A[train], X)
+    return _quantile_stratify(ps, n_strata, discovery_idx)
+
+
+def method_gmm(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+               discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Gaussian mixture model on standardized X."""
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    gmm = GaussianMixture(n_components=n_strata, n_init=10, random_state=42)
+    return gmm.fit_predict(X_scaled)
+
+
+def method_prognostic_score(X: np.ndarray, A: np.ndarray, Y: np.ndarray, n_strata: int,
+                             discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Prognostic-score stratification: predicted P(Y=1|X) among untreated, applied to all."""
+    train = np.asarray(discovery_idx) if discovery_idx is not None else np.arange(len(X))
+    A_train, Y_train = A[train], Y[train]
+    mask_untreated = A_train == 0
+    model = LogisticRegression(max_iter=1000, penalty='l2', C=1.0, solver='lbfgs')
+    if mask_untreated.sum() < 10 or len(np.unique(Y_train[mask_untreated])) < 2:
+        prog = _safe_predict_proba(model, X[train], Y_train, X)
+    else:
+        prog = _safe_predict_proba(model, X[train][mask_untreated], Y_train[mask_untreated], X)
+    return _quantile_stratify(prog, n_strata, discovery_idx)
+
+
+# ============================================================
 # Helper functions
 # ============================================================
 
-def _quantile_stratify(scores: np.ndarray, n_strata: int) -> np.ndarray:
-    """Stratify by quantile-based equal-size groups."""
-    quantiles = np.percentile(scores, np.linspace(0, 100, n_strata + 1)[1:-1])
-    return np.digitize(scores, quantiles)
+def _random_stratify(X: np.ndarray, A: np.ndarray, Y: np.ndarray, Z: np.ndarray,
+                     n_strata: int, seed: int = 42,
+                     discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Random stratification (lower bound baseline)."""
+    rng = np.random.default_rng(seed)
+    return rng.integers(0, n_strata, size=X.shape[0])
+
+
+def _oracle_kmeans_stratify(X: np.ndarray, A: np.ndarray, Y: np.ndarray, Z: np.ndarray,
+                            n_strata: int, seed: int = 42,
+                            discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Oracle: stratify using true Z."""
+    scaler = StandardScaler()
+    Z_scaled = scaler.fit_transform(Z)
+    km = KMeans(n_clusters=n_strata, n_init=10, random_state=seed)
+    return km.fit_predict(Z_scaled)
+
+
+def _oracle_quantile_stratify(X: np.ndarray, A: np.ndarray, Y: np.ndarray, Z: np.ndarray,
+                              n_strata: int, seed: int = 42,
+                              discovery_idx: np.ndarray | None = None) -> np.ndarray:
+    """Oracle: stratify using Z1 (age) quantiles."""
+    quantiles = np.percentile(Z[:, 0], np.linspace(0, 100, n_strata + 1)[1:-1])
+    return np.digitize(Z[:, 0], quantiles)
 
 
 # ============================================================
-# Method registry
+# Registries
 # ============================================================
 
 def get_all_methods() -> dict:
@@ -249,12 +321,14 @@ def get_all_methods() -> dict:
     return {
         '1A_predicted_prob': method_1a_predicted_probability,
         '1B_residual': method_1b_residual,
-        '1C_cv_decision': method_1c_cv_decision,
         '1D_ml_uncertainty': method_1d_ml_uncertainty,
         '2A_pca': method_2a_pca,
         '2B_clustering': method_2b_clustering,
         '2C_autoencoder': method_2c_autoencoder,
         '2D_rf_proximity': method_2d_rf_proximity,
+        'PS_propensity_score': method_ps_propensity_score,
+        'GMM': method_gmm,
+        'Prognostic_score': method_prognostic_score,
     }
 
 
@@ -277,26 +351,3 @@ def get_baseline_methods() -> dict:
         'oracle_kmeans': _oracle_kmeans_stratify,
         'oracle_quantile': _oracle_quantile_stratify,
     }
-
-
-def _random_stratify(X: np.ndarray, Y: np.ndarray, Z: np.ndarray, n_strata: int,
-                     seed: int = 42) -> np.ndarray:
-    """Random stratification (lower bound baseline)."""
-    rng = np.random.default_rng(seed)
-    return rng.integers(0, n_strata, size=X.shape[0])
-
-
-def _oracle_kmeans_stratify(X: np.ndarray, Y: np.ndarray, Z: np.ndarray,
-                            n_strata: int, seed: int = 42) -> np.ndarray:
-    """Oracle: stratify using true Z (upper bound baseline)."""
-    scaler = StandardScaler()
-    Z_scaled = scaler.fit_transform(Z)
-    km = KMeans(n_clusters=n_strata, n_init=10, random_state=seed)
-    return km.fit_predict(Z_scaled)
-
-
-def _oracle_quantile_stratify(X: np.ndarray, Y: np.ndarray, Z: np.ndarray,
-                              n_strata: int, seed: int = 42) -> np.ndarray:
-    """Oracle: stratify using Z1 (age) quantiles."""
-    quantiles = np.percentile(Z[:, 0], np.linspace(0, 100, n_strata + 1)[1:-1])
-    return np.digitize(Z[:, 0], quantiles)

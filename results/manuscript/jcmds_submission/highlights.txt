@@ -1,0 +1,7 @@
+Highlights
+
+- Coherence diagnostics for hidden effect modification in IPD meta-analysis.
+- A simulation benchmark compares seven data-driven stratification methods.
+- Residual-based stratification gives best subgroup agreement and ATE bias reduction.
+- The two coherence indices are sensitivity flags, not standalone statistical tests.
+- All code, data and results are reproducible from a public repository.
