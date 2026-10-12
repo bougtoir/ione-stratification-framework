@@ -5,7 +5,7 @@ import math
 
 import pytest
 
-from ione.aggregate import ArmCount, SubgroupTable
+from ione.aggregate import ArmCount, SubgroupTable, EffectSummary
 from ione.identifiability import (audit_decision, borrow_check,
                                   DecisionVerdict)
 from ione.augmentation import suggest_augmentation
@@ -188,3 +188,54 @@ def test_cli_audit(capsys):
     main(["audit", "--study", "recovery", "--target", "noO2"])
     out = capsys.readouterr().out
     assert "decision_audit" in out
+
+
+# ---------- F-finishing: q semantics + consistency ----------
+def test_common_q_estimate_recovery():
+    # RECOVERY randomisation ~1:2; noO2 stratum share is arm-consistent
+    from ione.data import RECOVERY as R
+    t = R.subgroups[2]
+    q1 = t.treat.n / R.overall.treat.n
+    q0 = t.control.n / R.overall.control.n
+    assert abs(q1 - q0) < 0.05  # compatible with common composition
+
+
+def test_consistency_exhaustive_recovery():
+    assert RECOVERY.check_consistency() == []
+
+
+def test_consistency_error_not_rounding():
+    bad = EffectSummary(
+        "bad",
+        SubgroupTable("all", ArmCount(100, 1000), ArmCount(100, 1000)),
+        [SubgroupTable("s1", ArmCount(90, 1200), ArmCount(50, 500))])
+    issues = bad.check_consistency()
+    assert any(i.severity == "error" for i in issues)
+
+
+def test_consistency_small_gap_is_warning():
+    w = EffectSummary(
+        "w",
+        SubgroupTable("all", ArmCount(100, 1000), ArmCount(100, 1000)),
+        [SubgroupTable("s1", ArmCount(100, 999), ArmCount(100, 999))])
+    issues = w.check_consistency()
+    assert issues and all(i.severity == "warning" for i in issues)
+
+
+def test_small_enumeration_agrees_with_lp():
+    """Independent reference: coarse full enumeration sign agreement."""
+    import itertools
+    q, p0b, p1b = 0.5, 0.20, 0.16
+    grid = [i / 1000 for i in range(1001)]
+    flip = False
+    for p00 in grid[::50]:
+        p01 = (p0b - (1 - q) * p00) / q
+        if not 0 <= p01 <= 1:
+            continue
+        for p10 in grid[::50]:
+            p11 = (p1b - (1 - q) * p10) / q
+            if 0 <= p11 <= 1 and p11 > p01:
+                flip = True
+    assert flip  # harm-compatible model exists
+    res = audit_decision((p0b, p1b), target_x=1, prev1=q)
+    assert res.verdict is DecisionVerdict.REVERSIBLE

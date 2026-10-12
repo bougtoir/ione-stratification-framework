@@ -82,3 +82,34 @@ python -m pytest tests/test_aggregate_audit.py -v
   reproduced from aggregate counts (documented limit).
 - Audit scope is restricted to studies that publish subgroup event
   counts; that availability itself is the binding real-world constraint.
+
+## Input CSV specification
+
+Columns (header required):
+`name,treat_events,treat_n,ctrl_events,ctrl_n`
+
+- One row per published subgroup stratum; counts are *published* integers
+  from the trial report, not reconstructed IPD.
+- `ione audit` checks subgroup-vs-overall consistency and reports
+  `error` (contradiction → INFEASIBLE) vs `warning` (rounding /
+  reporting gap, handled explicitly).
+- Target-stratum share is estimated per arm; when arm shares diverge
+  beyond ~2 SE the audit uses arm-specific weights instead of silently
+  assuming common composition.
+
+## Output status interpretation
+
+| verdict | meaning | not meaning |
+|---|---|---|
+| ROBUST_TREAT | every model compatible with the margins gives RD < -τ | a clinical recommendation |
+| ROBUST_NO_TREAT | every compatible model gives RD > -τ | proof of harm |
+| REVERSIBLE | bounds straddle -τ | "effect uncertain" in the estimation sense — this is nonidentification |
+| INFEASIBLE | no model satisfies the margins | insufficient information |
+| UNSUPPORTED | input lacks required specification (prevalence, mixing) | infeasibility |
+
+## Failure modes (by design)
+
+- Missing stratum prevalence → UNSUPPORTED.
+- Outcome margin without arm mixing proportion → UNSUPPORTED.
+- Subgroup counts contradicting the overall table → INFEASIBLE.
+- Solver failure → UNSUPPORTED, never ROBUST.

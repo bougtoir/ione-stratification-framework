@@ -10,7 +10,7 @@ authors:
   - name: Tatsuki Onishi
     affiliation: 1
 affiliations:
-  - name: Independent researcher
+  - name: Shiga University, Data Science AI Innovation Research Promotion Center
     index: 1
 date: 11 October 2026
 bibliography: paper.bib
@@ -37,18 +37,26 @@ population structure in observational data [@onishi-ione-legacy].
 
 # Statement of need
 
-Subgroup tables in trial publications report aggregate counts, yet
-clinicians and meta-researchers routinely ask whether a treatment
-decision for a specific subgroup is implied by those counts. Existing
-tools either synthesize effects (`metafor`, `netmeta`), quantify bias
+Even a statistically sound RCT or meta-analysis does not automatically
+justify a treatment decision for the patient in front of a clinician who
+differs from the enrolled population: published arm-level margins can be
+consistent with many incompatible conditional risk distributions, some
+of which reverse the implied subgroup decision. The information needed
+to resolve this — individual patient data — is ordinarily inaccessible
+to the clinical researcher. What is accessible is the published
+aggregate report itself.
+
+Existing tools synthesize effects (`metafor`, `netmeta`), quantify bias
 sensitivity (`EValue`, `tipr`), or design trials (`OptimalDesign`) —
-none audits *identifiability*: whether any set of conditional risks
-consistent with the published margins could flip the decision, and what
-the cheapest additional aggregate summary would be to resolve it. `ione`
-fills that workflow gap with an exact LP engine rather than heuristics,
-reports solver status and feasibility residuals, and is explicit about
-the assumptions (common stratum prevalence, mixing proportions, decision
-threshold) under which each verdict holds.
+none audits *identifiability* on aggregate margins: whether every model
+compatible with the published table implies the same decision, and what
+the cheapest additional aggregate summary would be to resolve it.
+`ione` is an *evidence-audit* tool for researchers: it makes the degree
+of under-identification explicit and orders the missing reports by
+burden (re-tabulation before new measurement before new enrollment). It
+does **not** recommend treatment for any individual patient, does not
+claim external validity, and reports only what the published counts
+support — including explicit abstention.
 
 # State of the field
 

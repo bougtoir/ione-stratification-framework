@@ -9,10 +9,12 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import math
 import sys
 
 from .aggregate import ArmCount, SubgroupTable, EffectSummary
-from .identifiability import audit_decision, borrow_check
+from .identifiability import (audit_decision, borrow_check, LPResult,
+                              DecisionVerdict)
 from .augmentation import suggest_augmentation
 from .proximity import ProximityProfile
 from .data import load_builtin
@@ -61,14 +63,42 @@ def main(argv=None):
         names = [s.name for s in eff.subgroups]
         tname = args.target or (names[-1] if names else eff.overall.name)
         tgt = next((s for s in eff.subgroups if s.name == tname), None)
+        # consistency of subgroup aggregates with the overall table
+        issues = eff.check_consistency()
+        errors = [i for i in issues if i.severity == "error"]
+        if errors:
+            print(json.dumps({"consistency": [
+                dict(kind=i.kind, severity=i.severity, detail=i.detail)
+                for i in issues]}, indent=2))
         if tgt is None:
             res = audit_decision((p0, p1), target_x=1)  # UNSUPPORTED: no target
         else:
-            n_target = tgt.treat.n + tgt.control.n
-            n_all = eff.overall.treat.n + eff.overall.control.n
-            q = n_target / n_all if n_all else None
-            res = audit_decision((p0, p1), target_x=1, prev1=q,
-                                 threshold=args.threshold)
+            # Arm-specific stratum prevalence: q1 = P(X=1|treat),
+            # q0 = P(X=1|control).  Under balanced randomisation these are
+            # equal; we estimate both and use arm_weights whenever they
+            # diverge beyond Monte-Carlo noise, else the pooled common q.
+            q1 = tgt.treat.n / eff.overall.treat.n
+            q0 = tgt.control.n / eff.overall.control.n
+            q_pooled = (tgt.treat.n + tgt.control.n) / (
+                eff.overall.treat.n + eff.overall.control.n)
+            # tolerance: ~2 SE of the difference in proportions
+            se = 2 * math.sqrt(q_pooled * (1 - q_pooled) * (
+                1 / eff.overall.treat.n + 1 / eff.overall.control.n))
+            if abs(q1 - q0) > max(se, 0.01):
+                res = audit_decision((p0, p1), target_x=1,
+                                     arm_weights=(q0, q1),
+                                     threshold=args.threshold)
+                res.detail += f"; arm-specific weights used (q0={q0:.3f},q1={q1:.3f})"
+            else:
+                res = audit_decision((p0, p1), target_x=1,
+                                     prev1=q_pooled,
+                                     threshold=args.threshold)
+        if errors:
+            res = LPResult(DecisionVerdict.INFEASIBLE, res.bound_lo,
+                           res.bound_hi, res.solver_status, res.residual,
+                           res.tol,
+                           "subgroup counts inconsistent with overall: "
+                           + "; ".join(i.detail for i in errors))
         print(json.dumps({
             "decision_audit": dict(
                 verdict=res.verdict.value,

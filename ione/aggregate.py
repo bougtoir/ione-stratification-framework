@@ -63,11 +63,57 @@ class SubgroupTable:
 
 
 @dataclass
+class ConsistencyIssue:
+    kind: str      # 'n_mismatch' | 'event_mismatch' | 'overlap' | 'rounding'
+    detail: str
+    severity: str  # 'error' (contradiction) or 'warning' (treatable as rounding/reporting gap)
+
+
+@dataclass
 class EffectSummary:
     """A study's published aggregate results: overall + subgroup tables."""
     study: str
     overall: SubgroupTable
     subgroups: list = field(default_factory=list)
+
+    def check_consistency(self, rel_tol=0.01, abs_tol=1):
+        """Verify subgroup aggregates are consistent with overall counts.
+
+        Exhaustive strata must sum to the overall; non-exhaustive strata
+        must not exceed it.  Small discrepancies are returned as
+        'warning' (rounding/reporting gaps), not contradictions.
+        Returns list[ConsistencyIssue]; empty = consistent.
+        """
+        issues = []
+        tn = sum(s.treat.n for s in self.subgroups)
+        cn = sum(s.control.n for s in self.subgroups)
+        te = sum(s.treat.events for s in self.subgroups)
+        ce = sum(s.control.events for s in self.subgroups)
+        for label, sub_total, ov in (
+                ("treat_n", tn, self.overall.treat.n),
+                ("control_n", cn, self.overall.control.n),
+                ("treat_events", te, self.overall.treat.events),
+                ("control_events", ce, self.overall.control.events)):
+            diff = sub_total - ov
+            tol = max(abs_tol, rel_tol * ov)
+            if diff > tol:
+                issues.append(ConsistencyIssue(
+                    "n_mismatch" if label.endswith("n") else "event_mismatch",
+                    f"{label}: subgroups sum {sub_total} exceeds overall {ov}",
+                    "error"))
+            elif diff != 0 and abs(diff) <= tol:
+                issues.append(ConsistencyIssue(
+                    "rounding",
+                    f"{label}: subgroups sum {sub_total} vs overall {ov} "
+                    f"(within tolerance; likely rounding or unpublished stratum)",
+                    "warning"))
+        # duplicate stratum names -> overlap risk
+        names = [s.name for s in self.subgroups]
+        if len(names) != len(set(names)):
+            issues.append(ConsistencyIssue(
+                "overlap", "duplicate subgroup names; strata may overlap",
+                "error"))
+        return issues
 
     def sufficiency_report(self):
         """Return {subgroup: (rr, lo, hi, rd, identifiable, nonestimable)}."""
