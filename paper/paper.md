@@ -1,5 +1,5 @@
 ---
-title: "IONE: aggregate-evidence decision audits for published clinical trial data"
+title: "IONE: Identifiability-Oriented Navigation of Evidence for aggregate clinical trial data"
 tags:
   - Python
   - evidence synthesis
@@ -18,7 +18,8 @@ bibliography: paper.bib
 
 # Summary
 
-`ione` is a Python package that audits whether published aggregate
+IONE (Identifiability-Oriented Navigation of Evidence) is an open-source
+Python package that audits whether published aggregate
 evidence — arm-level event counts, subgroup tables, and margins from RCTs
 and meta-analyses — can support a specified clinical decision for a
 target patient subgroup, without individual patient data. For a binary
@@ -32,7 +33,8 @@ conflated. When the decision is not robust, the package suggests the
 cheapest *reportable* augmentation (re-tabulation before new measurement
 before new enrollment) without promising resolution, and provides a
 retrospective leave-one-subgroup-out borrow check. The package also
-preserves the original IONE stratification codebase for detecting hidden
+preserves the original/legacy IONE (Incoherence-Oriented Neutralisation and
+Extraction) stratification codebase for detecting hidden
 population structure in observational data [@onishi-ione-legacy].
 
 # Statement of need

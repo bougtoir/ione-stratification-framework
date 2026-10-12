@@ -1,7 +1,7 @@
-# IONE Aggregate-Evidence Audit (`ione` package)
+# IONE (Identifiability-Oriented Navigation of Evidence) — aggregate-evidence audit (`ione` package)
 
-New module extending the IONE framework to **decision audits on published
-aggregate evidence** — no IPD, no pseudo-IPD.
+The current IONE product: **decision audits on published aggregate
+evidence** — no IPD, no pseudo-IPD.
 
 ## Features
 

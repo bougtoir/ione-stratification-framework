@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "ione-audit"
 version = "0.2.0"
-description = "IONE: hidden-population detection plus aggregate-evidence decision audits"
+description = "IONE: Identifiability-Oriented Navigation of Evidence (aggregate-evidence decision audit)"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [{name = "Tatsuki Onishi", email = "bougtoir@gmail.com"}]

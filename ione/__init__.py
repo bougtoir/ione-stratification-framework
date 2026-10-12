@@ -1,4 +1,4 @@
-"""IONE — aggregate-evidence decision audit toolkit.
+"""IONE (Identifiability-Oriented Navigation of Evidence) — aggregate-evidence decision audit toolkit.
 
 Implements, on top of the historical stratification framework:
 - aggregate evidence sufficiency audit from published arm-level counts

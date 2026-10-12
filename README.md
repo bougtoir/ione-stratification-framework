@@ -1,80 +1,57 @@
-# IONE: Incoherence-Oriented Neutralisation and Extraction
+# IONE: Identifiability-Oriented Navigation of Evidence
 
-A framework for detecting hidden population structure in observational studies and extracting coherent subpopulations for valid within-subgroup inference.
+Open-source Python package for auditing what published aggregate trial
+evidence can — and cannot — support for a clinical decision.
 
-## Overview
+## Current product: aggregate-evidence decision audit (`ione` package)
 
-IONE addresses multiple biases arising from hidden population structure in observational studies:
-- **Confounding bias**
-- **Simpson's paradox**
-- **Undetected effect modification**
-- **Ecological fallacy**
-- **Non-collapsibility**
+Given published arm-level event counts, subgroup tables and margins
+from RCTs / meta-analyses, `ione`:
 
-The framework operates in two stages:
-1. **Detection**: The C1 coherence indicator (derived from I² heterogeneity statistic) quantifies population incoherence
-2. **Extraction**: Stratification-based methods extract coherent subpopulations using routinely measured variables alone
+- computes crude RR/RD/OR with 95% CIs and flags non-estimable cells;
+- computes **sharp bounds** on the conditional risk difference via
+  linear programming (HiGHS) over the compatible-model polytope, and
+  returns `ROBUST_TREAT`, `ROBUST_NO_TREAT`, `REVERSIBLE`, `INFEASIBLE`,
+  or `UNSUPPORTED` — separate states, so inconsistent inputs,
+  insufficient information, and nonidentification are never conflated;
+- suggests the cheapest *reportable* augmentation (re-tabulation → new
+  measurement → new enrollment → abstain), each classified with its
+  assumptions — never a guarantee of resolution;
+- runs a retrospective leave-one-subgroup-out borrow check.
 
-## Methods
+Scope is explicit: binary stratum, binary outcome, two arms; bounds are
+conditional on stated assumptions (stratum prevalence, mixing
+proportions, decision threshold); verdicts are not clinical treatment
+recommendations. No IPD or pseudo-IPD is used.
 
-Two families of stratification methods are implemented:
+### Install & use
 
-**Family 1: Decision power-based (outcome-informed)**
-- 1A: Predicted probability stratification
-- 1B: Residual-based stratification
-- 1C: Cross-validated decision power
-- 1D: Machine learning uncertainty (Random Forest)
-
-**Family 2: Feature score-based (outcome-free)**
-- 2A: PCA-based stratification
-- 2B: k-means clustering
-
-## Project Structure
-
-```
-├── data_generation.py          # Monte Carlo data generation (DAG-based)
-├── methods.py                  # IONE stratification methods
-├── evaluation.py               # Performance evaluation (ARI, η², C1)
-├── run_simulation.py           # Main simulation runner (66,600 evaluations)
-├── visualization.py            # Simulation result visualisation
-├── real_data_analysis.py       # Application to 5 Simpson's paradox datasets
-├── real_data_visualization.py  # Real data result visualisation
-├── docs/                       # Specifications and background documents
-│   ├── spec_stratification_pseudo_randomization.md      # Spec v0.1
-│   ├── spec_stratification_pseudo_randomization_v0.2.md # Spec v0.2
-│   ├── prognostic_score_and_hdPS_explanation.md
-│   └── scope_check.md
-├── results/
-│   ├── figures/                # Simulation figures (10 PNG, 300 DPI colour)
-│   ├── real_data/              # Real data analysis results & figures
-│   ├── manuscript/             # Publication-ready outputs
-│   │   ├── IONE_manuscript.md / .docx          # English manuscript
-│   │   ├── IONE_manuscript_japanese_summary.md / .docx  # Japanese summary
-│   │   ├── IONE_figures_tables_EN.pptx         # English figures/tables
-│   │   ├── IONE_figures_tables_JA.pptx         # Japanese figures/tables
-│   │   ├── create_pptx_en.py / create_pptx_ja.py       # PPTX generators
-│   │   ├── create_docx.py / create_japanese_docx.py     # DOCX generators
-│   │   └── background.md
-│   ├── phase1_results.csv      # Phase 1 simulation results
-│   ├── sensitivity_results.csv # Sensitivity analysis results
-│   ├── evaluation_report.md
-│   ├── simulation_summary.md
-│   ├── journal_recommendation.md
-│   └── simpson_paradox_examples.md
+```bash
+pip install .
+ione audit --study recovery --target noO2
+ione borrow-check --study recovery --target noO2
+python -m pytest tests/
 ```
 
-## Target Journal
+Python API: `from ione import audit_decision, suggest_augmentation,
+load_builtin`. Full docs, CSV spec, verdict interpretation and failure
+modes: [docs/aggregate_audit/README.md](docs/aggregate_audit/README.md).
+Verified built-in examples: RECOVERY (NEJM 2021), ISIS-2 (Lancet 1988),
+WHO REACT (JAMA 2020).
 
-**BMC Medical Research Methodology** — Special Collection "Causal inference and observational data vol. 2" (Deadline: 30 July 2026)
+## Legacy IONE (historical)
 
-## Key Results
+The repository also preserves the **original/legacy IONE** —
+"Incoherence-Oriented Neutralisation and Extraction", a framework for
+detecting hidden population structure in observational studies
+(C1 coherence indicator, stratification-based extraction). That
+research code (`data_generation.py`, `methods.py`, `evaluation.py`,
+`run_simulation.py`, `real_data_analysis.py`, `results/`) is retained
+unchanged as a research artifact. See
+[docs/legacy_ione.md](docs/legacy_ione.md) for its original README.
 
-- **Simulation**: 66,600 evaluations across 1,200+ scenarios. All proposed methods significantly outperform random stratification.
-- **C1 indicator**: Reliably detects incoherent populations in both simulation and 5 real-world datasets.
-- **Real data**: Applied to kidney stone (ARI=0.851), Israeli vaccine (ARI=0.746), COVID-19 CFR, UC Berkeley admissions, and smoking-mortality datasets.
+## Package
 
-## Requirements
-
-- Python 3.11+
-- numpy, pandas, scikit-learn, scipy, matplotlib, seaborn
-- python-pptx, python-docx (for manuscript generation)
+- Distribution `ione-audit`, import package `ione`, CLI `ione`.
+- License: MIT (see `LICENSE`). Citation: `CITATION.cff`.
+- JOSS paper draft: `paper/paper.md`.
