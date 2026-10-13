@@ -34,16 +34,23 @@ explicitly disjoint verdicts --- \code{ROBUST\_TREAT},
 specification, and genuine nonidentification are never conflated. When a
 decision is not robust, the package orders additional \emph{reportable}
 aggregate summaries by burden (re-tabulation before new measurement
-before new enrollment) without promising resolution. Applications to
-published data from RECOVERY (dexamethasone in hospitalized COVID-19
-patients), ISIS-2 (aspirin and streptokinase in acute myocardial
-infarction), and the WHO REACT corticosteroid meta-analysis show that
-published subgroup margins are usually decision-reversible, and a
-retrospective leave-one-subgroup-out check on RECOVERY reproduces a
-realistic direction reversal that unexamined pooling would have
-produced. The tool recommends no treatment; it reports what the
-published counts identify and what reportable information would narrow
-the bounds.
+before new enrollment) without promising resolution. Audits are organized
+as an explicit information ladder: arm-level totals only (L1), plus
+stratum denominators (L2), plus arm-by-stratum event counts (L3), so
+that a reader can see exactly which published table changes the answer.
+Applications to published data show the ladder working in both
+directions: in RECOVERY (dexamethasone in hospitalized COVID-19
+patients) the published arm-by-stratum counts reach L3 and
+point-identify the crude stratum risk differences --- including the
+unfavourable direction in the no-oxygen subgroup that lower information
+levels leave undecided --- while in ISIS-2 (aspirin and streptokinase in
+acute myocardial infarction) subgroup results were published only as
+odds reductions and the ladder stops at L1, making the missing table
+concrete. A retrospective leave-one-subgroup-out check on RECOVERY
+further reproduces a realistic direction reversal that unexamined
+pooling would have produced. The tool recommends no treatment; it
+reports what each level of published counts identifies and what
+reportable information would narrow the bounds.
 }
 \Keywords{partial identification, aggregate data, clinical trials,
 decision analysis, evidence audit, \proglang{Python}}
@@ -118,7 +125,9 @@ identification question into a reproducible audit. Its contributions are
 deliberately those of an applied tool, not of new theory: (i) a complete
 audit workflow on published aggregate counts --- consistency checking of
 subgroup tables against the overall margin, sharp conditional
-risk-difference bounds by linear programming, and a five-state verdict
+risk-difference bounds by linear programming, an explicit L1/L2/L3
+information-level ladder that separates deliberate ablations from
+genuine publication gaps, and a five-state verdict
 taxonomy that keeps inconsistency (\code{INFEASIBLE}), underspecification
 (\code{UNSUPPORTED}), and nonidentification (\code{REVERSIBLE}) strictly
 separate; (ii) cost-ordered suggestions of additional \emph{reportable}
@@ -222,6 +231,44 @@ reporting error worth querying, \code{UNSUPPORTED} to missing analyst
 input, and \code{REVERSIBLE} to an information gap in the literature
 --- three different actions.
 
+\subsection{Information levels}
+\label{sec:levels}
+
+Because the audit's purpose is to show \emph{which} published table
+carries the answer, every stratum audit is reported as a ladder of
+three explicitly defined information levels, for one and the same
+estimand (the stratum-specific crude risk difference):
+
+\begin{itemize}
+\item \textbf{L1} (arm totals only): overall arm-level event counts;
+      stratum denominators and events withheld. The stratum risk
+      difference is unidentified with the trivial identified set
+      $[-1, +1]$.
+\item \textbf{L2} (plus stratum denominators): the arm-by-stratum
+      sample sizes (equivalently the stratum prevalences $q_0, q_1$)
+      are added, imposing \eqref{eq:margins}; the sharp LP bounds
+      apply.
+\item \textbf{L3} (plus stratum event counts): the arm-by-stratum
+      outcome counts are added. Two independent equations collapse
+      $\Theta$ to a point: the crude stratum risk difference is
+      point-identified and equals the difference of the published
+      proportions. A confidence interval around that point is
+      \emph{sampling} uncertainty and is reported separately --- it
+      is never mixed into the identified set.
+\end{itemize}
+
+Two interpretive rules are fixed. First, L1 and L2 are
+\emph{deliberate ablations} when L3 information was actually
+published: they measure what a reader who ignored the arm-by-stratum
+table could still conclude, and must never be described as a genuine
+publication gap. A level is called a gap only when the information
+was never reported (as in the ISIS-2 example below). Second,
+point-identification at L3 is identification of an \emph{aggregate
+stratum contrast}, not of any individual's causal effect: its causal
+reading requires randomization, a pre-treatment stratum definition,
+complete outcome ascertainment, and the usual estimand conditions,
+all of which are stated rather than assumed away.
+
 \subsection{Consistency checking}
 \label{sec:consistency}
 
@@ -274,7 +321,8 @@ The package \texttt{ione} (distribution name \texttt{ione-audit}, version
 0.2.0) is pure \proglang{Python} depending only on NumPy
 \citep{numpy2020} and SciPy \citep{scipy2020}, with the LP solved by
 HiGHS \citep{huangfu2018}. It provides a Python API
-(\code{audit\_decision}, \code{suggest\_augmentation},
+(\code{audit\_decision}, \code{audit\_levels},
+\code{suggest\_augmentation},
 \code{borrow\_check}, \code{EffectSummary.check\_consistency}) and a
 command-line interface (\code{ione audit}, \code{ione borrow-check})
 emitting structured JSON. Source, tests, and documentation are at
@@ -294,19 +342,24 @@ enumeration (sign agreement), and against published effect estimates
 for zero cells). Edge cases are asserted explicitly: missing prevalence
 returns \code{UNSUPPORTED}, inconsistent margins return
 \code{INFEASIBLE}, prevalence near 1 collapses bounds to the marginal
-risk difference, and prevalence near 0 widens them to $[-1, 1]$. All 27
+risk difference, and prevalence near 0 widens them to $[-1, 1]$. For the
+information ladder, a regression test asserts on random margin-consistent
+inputs that adding constraints never enlarges the identified set
+(L1 $\supseteq$ L2 $\supseteq$ L3 point), and unreachable levels return
+\code{UNSUPPORTED}. All 34
 tests pass under Python 3.9--3.12 in continuous integration.
 
 \section{Applications to published trials}
 \label{sec:results}
 
-Table~\ref{tab:data} summarizes the three built-in datasets; all counts
+Table~\ref{tab:data} summarizes the three source datasets; all counts
 are transcribed from the primary publications and cross-verified (the
 RECOVERY counts match the primary report \citep{recovery2021}
 percentage-for-percentage; ISIS-2 from \citet{isis2_1988}; REACT from
 \citet{react2020}). We report crude estimates only; where the original
-study's headline was model-adjusted (REACT's fixed-effect odds ratio),
-that is noted rather than reproduced.
+study's headline was model-adjusted (RECOVERY's age-adjusted rate
+ratios, REACT's fixed-effect odds ratio), that is noted rather than
+treated as the same estimand as a crude risk difference.
 
 \begin{table}[t!]
 \centering
@@ -325,76 +378,95 @@ RECOVERY & 28-day & overall & 482/2104 vs.\ 1110/4321 \\
 & & oxygen only & 298/1279 vs.\ 682/2604 \\
 & & no oxygen & 89/501 vs.\ 145/1034 \\
 \midrule
-ISIS-2 & 5-week vascular & aspirin overall & 804/8587 vs.\ 1016/8600 \\
-(Lancet 1988) & mortality & streptokinase arm & 791/8592 vs.\ 1029/8595 \\
-& & both agents & 343/4292 vs.\ 568/4300 \\
+ISIS-2 & 5-week vascular & aspirin contrast & 804/8587 vs.\ 1016/8600 \\
+(Lancet 1988) & mortality & streptokinase contrast & 791/8592 vs.\ 1029/8595 \\
+& & both vs.\ neither & 343/4292 vs.\ 568/4300 \\
+& & time-from-onset strata & odds reductions only$^a$ \\
 \midrule
 REACT & 28-day & overall & 222/678 vs.\ 425/1025 \\
-(JAMA 2020) & mortality & serious adv.\ events & 64/354 vs.\ 80/342 \\
+(JAMA 2020) & mortality & serious adv.\ events$^b$ & 64/354 vs.\ 80/342 \\
+\bottomrule
+\multicolumn{4}{@{}l}{\footnotesize $^a$Published only as odds
+reductions by time from pain onset (35\% SD 6, 16\% SD 7, 21\% SD 12
+for streptokinase); arm-by-stratum denominators and counts were never
+reported.}\\
+\multicolumn{4}{@{}l}{\footnotesize $^b$A post-treatment outcome, not a
+pre-treatment stratum --- retained only as a documented counterexample;
+see text.}
+\end{tabular}
+}
+\end{table}
+
+Table~\ref{tab:levels} reports the information-level audits at threshold
+$\tau = 0$, and Figure~\ref{fig:levels} shows the identified sets
+graphically.
+
+\paragraph{RECOVERY.} RECOVERY publishes all three levels, so the ladder
+is a pure ablation experiment: at L1 and L2 (arm totals, plus stratum
+denominators) every stratum is \code{REVERSIBLE} --- for the minority
+no-oxygen stratum the L2 bounds span essentially $[-1,+1]$ --- while the
+arm-by-stratum counts at L3 point-identify the crude risk differences:
+$-0.121$ (95\%~CI $-0.183$ to $-0.059$) under invasive ventilation,
+$-0.029$ ($-0.058$ to $-0.000$) under oxygen only, and $+0.037$
+($-0.002$ to $+0.077$) under no oxygen. The ablation makes the role of
+each table explicit: the published subgroup counts are what carry the
+stratum conclusions, and the no-oxygen subgroup's unfavourable direction
+--- which its age-adjusted rate ratio (1.19, a distinct estimand)
+reflects --- is invisible at L2.
+
+\paragraph{ISIS-2.} The factorial design's overall contrasts are
+published at L3-equivalent completeness (aspirin $-0.024$, streptokinase
+$-0.028$, both vs.\ neither $-0.052$ crude risk differences), but for
+patient strata --- the report's own time-from-pain-onset subgroups ---
+only odds reductions were printed, without arm-by-stratum denominators
+or event counts. The ladder for those strata therefore stops at L1:
+L2 and L3 are genuinely unreachable, and the augmentation request is
+concrete --- the arm $\times$ onset-time outcome cross-tabulation that
+was analyzed but not reported. We do not invent the missing table.
+
+\paragraph{REACT.} The REACT serious-adverse-events counts are retained
+only as a counterexample: a serious adverse event is a post-treatment
+outcome, not a pre-treatment patient characteristic, so it cannot define
+a stratum and is excluded from the applications. Screening whether a
+candidate variable is a pre-treatment stratum is part of the audit's
+input contract, not a numeric check --- this is precisely the kind of
+table misuse it exists to block.
+
+\begin{table}[t!]
+\centering
+\caption{\label{tab:levels} Information-level audits on published data
+(threshold $\tau = 0$). Identified sets are reported per level; at L3
+the set is a point (crude risk difference) and the bracketed interval is
+the 95\%~CI, which is sampling uncertainty, not an identification bound.
+L1/L2 are deliberate ablations where L3 was published (RECOVERY); for
+ISIS-2 patient strata, L2/L3 are genuinely unreachable because only odds
+reductions were published.}
+\smallskip
+{\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+study: stratum & L1 & L2 & L3 \\
+\midrule
+RECOVERY: invasive vent.\ & $[-1.00,+1.00]$ & $[-1.00,+1.00]$ &
+$-0.121$ [$-0.183,-0.059$] \\
+RECOVERY: oxygen only & $[-1.00,+1.00]$ & $[-0.43,+0.38]$ &
+$-0.029$ [$-0.058,-0.000$] \\
+RECOVERY: no oxygen & $[-1.00,+1.00]$ & $[-1.00,+0.96]$ &
+$+0.037$ [$-0.002,+0.077$] \\
+ISIS-2: onset-time stratum & $[-1.00,+1.00]$ & --- & --- \\
 \bottomrule
 \end{tabular}
 }
 \end{table}
 
-Table~\ref{tab:verdicts} reports the decision audits. The dominant
-finding is \code{REVERSIBLE}: for every non-degenerate subgroup target
-in the three datasets, the published margins admit compatible models on
-both sides of the decision threshold, and for minority strata the
-identified interval spans nearly the full $[-1,1]$ range (Figure
-\ref{fig:bounds}). ISIS-2 yields the single \code{ROBUST\_TREAT} verdict,
-but it is degenerate: the streptokinase ``subgroup'' coincides with the
-whole arm population ($q = 1$), so the conditional risk difference
-equals the marginal one --- the audit correctly reports robustness only
-where the margins actually pin it down. No published dataset was
-\code{INFEASIBLE} or \code{UNSUPPORTED}; Figure \ref{fig:verdicts} shows
-those states on labelled constructed inputs.
-
-\begin{table}[t!]
-\centering
-\caption{\label{tab:verdicts} Decision audits on published margins
-(threshold $\tau = 0$). ``Prevalence'' is the stratum share of the
-respective arm population; arm-specific prevalences are used where arm
-shares diverge.}
-\smallskip
-\begin{tabular}{@{}llllc@{}}
-\toprule
-study: target stratum & prevalence & bounds on $\mathrm{RD}$
-& verdict \\
-\midrule
-RECOVERY: invasive ventilation & 0.157 & $[-1.000,\,+1.000]$ &
-REVERSIBLE \\
-RECOVERY: oxygen only & 0.604 & $[-0.425,\,+0.379]$ & REVERSIBLE \\
-RECOVERY: no oxygen & 0.239 & $[-1.000,\,+0.959]$ & REVERSIBLE \\
-ISIS-2: streptokinase arm & 1.000 & $[-0.025,\,-0.025]$ &
-ROBUST\_TREAT \\
-ISIS-2: both agents & 0.500 & $[-0.236,\,+0.187]$ & REVERSIBLE \\
-REACT: serious adv.\ events & $0.334/0.522^a$ & $[-1.000,\,+0.627]$ &
-REVERSIBLE \\
-\bottomrule
-\multicolumn{4}{@{}l}{\footnotesize $^a$arm-specific prevalences
-$q_0, q_1$.}
-\end{tabular}
-\end{table}
-
 \begin{figure}[t!]
 \centering
-\includegraphics[width=0.75\textwidth]{fig_bounds_vs_q.pdf}
-\caption{\label{fig:bounds} Identified bounds on the conditional risk
-difference for the RECOVERY overall margins as a function of the stratum
-prevalence $q$. The dashed line marks the reported prevalence of the
-``no oxygen'' subgroup ($q = 0.239$). Bounds widen toward $[-1,1]$ for
-rare strata --- the information loss is driven by prevalence, not by
-sample size as modeled here.}
-\end{figure}
-
-\begin{figure}[t!]
-\centering
-\includegraphics[width=0.75\textwidth]{fig_verdicts.pdf}
-\caption{\label{fig:verdicts} Identified bound intervals across verdict
-states. The RECOVERY ``no oxygen'' audit is real data; the robust and
-infeasible rows are labelled constructed inputs (extreme margins;
-margin $>1$). \code{UNSUPPORTED} (missing specification) produces no
-bounds and is not shown.}
+\includegraphics[width=0.8\textwidth]{fig_levels.pdf}
+\caption{\label{fig:levels} Identified sets by information level. Grey:
+L1 (arm totals only); blue: L2 (plus stratum denominators, LP bounds);
+red point and whiskers: L3 (plus arm-by-stratum counts; point with
+95\%~CI). For ISIS-2 patient strata only L1 is reachable. For RECOVERY,
+L1/L2 are ablations of genuinely published L3 tables.}
 \end{figure}
 
 The borrow check illustrates why the audit matters. On RECOVERY, pooling
@@ -442,9 +514,11 @@ the original investigators nothing.
 \subsection{Practical uses and the value of abstention}
 
 Three uses appear immediate. First, citation hygiene: a clinician citing
-a subgroup result can check whether the published margins admit the
-implied decision at all; the RECOVERY no-oxygen case shows that widely
-interpreted subgroup tables can be fully decision-reversible. Second,
+a subgroup result can check which information level the published report
+actually reaches --- the RECOVERY ablation shows that dropping the
+arm-by-stratum table leaves every stratum decision-reversible, while
+ISIS-2 shows a landmark trial whose subgroup reporting never reached
+past L1. Second,
 requests for re-analysis: the augmentation ordering converts
 ``we need IPD'' --- usually a dead end --- into a concrete, minimal,
 zero-cost request (an arm $\times$ stratum cross-tabulation) that trial
@@ -490,8 +564,10 @@ suggest. \texttt{ione} makes the gap explicit and reproducible: sharp
 identification bounds on subgroup decisions, a verdict taxonomy that
 never conflates inconsistency, underspecification, and
 nonidentification, and a cost-ordered path to what could still be
-reported. On three landmark datasets the published subgroup margins are
-mostly decision-reversible, and a retrospective borrow check reproduces
+reported. The information-level framing makes the examples speak both
+ways: RECOVERY shows published arm-by-stratum counts carrying stratum
+decisions to L3, while ISIS-2 shows the audit stopping honestly at L1
+and naming the missing table. A retrospective borrow check reproduces
 a real direction reversal that unexamined pooling would have produced.
 The practical value is a disciplined ``we do not know, and here is the
 cheapest thing that would tell us'' instead of either over-claiming or

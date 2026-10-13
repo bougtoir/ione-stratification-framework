@@ -1,0 +1,11 @@
+item,value_used,source,status,doi
+RECOVERY overall,482/2104 vs 1110/4321,NEJM 2021;384:693,published counts (abstract/table),10.1056/NEJMoa2021436
+RECOVERY IMV,95/324 vs 283/683,NEJM 2021 fig/table,published counts,10.1056/NEJMoa2021436
+RECOVERY O2,298/1279 vs 682/2604,NEJM 2021 fig/table,published counts,10.1056/NEJMoa2021436
+RECOVERY noO2,89/501 vs 145/1034,NEJM 2021 fig/table,published counts (17.8% vs 14.0% -> RR 1.19 published adjusted),10.1056/NEJMoa2021436
+ISIS-2 aspirin contrast,804/8587 vs 1016/8600,Lancet 1988;2:349,published counts,10.1016/S0140-6736(88)92833-4
+ISIS-2 streptokinase contrast,791/8592 vs 1029/8595,Lancet 1988;2:349,published counts,10.1016/S0140-6736(88)92833-4
+ISIS-2 both vs neither,343/4292 vs 568/4300,Lancet 1988;2:349,published counts,10.1016/S0140-6736(88)92833-4
+ISIS-2 time-from-onset subgroups,odds reductions 35% SD6 / 16% SD7 / 21% SD12 (SK),Lancet 1988 fig 3a,published odds reductions only; no counts,10.1016/S0140-6736(88)92833-4
+REACT overall,222/678 vs 425/1025,JAMA 2020;324:1330,published pooled counts,10.1001/jama.2020.17023
+REACT serious adverse events,64/354 vs 80/342,JAMA 2020,published counts; POST-TREATMENT variable (excluded),10.1001/jama.2020.17023

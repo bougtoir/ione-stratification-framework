@@ -63,3 +63,22 @@ scope.
 ## Stopped per instructions
 
 No submission, no merge, no release, no extra gates.
+
+---
+
+## Addendum — R-gate revision (2026-10-13)
+
+An information-level (L1/L2/L3) revision was performed per
+`IONE_AJS_INFORMATION_LEVEL_FINAL_REVISION_PROMPT.txt` on branch
+`devin/1791935328-ione-ajs-l123`; see `ajs/audit/R_GATE_REPORT.md`,
+`R_CLAIM_MATRIX.csv`, `r_levels.csv`, `r_ledger.csv`, `logs/r_qc.txt`.
+
+Verdict remains **CONDITIONAL GO**. The revision fixed two real
+problems found in the A0-A7 package: (a) RECOVERY results had been
+presented as decision-reversible although arm-by-stratum counts were
+published (ablation vs genuine gap now separated by the L1/L2/L3
+ladder); (b) the REACT serious-adverse-events "subgroup" was a
+post-treatment variable and has been excluded. ISIS-2 subgroup claims
+were corrected to reflect that only odds reductions were published.
+Residual conditions are unchanged (affiliation/ORCID confirmation,
+reviewer CoI, main-branch lineage).

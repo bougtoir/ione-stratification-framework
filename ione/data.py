@@ -40,8 +40,16 @@ REACT = EffectSummary(
         metadata=dict(doi="10.1001/jama.2020.17023",
                       outcome="28-day all-cause mortality",
                       effect_measure_published="OR 0.66 (0.53-0.82) fixed-effect")),
+    # NOTE: serious adverse events are a POST-TREATMENT outcome, not a
+    # pre-treatment stratum.  They must never be used to define a patient
+    # subgroup in an identifiability audit (they are an outcome to audit,
+    # not a characteristic to condition on).  Kept here, flagged, only as
+    # a documented counterexample of a variable that fails the
+    # pre-treatment-stratum requirement.
     subgroups=[
-        SubgroupTable("serious_adverse_events", ArmCount(64, 354), ArmCount(80, 342)),
+        SubgroupTable("serious_adverse_events", ArmCount(64, 354), ArmCount(80, 342),
+                      metadata=dict(post_treatment=True,
+                                    note="outcome, not a pre-treatment stratum")),
     ])
 
 

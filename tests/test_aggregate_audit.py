@@ -239,3 +239,87 @@ def test_small_enumeration_agrees_with_lp():
     assert flip  # harm-compatible model exists
     res = audit_decision((p0b, p1b), target_x=1, prev1=q)
     assert res.verdict is DecisionVerdict.REVERSIBLE
+
+
+# ---------- information levels (L1/L2/L3) ----------
+from ione.levels import audit_levels, check_monotone
+
+
+def test_l1_trivial_bounds():
+    res = audit_levels(RECOVERY, "noO2", threshold=0.0)
+    l1 = res[0]
+    assert l1.level == "L1" and l1.reachable
+    assert l1.identified_lo == -1.0 and l1.identified_hi == 1.0
+    assert l1.verdict == DecisionVerdict.REVERSIBLE
+
+
+def test_l2_matches_lp_engine():
+    res = audit_levels(RECOVERY, "noO2", threshold=0.0)
+    l2 = res[1]
+    assert l2.level == "L2" and l2.reachable
+    # L2 must be strictly narrower than L1 on real margins
+    assert l2.identified_lo > -1.0 - 1e-9 or l2.identified_hi < 1.0 + 1e-9
+    # equal-prevalence check: arm prevalences nearly equal here,
+    # unequal-weight LP is used internally and must agree with LP engine
+    p0 = RECOVERY.overall.control.risk
+    p1 = RECOVERY.overall.treat.risk
+    s = RECOVERY.subgroups[2]
+    q0 = s.control.n / RECOVERY.overall.control.n
+    q1 = s.treat.n / RECOVERY.overall.treat.n
+    from ione.identifiability import _unequal_weight_lp
+    ref = _unequal_weight_lp(q0, q1, p0, p1, 1, 0.0)
+    assert abs(l2.identified_lo - ref.bound_lo) < 1e-8
+    assert abs(l2.identified_hi - ref.bound_hi) < 1e-8
+
+
+def test_l3_point_identified_and_inside_l2():
+    res = audit_levels(RECOVERY, "noO2", threshold=0.0)
+    l2, l3 = res[1], res[2]
+    assert l3.point_estimate == pytest.approx(89 / 501 - 145 / 1034)
+    assert l3.identified_lo == l3.identified_hi == l3.point_estimate
+    assert l2.identified_lo - 1e-9 <= l3.point_estimate <= l2.identified_hi + 1e-9
+    assert l3.ci[0] < l3.point_estimate < l3.ci[1]
+    # point > 0 -> identified unfavourable at tau=0
+    assert l3.verdict == DecisionVerdict.ROBUST_NO_TREAT
+
+
+def test_monotone_nesting_all_strata():
+    for s in RECOVERY.subgroups:
+        res = audit_levels(RECOVERY, s.name, threshold=0.0)
+        ok, msgs = check_monotone(res)
+        assert ok, msgs
+
+
+def test_monotone_nesting_random_margins():
+    """Nested constraints never enlarge the identified set."""
+    import numpy as np
+    rng = np.random.default_rng(7)
+    for _ in range(50):
+        n1, n0 = int(rng.integers(200, 2000)), int(rng.integers(200, 4000))
+        t_n, c_n = int(rng.integers(50, n1 // 2)), int(rng.integers(50, n0 // 2))
+        e1, e0 = int(rng.integers(1, n1 // 2)), int(rng.integers(1, n0 // 2))
+        # stratum counts must be feasible against the arm margins:
+        # stratum events <= arm events and stratum n <= arm n
+        eff = EffectSummary(
+            "synthetic",
+            SubgroupTable("o", ArmCount(e1, n1), ArmCount(e0, n0)),
+            [SubgroupTable("x", ArmCount(
+                int(rng.integers(0, min(t_n, e1) + 1)), t_n), ArmCount(
+                int(rng.integers(0, min(c_n, e0) + 1)), c_n))])
+        res = audit_levels(eff, "x", threshold=0.0)
+        ok, msgs = check_monotone(res)
+        assert ok, msgs
+
+
+def test_unreachable_levels_isis2_patient_stratum():
+    res = audit_levels(ISIS2, "time_from_onset_stratum", threshold=0.0)
+    assert res[0].reachable                    # L1 always reachable
+    assert not res[1].reachable                # no stratum denominators
+    assert not res[2].reachable                # no arm-by-stratum counts
+    assert res[1].verdict == DecisionVerdict.UNSUPPORTED
+    assert res[2].verdict == DecisionVerdict.UNSUPPORTED
+
+
+def test_react_sae_flagged_post_treatment():
+    s = REACT.subgroups[0]
+    assert s.metadata.get("post_treatment") is True

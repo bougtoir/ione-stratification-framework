@@ -27,13 +27,22 @@ nonidentification are never conflated), and — the feature I believe your
 readers will find most useful — orders the *additional aggregate
 summaries the original investigators could still report* by burden,
 starting with a near-zero-cost cross-tabulation request, while honestly
-declining to promise that any augmentation resolves the decision. The
-paper applies the tool to three source-verified datasets — RECOVERY
-(dexamethasone), ISIS-2 (aspirin/streptokinase), and the WHO REACT
-corticosteroid meta-analysis — and shows that published subgroup margins
-are usually decision-reversible; a retrospective borrow check on
-RECOVERY reproduces a real direction reversal that unexamined pooling
-would have produced.
+declining to promise that any augmentation resolves the decision. Every
+stratum audit is organized as an explicit information ladder — arm-level
+totals (L1), plus stratum denominators (L2), plus arm-by-stratum event
+counts (L3) — so the paper shows exactly which published table changes
+the answer, and marks lower levels as deliberate ablations when the full
+table was in fact published. The applications demonstrate both
+directions on source-verified data: RECOVERY (dexamethasone) publishes
+all three levels, so the crude stratum risk differences are
+point-identified — including the unfavourable direction in the no-oxygen
+subgroup — while ISIS-2 (aspirin/streptokinase) published its
+time-from-onset subgroups only as odds reductions, leaving the audit at
+L1 and making the missing table concrete. A documented counterexample
+from the WHO REACT meta-analysis shows why post-treatment variables must
+never define a stratum, and a retrospective borrow check on RECOVERY
+reproduces a real direction reversal that unexamined pooling would have
+produced.
 
 The statistical content is deliberately classical — partial
 identification via marginal-consistency linear programs, in the lineage

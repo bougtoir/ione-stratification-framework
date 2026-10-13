@@ -1,0 +1,12 @@
+RECOVERY/IMV: monotone-nesting check ok=True []
+RECOVERY/O2: monotone-nesting check ok=True []
+RECOVERY/noO2: monotone-nesting check ok=True []
+ISIS-2 time-from-onset: reachable level = L1 only (subgroup effects published as odds reductions, no counts)
+REACT serious_adverse_events: post_treatment flag = True -> excluded from L1/L2/L3 applications (documented counterexample)
+
+== QC ==
+consistency: RECOVERY subgroup sums equal overall margins exactly
+non-negativity & events<=n: all cells OK
+RECOVERY/noO2 L2 bounds [-1.0000,0.9621] residual=0.00e+00
+RECOVERY/noO2 L3 crude RD = 0.0374 (-0.0022,0.0770) vs published age-adjusted RR 1.19 — distinct estimands, not conflated
+borrow-check recovery/noO2: pooled (0.835, 0.755, 0.923) vs actual (1.267, 0.995, 1.613) reversal=True (retrospective diagnostic only)
