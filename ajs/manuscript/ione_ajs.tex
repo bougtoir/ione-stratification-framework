@@ -1,0 +1,502 @@
+\documentclass[article]{ajs}
+
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xurl}
+
+\author{Tatsuki Onishi\\ Shiga University\\ Data Science AI Innovation
+        Research Promotion Center}
+
+\title{IONE: Identifiability-Oriented Navigation of Evidence for Auditing
+Aggregate Clinical Trial Data}
+
+\Plainauthor{Tatsuki Onishi}
+\Plaintitle{IONE: Identifiability-Oriented Navigation of Evidence for
+Auditing Aggregate Clinical Trial Data}
+\Shorttitle{IONE: Auditing Aggregate Trial Data}
+
+\Abstract{
+Even a well-conducted randomized trial or meta-analysis publishes, at
+best, arm-level margins and a few subgroup tables; whether those
+aggregates can justify a treatment decision for a particular patient
+subgroup is a question of identification, not estimation. We present
+\texttt{ione} (IONE: Identifiability-Oriented Navigation of Evidence), an
+open-source \proglang{Python} package that audits published aggregate
+randomized-trial data without requiring individual patient data. For a
+binary stratum, binary outcome, and two-arm design, the set of
+conditional risk distributions compatible with the published margins is
+a polytope, and \texttt{ione} computes sharp bounds on the stratum-specific
+risk difference by linear programming (HiGHS), returning one of five
+explicitly disjoint verdicts --- \code{ROBUST\_TREAT},
+\code{ROBUST\_NO\_TREAT}, \code{REVERSIBLE}, \code{INFEASIBLE}, or
+\code{UNSUPPORTED} --- so that contradictory inputs, missing
+specification, and genuine nonidentification are never conflated. When a
+decision is not robust, the package orders additional \emph{reportable}
+aggregate summaries by burden (re-tabulation before new measurement
+before new enrollment) without promising resolution. Applications to
+published data from RECOVERY (dexamethasone in hospitalized COVID-19
+patients), ISIS-2 (aspirin and streptokinase in acute myocardial
+infarction), and the WHO REACT corticosteroid meta-analysis show that
+published subgroup margins are usually decision-reversible, and a
+retrospective leave-one-subgroup-out check on RECOVERY reproduces a
+realistic direction reversal that unexamined pooling would have
+produced. The tool recommends no treatment; it reports what the
+published counts identify and what reportable information would narrow
+the bounds.
+}
+\Keywords{partial identification, aggregate data, clinical trials,
+decision analysis, evidence audit, \proglang{Python}}
+\Plainkeywords{partial identification, aggregate data, clinical trials,
+decision analysis, evidence audit, Python}
+
+\Pages{1--xx}
+
+\Address{
+  Tatsuki Onishi\\
+  Shiga University, Data Science AI Innovation Research Promotion
+  Center\\
+  1-1-1 Banba, Hikone, Shiga 522-8522, Japan\\
+  E-mail: \email{bougtoir@gmail.com}
+}
+
+\begin{document}
+
+\section{Introduction}
+\label{sec:intro}
+
+Clinicians and evidence-synthesis researchers routinely face a situation
+in which a randomized controlled trial (RCT) or meta-analysis is
+statistically sound, yet the published report does not settle the
+question that matters in front of them: whether a treatment helps the
+specific subgroup their patient belongs to. Trials typically report
+arm-level event counts for the whole sample and, occasionally, crude
+subgroup tables. Whether those aggregates are even consistent with a
+unique subgroup-level treatment effect --- and, if not, how wide the
+range of compatible effects is --- is a question of identification, not
+of estimation precision.
+
+That published margins do not uniquely determine conditional quantities
+is a classical result. Manski's framework of partial identification
+\citep{manski2003} formalizes bounds on quantities that remain set-valued
+given the available information; \citet{cross2002} showed that aggregate
+("short") regressions identify conditional means only up to intervals;
+\citet{king1997} obtained deterministic bounds on individual-level
+cell probabilities from aggregate two-by-two margins in the ecological
+inference literature; and \citet{horowitz2000} derived bounds on
+treatment effects in randomized experiments with missing covariate and
+outcome data. Linear programming formulations for sharp treatment-effect
+bounds under structural assumptions go back to \citet{balke1997}. More
+recently, \citet{moon2026} independently developed sharp bounds for
+linear combinations of conditional mean outcomes when only group-level
+marginal distributions are observed --- mathematically the same family of
+marginal-consistency programs that we use, motivated by economic
+outcomes. None of this work, however, addresses the applied question a
+clinical researcher faces at the level of a published report: given
+\emph{this} trial's printed tables, is a decision for \emph{this}
+subgroup already determined, could it still reverse, and which
+additional \emph{reportable} summary --- one the original investigators
+could plausibly supply --- would narrow the answer?
+
+Existing software does not close this gap. Meta-analytic packages
+\citep{viechtbauer2010} synthesize published effects but assume the
+estimates are already identified. Sensitivity-analysis tools such as the
+E-value \citep{vanderweele2017} quantify robustness to unmeasured
+confounding for a point-identified estimate --- a different question from
+nonidentification. Bound software exists in econometrics --- the
+\texttt{tebounds} command \citep{mccarthy2015} and the
+\texttt{bpbounds} implementation of the Balke--Pearl bounds
+\citep{palmer2011} --- but these require microdata or instrumental-variable
+designs and do not operate on published arm-level margins. Transportability
+theory \citep{pearlbareinboim2014} identifies conditions under which a
+causal effect may be carried to a new population, but presumes assumptions
+that a published report rarely documents.
+
+We present \texttt{ione} (IONE: Identifiability-Oriented Navigation of
+Evidence), an open-source \proglang{Python} package that turns this
+identification question into a reproducible audit. Its contributions are
+deliberately those of an applied tool, not of new theory: (i) a complete
+audit workflow on published aggregate counts --- consistency checking of
+subgroup tables against the overall margin, sharp conditional
+risk-difference bounds by linear programming, and a five-state verdict
+taxonomy that keeps inconsistency (\code{INFEASIBLE}), underspecification
+(\code{UNSUPPORTED}), and nonidentification (\code{REVERSIBLE}) strictly
+separate; (ii) cost-ordered suggestions of additional \emph{reportable}
+summaries (re-tabulation of already-collected data before new measurement
+before new enrollment), each with its assumptions stated and none
+promising resolution; and (iii) three source-verified applications to
+landmark trials and a meta-analysis, including a documented real-data
+direction reversal that unexamined subgroup pooling would have produced.
+The name IONE also denotes an earlier observational-stratification
+framework by the same author (here: ``original/legacy IONE''); the two
+share only the name and are distinguished throughout.
+
+The tool does not recommend treatment for any patient, does not claim
+external validity, and returns abstention (\code{UNSUPPORTED}) as a
+first-class output when the information class is not supported. The
+remainder of the paper defines the audit problem and the exact
+computation (Section~\ref{sec:methods}), describes the implementation and
+its verification (Section~\ref{sec:impl}), reports the three real-data
+audits (Section~\ref{sec:results}), and discusses scope, limitations, and
+relation to prior work (Section~\ref{sec:discussion}).
+
+\section{The audit problem and exact computation}
+\label{sec:methods}
+
+\subsection{Data and estimand}
+
+We consider the smallest setting in which the problem already bites: a
+binary stratum indicator $X \in \{0,1\}$ (e.g., ``receiving no
+respiratory support at randomization''), a binary outcome $Y \in \{0,1\}$
+(e.g., death within 28 days), and two arms $T \in \{0,1\}$ (control,
+treatment). The published report supplies arm-level margins
+$\bar p_0 = P(Y{=}1 \mid T{=}0)$ and $\bar p_1 = P(Y{=}1 \mid T{=}1)$ ---
+overall event risks per arm --- and a subgroup table that supplies, for
+each named stratum, the arm-specific counts $(e_{1x}, n_{1x})$ and
+$(e_{0x}, n_{0x})$, from which the stratum prevalence $q = P(X{=}1)$ (or
+arm-specific prevalences $q_0, q_1$) is estimated. The estimand is the
+stratum-specific risk difference
+\[
+\mathrm{RD}_x \;=\; P(Y{=}1 \mid T{=}1, X{=}x) - P(Y{=}1 \mid T{=}0, X{=}x),
+\qquad x \in \{0,1\}.
+\]
+
+Write the four latent conditional risks as
+$\theta = (p_{00}, p_{01}, p_{10}, p_{11})$ where $p_{tx} = P(Y{=}1 \mid
+T{=}t, X{=}x)$. The published margins impose the linear equalities
+\begin{equation}
+(1-q)\, p_{0,0} + q\, p_{0,1} = \bar p_0, \qquad
+(1-q)\, p_{1,0} + q\, p_{1,1} = \bar p_1,
+\label{eq:margins}
+\end{equation}
+and $\theta \in [0,1]^4$. If the report additionally publishes a
+per-stratum outcome margin $P(Y{=}1 \mid X{=}x)$, the constraint
+$(1 - m_x)\, p_{0x} + m_x\, p_{1x} = P(Y{=}1 \mid X{=}x)$ applies, where
+$m_x = P(T{=}1 \mid X{=}x)$ must be supplied by the analyst --- it is
+never defaulted to the allocation ratio. Because all constraints are
+linear and the feasible set $\Theta$ is a polytope, the sharp bounds of
+the linear estimand $\mathrm{RD}_x = p_{1x} - p_{0x}$ are obtained
+exactly by two linear programs,
+\[
+\mathrm{RD}_x^{-} = \min_{\theta \in \Theta} (p_{1x} - p_{0x}), \qquad
+\mathrm{RD}_x^{+} = \max_{\theta \in \Theta} (p_{1x} - p_{0x}),
+\]
+solved with the HiGHS dual simplex solver
+\citep{huangfu2018, scipy2020}. ``Sharp'' is used in the standard
+sense: the interval is the tightest one implied by \eqref{eq:margins}
+alone; both endpoints are attained by feasible conditional
+distributions.
+
+Three conditions govern interpretation. First, the bounds are
+\emph{identification bounds on the published margins}, not confidence
+intervals: sampling uncertainty in the reported counts is a separate
+layer that we do not model here \citep[cf.][]{imbens2004}. Second, when
+arm compositions differ ($q_1 \neq q_0$), each arm uses its own stratum
+prevalence; a single common $q$ is used only when the arm shares are
+compatible. Third, nothing in \eqref{eq:margins} restricts
+unmeasured-effect-modifier structures beyond $X$; declaring a suspected
+unmeasured modifier changes only the augmentation advice
+(Section~\ref{sec:aug}), not the bounds.
+
+\subsection{Verdicts}
+
+Given a decision threshold $\tau \ge 0$ on the adverse-event scale
+(benefit requires $\mathrm{RD}_x < -\tau$), the audit returns exactly one
+of five disjoint states:
+
+\begin{itemize}
+\item \code{ROBUST\_TREAT}: every model in $\Theta$ gives
+      $\mathrm{RD}_x < -\tau$;
+\item \code{ROBUST\_NO\_TREAT}: every model in $\Theta$ gives
+      $\mathrm{RD}_x > -\tau$;
+\item \code{REVERSIBLE}: $\Theta$ contains models on both sides of
+      $-\tau$ (genuine nonidentification of the decision);
+\item \code{INFEASIBLE}: $\Theta$ is empty --- the published aggregates
+      are mutually inconsistent;
+\item \code{UNSUPPORTED}: the input lacks a required specification
+      (stratum prevalence, arm mixing proportion) or the solver fails.
+\end{itemize}
+
+The separation matters in practice: \code{INFEASIBLE} points to a
+reporting error worth querying, \code{UNSUPPORTED} to missing analyst
+input, and \code{REVERSIBLE} to an information gap in the literature
+--- three different actions.
+
+\subsection{Consistency checking}
+\label{sec:consistency}
+
+Before the LP is run, subgroup counts are checked against the overall
+table: for exhaustive strata, sums of events and denominators must equal
+the overall counts; small gaps are flagged as warnings (rounding or an
+unpublished stratum), while exceedances are errors that render the audit
+\code{INFEASIBLE}. Duplicate stratum names are treated as overlap errors.
+This check is cheap and frequently pays: subgroup tables that cannot
+support any conclusion are identified before any bounds are computed.
+
+\subsection{Reportable augmentation}
+\label{sec:aug}
+
+When the verdict is \code{REVERSIBLE} or \code{UNSUPPORTED}, the package
+lists additional aggregate summaries the original investigators could in
+principle supply, ordered by expected burden:
+
+\begin{enumerate}
+\item \emph{re-tabulation} (near-zero cost): an arm $\times$ stratum
+      outcome cross-tabulation, or per-stratum baseline risk;
+\item \emph{new measurement} on existing cohorts;
+\item \emph{new enrollment}: a stratum-restricted randomized cohort;
+\item \emph{abstain}: no publishable summary is shown to resolve the
+      decision.
+\end{enumerate}
+
+For the binary-stratum model, an arm $\times$ stratum cross-tabulation
+adds two independent equations and collapses $\Theta$ to a point ---
+identifiability is structural. Every option is classified
+(\texttt{sufficient\_assumed}, \texttt{potentially\_informative},
+\texttt{irrelevant}, \texttt{infeasible}, \texttt{unknown}) together with
+the assumptions under which its classification holds; no option carries
+an unconditional guarantee of resolution, since the future cells are
+unknown a priori.
+
+\subsection{Retrospective borrow check}
+
+As a demonstration diagnostic --- not a borrowing method --- the package
+pools the other subgroups' log risk ratios (fixed effect) and compares
+the prediction with the held-out subgroup's actual crude risk ratio. The
+comparison is retrospective by construction: it documents what unexamined
+pooling would have concluded on already-published data, not prospective
+validation, and it uses crude rather than adjusted effects.
+
+\section{Implementation and verification}
+\label{sec:impl}
+
+The package \texttt{ione} (distribution name \texttt{ione-audit}, version
+0.2.0) is pure \proglang{Python} depending only on NumPy
+\citep{numpy2020} and SciPy \citep{scipy2020}, with the LP solved by
+HiGHS \citep{huangfu2018}. It provides a Python API
+(\code{audit\_decision}, \code{suggest\_augmentation},
+\code{borrow\_check}, \code{EffectSummary.check\_consistency}) and a
+command-line interface (\code{ione audit}, \code{ione borrow-check})
+emitting structured JSON. Source, tests, and documentation are at
+\url{https://github.com/bougtoir/ione-stratification-framework}.
+
+Verification is algebraic rather than self-referential. For the
+two-by-two-by-two model the sharp bounds have a closed form: solving
+\eqref{eq:margins} for $p_{t,1}$ given free $p_{t,0}$ and intersecting
+the resulting windows yields $\mathrm{RD}_1^- = c - k\,d_{\max}$ and
+$\mathrm{RD}_1^+ = c - k\,d_{\min}$ with $c = (\bar p_1 - \bar p_0)/q$,
+$k = (1-q)/q$, and $d_{\min}, d_{\max}$ the range of $p_{1,0} - p_{0,0}$
+over the feasible windows. The test suite checks LP optima against this
+closed form (agreement to $10^{-8}$ on curated cases; $1.8 \times
+10^{-15}$ worst case over 200 random margins), against coarse full
+enumeration (sign agreement), and against published effect estimates
+(crude risk ratios for all three datasets, Haldane-corrected odds ratios
+for zero cells). Edge cases are asserted explicitly: missing prevalence
+returns \code{UNSUPPORTED}, inconsistent margins return
+\code{INFEASIBLE}, prevalence near 1 collapses bounds to the marginal
+risk difference, and prevalence near 0 widens them to $[-1, 1]$. All 27
+tests pass under Python 3.9--3.12 in continuous integration.
+
+\section{Applications to published trials}
+\label{sec:results}
+
+Table~\ref{tab:data} summarizes the three built-in datasets; all counts
+are transcribed from the primary publications and cross-verified (the
+RECOVERY counts match the primary report \citep{recovery2021}
+percentage-for-percentage; ISIS-2 from \citet{isis2_1988}; REACT from
+\citet{react2020}). We report crude estimates only; where the original
+study's headline was model-adjusted (REACT's fixed-effect odds ratio),
+that is noted rather than reproduced.
+
+\begin{table}[t!]
+\centering
+\caption{\label{tab:data} Source-verified published aggregate datasets
+used for the audits (crude arm-level counts): RECOVERY
+\citep{recovery2021}, ISIS-2 \citep{isis2_1988}, and WHO REACT
+\citep{react2020}.}
+\smallskip
+{\small
+\begin{tabular}{@{}llll@{}}
+\toprule
+study & outcome & stratum & events/$n$, treat vs.\ control \\
+\midrule
+RECOVERY & 28-day & overall & 482/2104 vs.\ 1110/4321 \\
+(NEJM 2021) & mortality & invasive ventilation & 95/324 vs.\ 283/683 \\
+& & oxygen only & 298/1279 vs.\ 682/2604 \\
+& & no oxygen & 89/501 vs.\ 145/1034 \\
+\midrule
+ISIS-2 & 5-week vascular & aspirin overall & 804/8587 vs.\ 1016/8600 \\
+(Lancet 1988) & mortality & streptokinase arm & 791/8592 vs.\ 1029/8595 \\
+& & both agents & 343/4292 vs.\ 568/4300 \\
+\midrule
+REACT & 28-day & overall & 222/678 vs.\ 425/1025 \\
+(JAMA 2020) & mortality & serious adv.\ events & 64/354 vs.\ 80/342 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+Table~\ref{tab:verdicts} reports the decision audits. The dominant
+finding is \code{REVERSIBLE}: for every non-degenerate subgroup target
+in the three datasets, the published margins admit compatible models on
+both sides of the decision threshold, and for minority strata the
+identified interval spans nearly the full $[-1,1]$ range (Figure
+\ref{fig:bounds}). ISIS-2 yields the single \code{ROBUST\_TREAT} verdict,
+but it is degenerate: the streptokinase ``subgroup'' coincides with the
+whole arm population ($q = 1$), so the conditional risk difference
+equals the marginal one --- the audit correctly reports robustness only
+where the margins actually pin it down. No published dataset was
+\code{INFEASIBLE} or \code{UNSUPPORTED}; Figure \ref{fig:verdicts} shows
+those states on labelled constructed inputs.
+
+\begin{table}[t!]
+\centering
+\caption{\label{tab:verdicts} Decision audits on published margins
+(threshold $\tau = 0$). ``Prevalence'' is the stratum share of the
+respective arm population; arm-specific prevalences are used where arm
+shares diverge.}
+\smallskip
+\begin{tabular}{@{}llllc@{}}
+\toprule
+study: target stratum & prevalence & bounds on $\mathrm{RD}$
+& verdict \\
+\midrule
+RECOVERY: invasive ventilation & 0.157 & $[-1.000,\,+1.000]$ &
+REVERSIBLE \\
+RECOVERY: oxygen only & 0.604 & $[-0.425,\,+0.379]$ & REVERSIBLE \\
+RECOVERY: no oxygen & 0.239 & $[-1.000,\,+0.959]$ & REVERSIBLE \\
+ISIS-2: streptokinase arm & 1.000 & $[-0.025,\,-0.025]$ &
+ROBUST\_TREAT \\
+ISIS-2: both agents & 0.500 & $[-0.236,\,+0.187]$ & REVERSIBLE \\
+REACT: serious adv.\ events & $0.334/0.522^a$ & $[-1.000,\,+0.627]$ &
+REVERSIBLE \\
+\bottomrule
+\multicolumn{4}{@{}l}{\footnotesize $^a$arm-specific prevalences
+$q_0, q_1$.}
+\end{tabular}
+\end{table}
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.75\textwidth]{fig_bounds_vs_q.pdf}
+\caption{\label{fig:bounds} Identified bounds on the conditional risk
+difference for the RECOVERY overall margins as a function of the stratum
+prevalence $q$. The dashed line marks the reported prevalence of the
+``no oxygen'' subgroup ($q = 0.239$). Bounds widen toward $[-1,1]$ for
+rare strata --- the information loss is driven by prevalence, not by
+sample size as modeled here.}
+\end{figure}
+
+\begin{figure}[t!]
+\centering
+\includegraphics[width=0.75\textwidth]{fig_verdicts.pdf}
+\caption{\label{fig:verdicts} Identified bound intervals across verdict
+states. The RECOVERY ``no oxygen'' audit is real data; the robust and
+infeasible rows are labelled constructed inputs (extreme margins;
+margin $>1$). \code{UNSUPPORTED} (missing specification) produces no
+bounds and is not shown.}
+\end{figure}
+
+The borrow check illustrates why the audit matters. On RECOVERY, pooling
+the other subgroups (invasive ventilation and oxygen only) predicts
+benefit for the untreated subgroup --- risk ratio 0.835
+(95\%~CI 0.755--0.923) --- while the actual published no-oxygen estimate
+shows harm, risk ratio 1.267 (0.995--1.613), with non-overlapping
+intervals. This is a retrospective demonstration on real published
+counts, not prospective validation of any borrowing rule; it documents
+that direction reversal under unexamined pooling is not hypothetical.
+
+For the \code{REVERSIBLE} RECOVERY cases, the augmentation list begins
+with a zero-cost option: an arm $\times$ respiratory-support outcome
+cross-tabulation of already-collected trial data, which would collapse
+the identified interval to a point if produced (the future cell values
+remain unknown, so the post-information decision is not guaranteed ---
+the classification states this). Per-stratum baseline risk and a
+stratum-restricted randomized cohort follow in burden order.
+
+Audits run at interactive speed: each LP pair solves in under a
+millisecond, and the full reproduction script (200 random-margin
+checks, a 400-point prevalence sweep, all audits and figures) completes
+in seconds on a laptop.
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{What the audit adds}
+
+The contribution of \texttt{ione} is a reproducible statistical audit
+workflow, not a new estimator: partial identification of conditional
+quantities from aggregate margins is classical
+\citep{cross2002, manski2003, king1997}, the LP formulation follows
+\citet{balke1997}, and the same marginal-consistency program has
+recently been developed independently for economic outcomes
+\citep{moon2026}. What was missing, and what the package supplies, is an
+applied layer that a clinical researcher can run on a published report:
+consistency screening of the printed tables, sharp bounds with a
+decision-verdict taxonomy that separates ``the data contradict
+themselves'' from ``the data do not decide'' from ``you have not given
+me enough specification,'' and an ordered list of what could still be
+reported to narrow the answer --- starting with re-tabulations that cost
+the original investigators nothing.
+
+\subsection{Practical uses and the value of abstention}
+
+Three uses appear immediate. First, citation hygiene: a clinician citing
+a subgroup result can check whether the published margins admit the
+implied decision at all; the RECOVERY no-oxygen case shows that widely
+interpreted subgroup tables can be fully decision-reversible. Second,
+requests for re-analysis: the augmentation ordering converts
+``we need IPD'' --- usually a dead end --- into a concrete, minimal,
+zero-cost request (an arm $\times$ stratum cross-tabulation) that trial
+groups can often supply. Third, a disciplined abstention state:
+\code{UNSUPPORTED} is an output, not an error, so incomplete reports end
+in an explicit statement of what is missing rather than silence.
+
+\subsection{Limitations}
+
+The current release handles binary strata, binary outcomes, and two arms
+only; richer covariates enlarge the polytope and are future work. Bounds
+are identification bounds on the published margins treated as exact ---
+sampling uncertainty in the reported counts is not propagated, and
+valid confidence sets for partially identified parameters are a
+separate known layer \citep{imbens2004}. Estimands are crude: adjusted
+published estimates cannot be reproduced from aggregate counts and are
+never substituted for them. The stratum prevalence (or arm-specific
+prevalences) must be estimable from the report, which restricts
+applicability to trials that publish subgroup denominators --- that
+availability is itself the binding real-world constraint. The borrow
+check is a retrospective diagnostic, not a validated borrowing method,
+and crude risk ratios may differ from adjusted ones. Finally, the audit
+audits identifiability, not truth: biased underlying estimates produce
+faithful bounds around biased margins.
+
+\subsection{Relation to further work}
+
+The framework complements, rather than competes with, sensitivity
+analysis \citep{vanderweele2017} and transportability
+\citep{pearlbareinboim2014}: those approaches ask whether conclusions
+survive bias or transfer across populations under assumptions, while the
+audit asks what the published numbers alone identify under the stated
+model. Extensions worth pursuing are interval-valued margins that carry
+sampling error, multi-level and continuous strata, and joint audits
+across linked trial reports.
+
+\section{Conclusions}
+\label{sec:conclusions}
+
+Published aggregate trial data carry more decision-relevant information
+than they are usually credited with --- and less than subgroup headlines
+suggest. \texttt{ione} makes the gap explicit and reproducible: sharp
+identification bounds on subgroup decisions, a verdict taxonomy that
+never conflates inconsistency, underspecification, and
+nonidentification, and a cost-ordered path to what could still be
+reported. On three landmark datasets the published subgroup margins are
+mostly decision-reversible, and a retrospective borrow check reproduces
+a real direction reversal that unexamined pooling would have produced.
+The practical value is a disciplined ``we do not know, and here is the
+cheapest thing that would tell us'' instead of either over-claiming or
+silence.
+
+\bibliography{ione_ajs}
+
+\end{document}

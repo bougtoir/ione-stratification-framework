@@ -1,0 +1,7 @@
+case,verdict,bound_lo,bound_hi,note
+RECOVERY noO2 (real),REVERSIBLE,-1.0000,0.9589,real data
+constructed: extreme benefit,ROBUST_TREAT,-1.0000,-0.2000,constructed
+constructed: extreme harm,ROBUST_NO_TREAT,0.2000,1.0000,constructed
+constructed: infeasible margins,INFEASIBLE (margin>1),-0.5000,1.5000,constructed
+p0bar=1.2 margin>1 (constructed),INFEASIBLE,,,empty feasible set
+no prevalence supplied (constructed),UNSUPPORTED,,,missing P(X=1)

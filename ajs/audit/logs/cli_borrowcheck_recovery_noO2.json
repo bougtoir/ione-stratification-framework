@@ -1,0 +1,16 @@
+{
+  "target": "noO2",
+  "pooled_pred": [
+    0.835,
+    0.755,
+    0.923
+  ],
+  "actual": [
+    1.267,
+    0.995,
+    1.613
+  ],
+  "direction_reversal": true,
+  "ci_overlap": false,
+  "caveat": "retrospective demonstration; crude vs adjusted RR; pooling inappropriate across differing endpoints/populations"
+}
