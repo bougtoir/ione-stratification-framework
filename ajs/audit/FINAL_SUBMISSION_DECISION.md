@@ -6,7 +6,7 @@ are author-side confirmations, not blockers to preparing the
 submission.
 
 Submission commit: `fc160fa62e72b82862e40cf68a0184421f62fbd2`
-(branch `devin/1791939580-ione-ajs-micro`).
+(branch `devin/1791939580-ione-ajs-micro`; the zip was packaged at branch HEAD — see git log for the two doc-only commits above this SHA).
 
 ## Why not HOLD
 
