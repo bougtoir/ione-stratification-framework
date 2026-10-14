@@ -1,0 +1,12 @@
+FONT AUDIT — before vs after visual-QC pass
+
+BEFORE (MINOR_FIX build): all Latin Modern / math fonts Type 1 embedded;
+the research figure contributed BMQQDV+DejaVuSans as **Type 3, embedded,
+no ToUnicode** (searchability loss in figure text).
+
+AFTER (this build): same Type 1 set; DejaVuSans now CID TrueType
+(Type 42), embedded with ToUnicode — zero Type 3 in manuscript and
+figure. No unintended font mixing; Latin Modern body/math/mono/sans
+all intentional (ajs.cls).
+
+Exceptions: none remaining.
