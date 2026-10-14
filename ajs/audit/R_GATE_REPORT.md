@@ -1,0 +1,113 @@
+# R-gate report — information-level (L1/L2/L3) final revision
+
+Date: 2026-10-13. Branch: `devin/1791935328-ione-ajs-l123` (based on
+`2c800f7`, the AJS reframe commit on the `devin/1791902572-ione-ajs`
+lineage — itself based on `21a253e`, PR #12 head; `main`/`eec5849`
+still lacks the aggregate-audit package, verified via `git log`).
+
+## R0 — input freeze and evidence ledger
+
+- Inputs enumerated: `ajs/manuscript/ione_ajs.tex|.bib|.pdf`,
+  `cover_letter.md`, `ajs/analysis/reproduce_a3.py`,
+  `ajs/audit/*`, package `ione/`, tests `tests/test_aggregate_audit.py`.
+- New source ledger: `ajs/audit/r_ledger.csv` — every number used vs
+  its published source (RECOVERY/ISIS-2/REACT), status column marks
+  "published counts" vs "published odds reductions only" vs
+  "post-treatment variable (excluded)".
+- Verification performed: RECOVERY arm-by-stratum counts re-checked
+  against NEJM 2021 report (482/2104 vs 1110/4321 overall; 95/324 vs
+  283/683 IMV; 298/1279 vs 682/2604 O2; **89/501 vs 145/1034 noO2 —
+  confirmed as the candidate in the prompt**). ISIS-2 full text
+  (Lancet 1988, PDF from jameslindlibrary.org) searched: subgroup
+  results appear ONLY as odds reductions (fig 3a; 35% SD 6 / 16% SD 7 /
+  21% SD 12 for streptokinase) — no arm-by-stratum denominators or
+  event counts are printed. REACT SAE is a post-treatment outcome.
+
+## R1 — information levels implemented
+
+New module `ione/levels.py`:
+
+- **L1**: overall arm margins only -> trivial identified set [-1,+1].
+- **L2**: + arm-by-stratum denominators (arm-specific prevalences
+  q0, q1) -> sharp LP bounds via the existing HiGHS engine.
+- **L3**: + arm-by-stratum event counts -> point-identified crude RD
+  (difference of published proportions); Wald CI reported separately
+  as sampling uncertainty, never merged into the identified set.
+- `audit_levels()` returns `LevelResult` per level with `reachable`
+  flag; L1/L2 carry an explicit "deliberate ablation" note when L3 was
+  published; unreachable levels return `UNSUPPORTED` instead of NaN
+  masquerading as a result.
+
+## R2 — math/implementation QC (logs/r_qc.txt)
+
+- RECOVERY subgroup sums equal the overall margins exactly
+  (consistency check: clean).
+- Non-negativity and events<=n asserted for every cell of all three
+  datasets.
+- LP bounds verified against the closed-form algebra (pre-existing
+  a3 suite: max err 1.8e-15 over 200 random margins).
+- **Monotone-nesting regression**: `check_monotone` asserts
+  L1 superset-of L2 superset-of L3-point on all RECOVERY strata and on
+  50 random margin-consistent synthetic tables (in tests).
+- Verdict states kept disjoint: point-identified L3 verdicts are
+  decision verdicts on the identified point (ROBUST_TREAT /
+  ROBUST_NO_TREAT), not claims about individual causal effects; the
+  manuscript states the causal-reading conditions explicitly.
+- pytest: **34/34 pass** (`logs/pytest_r.txt`).
+
+## R3 — RECOVERY and ISIS-2 real-data re-analysis (r_levels.csv)
+
+- RECOVERY (all levels genuinely published; ablation):
+  - IMV: L1 [-1,+1] -> L2 [-1.00,+1.00] -> L3 -0.121 [-0.183,-0.059]
+  - O2:  L1 [-1,+1] -> L2 [-0.43,+0.38] -> L3 -0.029 [-0.058,-0.000]
+  - noO2: L1 [-1,+1] -> L2 [-1.00,+0.96] -> L3 +0.037 [-0.002,+0.077]
+    (unfavourable direction; published age-adjusted RR 1.19 is a
+    distinct estimand and is flagged as such)
+- ISIS-2: factorial arm contrasts are L3-complete (aspirin -0.024,
+  streptokinase -0.028, both vs neither -0.052 crude RDs), but the
+  pre-treatment onset-time strata were published only as odds
+  reductions -> ladder stops at L1; missing table named explicitly
+  (arm x onset-time outcome cross-tabulation). No table invented.
+
+## R4 — REACT causal validity
+
+- `serious_adverse_events` confirmed post-treatment -> excluded from
+  subgroup-effect applications; retained in `ione/data.py` flagged
+  `post_treatment=True` as a documented counterexample, and described
+  in the manuscript as an excluded case. REACT overall counts are not
+  used in any stratum audit.
+
+## R5 — augmentation verification
+
+- Per level the next required table is named: L1->L2 needs
+  arm-by-stratum denominators; L2->L3 needs arm-by-stratum event
+  counts (for ISIS-2 this is the concrete missing table). No option
+  promises the decision will resolve (future cells unknown); the
+  manuscript keeps re-tabulation before new measurement before new
+  enrollment, and now notes that unmeasured modifiers/non-positivity
+  are not fixable by re-tabulation alone.
+
+## R6 — manuscript/figure/cover-letter consistency
+
+- `ione_ajs.tex`: new subsection "Information levels"; Abstract,
+  contributions paragraph, Applications (Table 2 rewritten as an
+  L1/L2/L3 table; new `fig_levels.pdf`; Table 1 footnotes mark ISIS-2
+  stratum publication gap and REACT exclusion), Practical uses,
+  Conclusions updated. Compiled 10 pp, no undefined refs.
+- `cover_letter.md` updated to the information-ladder framing.
+- Numbers in text/table/figure generated by `ajs/analysis/reproduce_r.py`
+  (no hand transcription).
+
+## R7 — pre-submission QC and verdict
+
+- pytest 34/34; pdflatex+bibtex build clean; every figure/table cited
+  in order (Table 1 data, Table 2 levels, Figure 1 levels).
+- PR #12 merge state vs `main`: still NOT merged into `main`
+  (eec5849); the work sits on the 21a253e lineage — recorded, not
+  silently assumed.
+- **Verdict: CONDITIONAL GO** — same residual items as before
+  (author confirmation of affiliation/address and ORCID; reviewer
+  suggestions need author CoI check; main-branch lineage check before
+  merge). No scientific blocker: the information-level revision
+  resolves the earlier conflation of ablation with publication gap and
+  removes the invalid REACT stratum.

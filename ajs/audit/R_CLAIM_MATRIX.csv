@@ -1,0 +1,8 @@
+claim,before (A0-A7 package),after (R revision),evidence / disposition
+"subgroup decision identifiability from published margins","published subgroup margins are usually decision-reversible (all targets REVERSIBLE except degenerate q=1)","same estimand audited per information level; REVERSIBLE retained only as L1/L2 ablation or genuine gap","r_levels.csv; fig_levels.pdf"
+"RECOVERY subgroup effects","bounds [-1,+1]/[-0.43,+0.38]/[-1.00,+0.96] REVERSIBLE for all strata","arm-by-stratum counts ARE published: L3 point-identifies crude RDs (-0.121,-0.029,+0.037); L1/L2 kept as labelled ablations","r_levels.csv; NEJM 2021; R_GATE_REPORT R3"
+"noO2 direction","bounds included both signs; decision reversible","L3 crude RD +0.037 (>0, unfavourable); published adjusted RR 1.19 noted as distinct estimand","r_qc.txt; NEJM abstract"
+"ISIS-2 subgroup evidence","'streptokinase' stratum ROBUST_TREAT [-0.025,-0.025] (degenerate q=1)","factorial arm contrasts are L3-complete treatment comparisons (not patient strata); patient onset-time strata reach L1 only (odds reductions published, no counts)","r_ledger.csv; Lancet 1988 fig 3a"
+"REACT subgroup","SAE stratum audited REVERSIBLE","SAE excluded: post-treatment outcome cannot define a stratum; kept as documented counterexample (post_treatment flag)","ione/data.py; R_GATE_REPORT R4"
+"contribution framing","audit workflow + verdict taxonomy + augmentations","+ explicit L1/L2/L3 ladder separating ablations from genuine publication gaps","ione/levels.py; manuscript sec 2.3"
+"verdict honesty","constructed examples for ROBUST/INFEASIBLE states","real point-identified verdicts at L3 (RECOVERY); unreachable levels return UNSUPPORTED, never fabricated","tests (34/34); logs/r_qc.txt"

@@ -1,0 +1,14 @@
+study,stratum,level,reachable,identified_lo,identified_hi,point_estimate,ci_lo,ci_hi,verdict,kind,note
+RECOVERY,IMV,L1,True,-1.0000,1.0000,,,,REVERSIBLE,real published counts,stratum counts withheld; no prevalence -> trivial bounds | ablation
+RECOVERY,IMV,L2,True,-1.0000,1.0000,,,,REVERSIBLE,real published counts,"LP bounds on stratum RD; q0=0.1581, q1=0.1540; deliberate ablation | ablation"
+RECOVERY,IMV,L3,True,-0.1211,-0.1211,-0.1211,-0.1830,-0.0593,ROBUST_TREAT,real published counts,crude stratum RD point-identified; CI is sampling uncertainty
+RECOVERY,O2,L1,True,-1.0000,1.0000,,,,REVERSIBLE,real published counts,stratum counts withheld; no prevalence -> trivial bounds | ablation
+RECOVERY,O2,L2,True,-0.4263,0.3769,,,,REVERSIBLE,real published counts,"LP bounds on stratum RD; q0=0.6026, q1=0.6079; deliberate ablation | ablation"
+RECOVERY,O2,L3,True,-0.0289,-0.0289,-0.0289,-0.0576,-0.0002,ROBUST_TREAT,real published counts,crude stratum RD point-identified; CI is sampling uncertainty
+RECOVERY,noO2,L1,True,-1.0000,1.0000,,,,REVERSIBLE,real published counts,stratum counts withheld; no prevalence -> trivial bounds | ablation
+RECOVERY,noO2,L2,True,-1.0000,0.9621,,,,REVERSIBLE,real published counts,"LP bounds on stratum RD; q0=0.2393, q1=0.2381; deliberate ablation | ablation"
+RECOVERY,noO2,L3,True,0.0374,0.0374,0.0374,-0.0022,0.0770,ROBUST_NO_TREAT,real published counts,crude stratum RD point-identified; CI is sampling uncertainty
+ISIS-2,time-from-onset stratum,L1,True,-1.0000,1.0000,,,,REVERSIBLE,real publication gap,published only as odds reductions (Lancet fig. 3a); arm x stratum counts never reported
+ISIS-2,time-from-onset stratum,L2,False,,,,,,UNSUPPORTED,real publication gap,published only as odds reductions (Lancet fig. 3a); arm x stratum counts never reported
+ISIS-2,time-from-onset stratum,L3,False,,,,,,UNSUPPORTED,real publication gap,published only as odds reductions (Lancet fig. 3a); arm x stratum counts never reported
+REACT,serious_adverse_events,excluded,,,,,,,not a pre-treatment stratum,excluded counterexample,post-treatment outcome; cannot define a stratum

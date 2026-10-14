@@ -1,7 +1,5 @@
-__pycache__/
-*.pyc
-*.pyo
-.DS_Store
+build/
+dist/
 *.egg-info/
-.env
-/full_outputs/
+__pycache__/
+.pytest_cache/

@@ -1,0 +1,11 @@
+== extended edge-case checks ==
+zero-event rr() -> raises ZeroDivisionError (documented: RR undefined, caller abstains)
+zero-event orr() -> Haldane OR=0.086 (finite)
+q=0.999 bounds [-0.1011,-0.0991] vs marginal -0.1000 -> shrink to margin
+q=0.02 bounds [-1.0000,1.0000] -> near-uninformative
+subgroup>overall -> ['error'] (error expected)
+augmentation[0] re_tabulation: arm × stratum outcome cross-tabulation of existing records [sufficient_assumed]
+augmentation[0] re_tabulation: per-stratum baseline (control-arm) risk [sufficient_assumed]
+augmentation[3] new_enrollment: prospective randomized cohort restricted to the target stratum [sufficient_assumed]
+borrow-check recovery/noO2: pooled (0.835, 0.755, 0.923) vs actual (1.267, 0.995, 1.613) reversal=True
+LP-vs-algebra max abs error over 200 random margins: 1.78e-15

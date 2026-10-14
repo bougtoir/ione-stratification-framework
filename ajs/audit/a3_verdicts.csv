@@ -1,0 +1,7 @@
+study,target,n_treat,n_ctrl,prevalence,verdict,bound_lo,bound_hi,residual
+recovery,IMV,324,683,0.1567,REVERSIBLE,-1.0000,1.0000,0.00e+00
+recovery,O2,1279,2604,0.6044,REVERSIBLE,-0.4251,0.3791,0.00e+00
+recovery,noO2,501,1034,0.2389,REVERSIBLE,-1.0000,0.9589,2.78e-17
+isis2,streptokinase,8592,8595,1.0000,ROBUST_TREAT,-0.0245,-0.0245,0.00e+00
+isis2,combo,4292,4300,0.4999,REVERSIBLE,-0.2363,0.1873,0.00e+00
+react,serious_adverse_events,354,342,"q0=0.3337,q1=0.5221",REVERSIBLE,-1.0000,0.6271,0.00e+00
