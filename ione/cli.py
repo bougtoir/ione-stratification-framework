@@ -56,6 +56,8 @@ def main(argv=None):
         else:
             p.error("need --study or --csv")
         report = eff.sufficiency_report()
+        # "sufficiency" is a legacy JSON key (original IONE vocabulary);
+        # kept for API compatibility. Verdict values are canonical.
         print(json.dumps({"sufficiency": report}, indent=2))
         # decision audit on the target subgroup using overall margins
         p0 = eff.overall.control.risk

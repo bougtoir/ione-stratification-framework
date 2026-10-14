@@ -133,9 +133,10 @@ taxonomy that keeps inconsistency (\code{INFEASIBLE}), underspecification
 separate; (ii) cost-ordered suggestions of additional \emph{reportable}
 summaries (re-tabulation of already-collected data before new measurement
 before new enrollment), each with its assumptions stated and none
-promising resolution; and (iii) three source-verified applications to
-landmark trials and a meta-analysis, including a documented real-data
-direction reversal that unexamined subgroup pooling would have produced.
+promising resolution; and (iii) two source-verified applications to
+landmark trials plus one deliberately excluded counterexample,
+including a documented real-data direction reversal that unexamined
+subgroup pooling would have produced.
 The name IONE also denotes an earlier observational-stratification
 framework by the same author (here: ``original/legacy IONE''); the two
 share only the name and are distinguished throughout.
@@ -145,8 +146,8 @@ external validity, and returns abstention (\code{UNSUPPORTED}) as a
 first-class output when the information class is not supported. The
 remainder of the paper defines the audit problem and the exact
 computation (Section~\ref{sec:methods}), describes the implementation and
-its verification (Section~\ref{sec:impl}), reports the three real-data
-audits (Section~\ref{sec:results}), and discusses scope, limitations, and
+its verification (Section~\ref{sec:impl}), reports the real-data audits
+(Section~\ref{sec:results}), and discusses scope, limitations, and
 relation to prior work (Section~\ref{sec:discussion}).
 
 \section{The audit problem and exact computation}
@@ -202,7 +203,9 @@ intervals: sampling uncertainty in the reported counts is a separate
 layer that we do not model here \citep[cf.][]{imbens2004}. Second, when
 arm compositions differ ($q_1 \neq q_0$), each arm uses its own stratum
 prevalence; a single common $q$ is used only when the arm shares are
-compatible. Third, nothing in \eqref{eq:margins} restricts
+compatible. At L2 the prevalences themselves come from the published
+denominators and are likewise conditioned on as given, not treated as
+exact population quantities. Third, nothing in \eqref{eq:margins} restricts
 unmeasured-effect-modifier structures beyond $X$; declaring a suspected
 unmeasured modifier changes only the augmentation advice
 (Section~\ref{sec:aug}), not the bounds.
@@ -225,6 +228,12 @@ of five disjoint states:
 \item \code{UNSUPPORTED}: the input lacks a required specification
       (stratum prevalence, arm mixing proportion) or the solver fails.
 \end{itemize}
+
+These are the five \emph{primary} states. For backward compatibility
+the implementation retains two legacy aliases, \code{SUFFICIENT} and
+\code{UNIDENTIFIABLE}, from the original IONE vocabulary; they are
+distinct enum values kept only so older callers do not break, and the
+audit outputs here never emit them.
 
 The \code{ROBUST} labels refer exclusively to sign stability within
 the identified set conditional on the observed margins and stated
@@ -352,7 +361,7 @@ information ladder, a regression test asserts on random margin-consistent
 inputs that adding constraints never enlarges the identified set
 (L1 $\supseteq$ L2 $\supseteq$ L3 point), and unreachable levels return
 \code{UNSUPPORTED}. All 34
-tests pass under Python 3.9--3.12 in continuous integration.
+tests pass under Python 3.9, 3.11, and 3.12 in continuous integration.
 
 \section{Applications to published trials}
 \label{sec:results}
@@ -403,8 +412,10 @@ see text.}
 \end{table}
 
 Table~\ref{tab:levels} reports the information-level audits at threshold
-$\tau = 0$, and Figure~\ref{fig:levels} shows the identified sets
-graphically.
+$\tau = 0$ (all demonstrations use this threshold; audits at other
+thresholds require an explicit user-specified analysis, which we do
+not separately validate here), and Figure~\ref{fig:levels} shows the
+identified sets graphically.
 
 \paragraph{RECOVERY.} RECOVERY publishes all three levels, so the ladder
 is a pure ablation experiment: at L1 and L2 (arm totals, plus stratum
@@ -550,9 +561,11 @@ prevalences) must be estimable from the report, which restricts
 applicability to trials that publish subgroup denominators --- that
 availability is itself the binding real-world constraint. The borrow
 check is a retrospective diagnostic, not a validated borrowing method,
-and crude risk ratios may differ from adjusted ones. Finally, the audit
-audits identifiability, not truth: biased underlying estimates produce
-faithful bounds around biased margins.
+and crude risk ratios may differ from adjusted ones. The demonstrations
+are drawn from cardiovascular and respiratory trials; the workflow is
+domain-agnostic but its value across other specialties is untested.
+Finally, the audit audits identifiability, not truth: biased underlying
+estimates produce faithful bounds around biased margins.
 
 \subsection{Relation to further work}
 
