@@ -26,7 +26,9 @@ inconsistent tables, missing specification, and genuine
 nonidentification are never conflated), and — the feature I believe your
 readers will find most useful — orders the *additional aggregate
 summaries the original investigators could still report* by burden,
-starting with a near-zero-cost cross-tabulation request, while honestly
+starting with a potentially low-burden cross-tabulation request ---
+recognizing that even re-tabulation carries real data-management and
+privacy costs for trial groups --- while honestly
 declining to promise that any augmentation resolves the decision. Every
 stratum audit is organized as an explicit information ladder — arm-level
 totals (L1), plus stratum denominators (L2), plus arm-by-stratum event

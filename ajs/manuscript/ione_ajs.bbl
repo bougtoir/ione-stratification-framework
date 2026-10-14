@@ -1,0 +1,117 @@
+\begin{thebibliography}{18}
+\newcommand{\enquote}[1]{``#1''}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi:\discretionary{}{}{}#1}\else
+  \providecommand{\doi}{doi:\discretionary{}{}{}\begingroup \urlstyle{rm}\Url}\fi
+\providecommand{\eprint}[2][]{\url{#2}}
+
+\bibitem[{Balke and Pearl(1997)}]{balke1997}
+Balke A, Pearl J (1997).
+\newblock \enquote{Bounds on Treatment Effects from Studies with Imperfect Compliance.}
+\newblock \emph{Journal of the American Statistical Association}, \textbf{92}(439), 1171--1176.
+\newblock \doi{10.1080/01621459.1997.10474074}.
+
+\bibitem[{Cross and Manski(2002)}]{cross2002}
+Cross PJ, Manski CF (2002).
+\newblock \enquote{Regressions, Short and Long.}
+\newblock \emph{Econometrica}, \textbf{70}(1), 357--368.
+\newblock \doi{10.1111/1468-0262.00279}.
+
+\bibitem[{Harris \emph{et~al.}(2020)Harris, Millman, van~der Walt \emph{et~al.}}]{numpy2020}
+Harris CR, Millman KJ, van~der Walt SJ, \emph{et~al.} (2020).
+\newblock \enquote{Array Programming with {NumPy}.}
+\newblock \emph{Nature}, \textbf{585}, 357--362.
+\newblock \doi{10.1038/s41586-020-2649-2}.
+
+\bibitem[{Horowitz and Manski(2000)}]{horowitz2000}
+Horowitz JL, Manski CF (2000).
+\newblock \enquote{Nonparametric Analysis of Randomized Experiments with Missing Covariate and Outcome Data.}
+\newblock \emph{Journal of the American Statistical Association}, \textbf{95}(449), 77--84.
+\newblock \doi{10.1080/01621459.2000.10473902}.
+
+\bibitem[{Huangfu and Hall(2018)}]{huangfu2018}
+Huangfu Q, Hall JAJ (2018).
+\newblock \enquote{Parallelizing the Dual Revised Simplex Method.}
+\newblock \emph{Mathematical Programming Computation}, \textbf{10}(1), 119--142.
+\newblock \doi{10.1007/s12532-017-0130-5}.
+
+\bibitem[{Imbens and Manski(2004)}]{imbens2004}
+Imbens GW, Manski CF (2004).
+\newblock \enquote{Confidence Intervals for Partially Identified Parameters.}
+\newblock \emph{Econometrica}, \textbf{72}(6), 1845--1857.
+\newblock \doi{10.1111/j.1468-0262.2004.00555.x}.
+
+\bibitem[{{ISIS-2 Collaborative Group}(1988)}]{isis2_1988}
+{ISIS-2 Collaborative Group} (1988).
+\newblock \enquote{Randomised Trial of Intravenous Streptokinase, Oral Aspirin, Both, or Neither among 17,187 Cases of Suspected Acute Myocardial Infarction.}
+\newblock \emph{The Lancet}, \textbf{2}, 349--360.
+\newblock \doi{10.1016/S0140-6736(88)92833-4}.
+
+\bibitem[{King(1997)}]{king1997}
+King G (1997).
+\newblock \emph{A Solution to the Ecological Inference Problem: Reconstructing Individual Behavior from Aggregate Data}.
+\newblock Princeton University Press, Princeton.
+
+\bibitem[{Manski(2003)}]{manski2003}
+Manski CF (2003).
+\newblock \emph{Partial Identification of Probability Distributions}.
+\newblock Springer-Verlag, New York.
+
+\bibitem[{McCarthy \emph{et~al.}(2015)McCarthy, Millimet, and Roy}]{mccarthy2015}
+McCarthy I, Millimet DL, Roy M (2015).
+\newblock \enquote{Bounding Treatment Effects: A Command for the Partial Identification of the Average Treatment Effect with Endogenous and Misreported Treatment Assignment.}
+\newblock \emph{The Stata Journal}, \textbf{15}(2), 411--436.
+\newblock \doi{10.1177/1536867X1501500205}.
+
+\bibitem[{Moon(2026)}]{moon2026}
+Moon S (2026).
+\newblock \enquote{Partial Identification of Individual-Level Parameters Using Aggregate Data in a Nonparametric Model.}
+\newblock \emph{Econometric Reviews}.
+\newblock \doi{10.1080/07474938.2025.2604682}.
+
+\bibitem[{Palmer \emph{et~al.}(2011)Palmer, Ramsahai, Holmes, Steer, Sheehan, Tobias, Lawlor, and Smith}]{palmer2011}
+Palmer TM, Ramsahai RR, Holmes FL, Steer CD, Sheehan NA, Tobias JH, Lawlor DA, Smith GD (2011).
+\newblock \enquote{Nonparametric Bounds for the Causal Effect in a Binary Instrumental-Variable Model.}
+\newblock \emph{The Stata Journal}, \textbf{11}(3), 345--367.
+\newblock \doi{10.1177/1536867X1101100302}.
+
+\bibitem[{Pearl and Bareinboim(2014)}]{pearlbareinboim2014}
+Pearl J, Bareinboim E (2014).
+\newblock \enquote{External Validity: From {D}o-Calculus to Transportability Across Populations.}
+\newblock \emph{Statistical Science}, \textbf{29}(4), 579--595.
+\newblock \doi{10.1214/14-STS486}.
+
+\bibitem[{{RECOVERY Collaborative Group}(2021)}]{recovery2021}
+{RECOVERY Collaborative Group} (2021).
+\newblock \enquote{Dexamethasone in Hospitalized Patients with {C}ovid-19.}
+\newblock \emph{New England Journal of Medicine}, \textbf{384}, 693--704.
+\newblock \doi{10.1056/NEJMoa2021436}.
+
+\bibitem[{VanderWeele and Ding(2017)}]{vanderweele2017}
+VanderWeele TJ, Ding P (2017).
+\newblock \enquote{Sensitivity Analysis in Observational Research: Introducing the {E}-Value.}
+\newblock \emph{Annals of Internal Medicine}, \textbf{167}(4), 268--274.
+\newblock \doi{10.7326/M16-2607}.
+
+\bibitem[{Viechtbauer(2010)}]{viechtbauer2010}
+Viechtbauer W (2010).
+\newblock \enquote{Conducting Meta-Analyses in {R} with the \texttt{metafor} Package.}
+\newblock \emph{Journal of Statistical Software}, \textbf{36}(3), 1--48.
+\newblock \doi{10.18637/jss.v036.i03}.
+
+\bibitem[{Virtanen \emph{et~al.}(2020)Virtanen, Gommers, Oliphant \emph{et~al.}}]{scipy2020}
+Virtanen P, Gommers R, Oliphant TE, \emph{et~al.} (2020).
+\newblock \enquote{{SciPy} 1.0: Fundamental Algorithms for Scientific Computing in {Python}.}
+\newblock \emph{Nature Methods}, \textbf{17}, 261--272.
+\newblock \doi{10.1038/s41592-019-0686-2}.
+
+\bibitem[{{WHO Rapid Evidence Appraisal for COVID-19 Therapies (REACT) Working Group} and Sterne(2020)}]{react2020}
+{WHO Rapid Evidence Appraisal for COVID-19 Therapies (REACT) Working Group}, Sterne JAC (2020).
+\newblock \enquote{Association between Administration of Systemic Corticosteroids and Mortality among Critically Ill Patients with {COVID}-19: A Meta-Analysis.}
+\newblock \emph{JAMA}, \textbf{324}(13), 1330--1341.
+\newblock \doi{10.1001/jama.2020.17023}.
+
+\end{thebibliography}

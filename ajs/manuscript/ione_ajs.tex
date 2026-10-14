@@ -44,9 +44,9 @@ patients) the published arm-by-stratum counts reach L3 and
 point-identify the crude stratum risk differences --- including the
 unfavourable direction in the no-oxygen subgroup that lower information
 levels leave undecided --- while in ISIS-2 (aspirin and streptokinase in
-acute myocardial infarction) subgroup results were published only as
-odds reductions and the ladder stops at L1, making the missing table
-concrete. A retrospective leave-one-subgroup-out check on RECOVERY
+acute myocardial infarction) subgroup effects were published as odds
+reductions but not as arm-by-stratum counts, so the event-count ladder
+stops at L1 and names the missing table concretely. A retrospective leave-one-subgroup-out check on RECOVERY
 further reproduces a realistic direction reversal that unexamined
 pooling would have produced. The tool recommends no treatment; it
 reports what each level of published counts identifies and what
@@ -225,6 +225,11 @@ of five disjoint states:
 \item \code{UNSUPPORTED}: the input lacks a required specification
       (stratum prevalence, arm mixing proportion) or the solver fails.
 \end{itemize}
+
+The \code{ROBUST} labels refer exclusively to sign stability within
+the identified set conditional on the observed margins and stated
+assumptions; they do not incorporate sampling uncertainty and do not
+constitute clinical treatment recommendations.
 
 The separation matters in practice: \code{INFEASIBLE} points to a
 reporting error worth querying, \code{UNSUPPORTED} to missing analyst
@@ -408,7 +413,9 @@ no-oxygen stratum the L2 bounds span essentially $[-1,+1]$ --- while the
 arm-by-stratum counts at L3 point-identify the crude risk differences:
 $-0.121$ (95\%~CI $-0.183$ to $-0.059$) under invasive ventilation,
 $-0.029$ ($-0.058$ to $-0.000$) under oxygen only, and $+0.037$
-($-0.002$ to $+0.077$) under no oxygen. The ablation makes the role of
+($-0.002$ to $+0.077$) under no oxygen --- point-identification of the
+direction, while the 95\%~CI crossing zero records the separate
+sampling-uncertainty layer. The ablation makes the role of
 each table explicit: the published subgroup counts are what carry the
 stratum conclusions, and the no-oxygen subgroup's unfavourable direction
 --- which its age-adjusted rate ratio (1.19, a distinct estimand)
@@ -419,8 +426,11 @@ published at L3-equivalent completeness (aspirin $-0.024$, streptokinase
 $-0.028$, both vs.\ neither $-0.052$ crude risk differences), but for
 patient strata --- the report's own time-from-pain-onset subgroups ---
 only odds reductions were printed, without arm-by-stratum denominators
-or event counts. The ladder for those strata therefore stops at L1:
-L2 and L3 are genuinely unreachable, and the augmentation request is
+or event counts. The ladder for those strata therefore stops at L1 ---
+a property of the event-count ladder, not an absence of published
+subgroup evidence: the report does contain stratified effect summaries,
+just not in the count form that the audit requires. L2 and L3 are
+genuinely unreachable, and the augmentation request is
 concrete --- the arm $\times$ onset-time outcome cross-tabulation that
 was analyzed but not reported. We do not invent the missing table.
 
