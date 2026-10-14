@@ -1,0 +1,47 @@
+This is BibTeX, Version 0.99e (TeX Live 2026)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: ione_ajs.aux
+The style file: ajs.bst
+Database file #1: ione_ajs.bib
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+You've used 18 entries,
+            3140 wiz_defined-function locations,
+            761 strings with 8404 characters,
+and the built_in function-call counts, 16150 in all, are:
+= -- 1380
+> -- 374
+< -- 14
++ -- 143
+- -- 123
+* -- 1357
+:= -- 2176
+add.period$ -- 86
+call.type$ -- 18
+change.case$ -- 111
+chr.to.int$ -- 18
+cite$ -- 18
+duplicate$ -- 1474
+empty$ -- 1520
+format.name$ -- 181
+if$ -- 3298
+int.to.chr$ -- 1
+int.to.str$ -- 1
+missing$ -- 217
+newline$ -- 117
+num.names$ -- 72
+pop$ -- 423
+preamble$ -- 1
+purify$ -- 111
+quote$ -- 0
+skip$ -- 307
+stack$ -- 0
+substring$ -- 1532
+swap$ -- 523
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 156
+warning$ -- 0
+while$ -- 125
+width$ -- 0
+write$ -- 273

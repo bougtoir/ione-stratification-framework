@@ -34,16 +34,22 @@ Submission commit: `fc160fa62e72b82862e40cf68a0184421f62fbd2`
    ("Shiga University, Data Science AI Innovation Research Promotion
    Center" and the Banba address) and supply ORCID if available —
    currently left as provided, ORCID not invented.
-2. **Git lineage**: `main` (`eec5849`) does not contain the
-   aggregate-audit package; the submission lineage is the `21a253e`
-   family (PRs #13, #14, and this branch). Verify intended base and
-   merge publicly before or alongside submission so the linked
-   repository contains the audited code. Suggested reviewers
-   (Palmer/Shpitser/Mathur) need the author's conflict-of-interest
+2. ~~**Git lineage**~~ — RESOLVED 2026-10-14: PRs #13, #14, #15 merged;
+   `main` @ `b0e62d7` contains the audited package and the `ajs/` tree.
+   Remaining: merge this minor-fix branch so the repo exactly matches
+   the submitted manuscript version (or submit as-is and merge before
+   publication; the differences are prose-only). Suggested reviewers
+   (Palmer/Shpitser/Mathur) still need the author's conflict-of-interest
    check.
-3. **License/repo polish**: package README already documents the
-   audited features; ensure the public repo reflects this commit
-   (done once PR is merged by the author).
+3. **Version tag** (optional): no git tag/release exists for v0.2.0;
+   tagging the submission commit after merge is recommended but not
+   required.
+
+## Minor-fix update (this commit)
+
+All adversarial-review issues I-01..I-10 handled — see
+`MINOR_FIX_CHANGELOG.md`. Prose-only edits; no numeric results changed.
+pytest 34/34; PDF rebuilds clean (10 pp).
 
 ## Not done (per instructions)
 
