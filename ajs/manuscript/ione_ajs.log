@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.10.13)  14 OCT 2026 01:56
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.10.13)  14 OCT 2026 02:25
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -658,23 +658,14 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
  []
 
 [4]
-Overfull \hbox (100.37367pt too wide) in paragraph at lines 334--344
-\T1/lmr/m/n/10.95 (\T1/lmtt/m/n/10.95 audit_decision\T1/lmr/m/n/10.95 , \T1/lmtt/m/n/10.95 audit_levels\T1/lmr/m/n/10.95 , \T1/lmtt/m/n/10.95 suggest_augmentation\T1/lmr/m/n/10.95 , \T1/lmtt/m/n/10.95 borrow_check\T1/lmr/m/n/10.95 , \T1/lmtt/m/n/10.95 EffectSummary.check_consistency\T1/lmr/m/n/10.95 )
- []
-
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 386.
+(Font)              <10> on input line 388.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 386.
+(Font)              <7> on input line 388.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 386.
+(Font)              <5> on input line 388.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <9> on input line 406.
-
-Overfull \hbox (283.23914pt too wide) in paragraph at lines 386--412
- [][] 
- []
-
+(Font)              <9> on input line 408.
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 5
@@ -684,7 +675,7 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 <fig_levels.pdf, id=220, 462.52798pt x 289.08pt>
 File: fig_levels.pdf Graphic file (type pdf)
 <use fig_levels.pdf>
-Package pdftex.def Info: fig_levels.pdf  used on input line 485.
+Package pdftex.def Info: fig_levels.pdf  used on input line 487.
 (pdftex.def)             Requested size: 354.12434pt x 221.33955pt.
 
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
@@ -692,6 +683,9 @@ Overfull \hbox (5.47499pt too wide) has occurred while \output is active
  []
 
 [6]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
 Overfull \hbox (5.47499pt too wide) has occurred while \output is active
 [] \T1/lmr/m/n/10.95 7
  []
@@ -720,18 +714,18 @@ Package rerunfilecheck Info: File `ione_ajs.out' has not changed.
 (rerunfilecheck)             Checksum: F1B1ACA060746A9DAC4FA10D314761F4;3332.
  ) 
 Here is how much of TeX's memory you used:
- 22217 strings out of 469040
- 415079 string characters out of 5457101
- 805320 words of memory out of 5000000
- 50851 multiletter control sequences out of 15000+600000
+ 22219 strings out of 469040
+ 415141 string characters out of 5457101
+ 803320 words of memory out of 5000000
+ 50853 multiletter control sequences out of 15000+600000
  710313 words of font info for 99 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 122i,10n,122p,574b,575s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 122i,12n,122p,574b,573s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi6.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi8.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmr8.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmr9.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmri10.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmro10.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmss10.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy8.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></home/ubuntu/.TinyTeX/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb>
-Output written on ione_ajs.pdf (10 pages, 345727 bytes).
+Output written on ione_ajs.pdf (10 pages, 344027 bytes).
 PDF statistics:
- 453 PDF objects out of 1000 (max. 8388607)
- 344 compressed objects within 4 object streams
+ 404 PDF objects out of 1000 (max. 8388607)
+ 342 compressed objects within 4 object streams
  72 named destinations out of 1000 (max. 500000)
  151 words of extra memory for PDF output out of 10000 (max. 10000000)
 

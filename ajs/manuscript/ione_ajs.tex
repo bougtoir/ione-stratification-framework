@@ -331,16 +331,18 @@ validation, and it uses crude rather than adjusted effects.
 \section{Implementation and verification}
 \label{sec:impl}
 
+\begin{sloppypar}
 The package \texttt{ione} (distribution name \texttt{ione-audit}, version
 0.2.0) is pure \proglang{Python} depending only on NumPy
 \citep{numpy2020} and SciPy \citep{scipy2020}, with the LP solved by
-HiGHS \citep{huangfu2018}. It provides a Python API
-(\code{audit\_decision}, \code{audit\_levels},
-\code{suggest\_augmentation},
-\code{borrow\_check}, \code{EffectSummary.check\_consistency}) and a
+HiGHS \citep{huangfu2018}. It provides a Python API with functions
+\code{audit\_decision}, \code{audit\_levels},
+\code{suggest\_augmentation}, \code{borrow\_check}, and
+\code{EffectSummary.check\_consistency}, and a
 command-line interface (\code{ione audit}, \code{ione borrow-check})
 emitting structured JSON. Source, tests, and documentation are at
 \url{https://github.com/bougtoir/ione-stratification-framework}.
+\end{sloppypar}
 
 Verification is algebraic rather than self-referential. For the
 two-by-two-by-two model the sharp bounds have a closed form: solving
@@ -400,13 +402,13 @@ ISIS-2 & 5-week vascular & aspirin contrast & 804/8587 vs.\ 1016/8600 \\
 REACT & 28-day & overall & 222/678 vs.\ 425/1025 \\
 (JAMA 2020) & mortality & serious adv.\ events$^b$ & 64/354 vs.\ 80/342 \\
 \bottomrule
-\multicolumn{4}{@{}l}{\footnotesize $^a$Published only as odds
-reductions by time from pain onset (35\% SD 6, 16\% SD 7, 21\% SD 12
-for streptokinase); arm-by-stratum denominators and counts were never
-reported.}\\
-\multicolumn{4}{@{}l}{\footnotesize $^b$A post-treatment outcome, not a
-pre-treatment stratum --- retained only as a documented counterexample;
-see text.}
+\multicolumn{4}{@{}p{\textwidth}@{}}{\footnotesize $^a$Published only
+as odds reductions by time from pain onset (35\% SD 6, 16\% SD 7, 21\%
+SD 12 for streptokinase); arm-by-stratum denominators and counts were
+never reported.}\\
+\multicolumn{4}{@{}p{\textwidth}@{}}{\footnotesize $^b$A post-treatment
+outcome, not a pre-treatment stratum --- retained only as a documented
+counterexample; see text.}
 \end{tabular}
 }
 \end{table}

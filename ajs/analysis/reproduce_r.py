@@ -26,6 +26,7 @@ from ione.augmentation import suggest_augmentation
 
 import matplotlib
 matplotlib.use("Agg")
+matplotlib.rcParams["pdf.fonttype"] = 42  # embed TrueType; avoid Type 3
 import matplotlib.pyplot as plt
 
 OUT = os.path.join(os.path.dirname(__file__), "..", "audit")
@@ -137,8 +138,9 @@ for s in RECOVERY.subgroups:
     y += 0.7
 # ISIS-2: only L1
 ax.plot([-1, 1], [y, y], lw=2, color="0.6")
-ax.annotate("only odds reductions published\n(L1 reached; L2/L3 not recoverable)",
-            xy=(0.55, y), fontsize=7, color="0.3", va="center")
+ax.annotate("only odds reductions published\n(L1 reached; L2/L3 unreachable)",
+            xy=(0, y - 0.30), fontsize=7, color="0.3", va="center",
+            ha="center")
 ylabels.append("ISIS-2 onset-time stratum")
 ypos.append(y)
 ax.axvline(0, color="black", lw=0.8)
@@ -153,7 +155,7 @@ ax.legend(handles=[
     fontsize=7, frameon=False, loc="upper center",
     bbox_to_anchor=(0.5, -0.18), ncol=1)
 fig.tight_layout(rect=(0, 0.06, 1, 1))
-fig.savefig(os.path.join(OUT, "fig_levels.pdf"))
+fig.savefig(os.path.join(OUT, "fig_levels.pdf"))  # Type-42 fonts, no Type 3
 fig.savefig(os.path.join(OUT, "..", "manuscript", "fig_levels.pdf"))
 
 # ---------- QC checks ----------------------------------------------------
