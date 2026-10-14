@@ -31,7 +31,7 @@ Submission commit: `fc160fa62e72b82862e40cf68a0184421f62fbd2`
 ## Conditions the author must close before pressing "submit"
 
 1. **Affiliation/ORCID**: confirm the legal affiliation string
-   ("Shiga University, Data Science AI Innovation Research Promotion
+   ("Shiga University, Data Science and AI Innovation Research Promotion
    Center" and the Banba address) and supply ORCID if available —
    currently left as provided, ORCID not invented.
 2. ~~**Git lineage**~~ — RESOLVED 2026-10-14: PRs #13, #14, #15 merged;

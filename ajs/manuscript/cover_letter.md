@@ -67,4 +67,4 @@ propose names on request.
 
 Sincerely,
 Tatsuki Onishi
-Shiga University, Data Science AI Innovation Research Promotion Center
+Shiga University, Data Science and AI Innovation Research Promotion Center

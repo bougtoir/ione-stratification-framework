@@ -18,7 +18,7 @@ scope.
 
 1. **Author confirmations required**: ORCID; official English
    affiliation name and postal address (currently "Shiga University,
-   Data Science AI Innovation Research Promotion Center, 1-1-1 Banba,
+   Data Science and AI Innovation Research Promotion Center, 1-1-1 Banba,
    Hikone" — guessed address, must confirm); consent to list suggested
    reviewers (Palmer, Shpitser, Mathur — no CoI confirmed by author).
 2. **Main-branch discrepancy (informational)**: handoff stated

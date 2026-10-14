@@ -10,7 +10,7 @@ authors:
   - name: Tatsuki Onishi
     affiliation: 1
 affiliations:
-  - name: Shiga University, Data Science AI Innovation Research Promotion Center
+  - name: Shiga University, Data Science and AI Innovation Research Promotion Center
     index: 1
 date: 11 October 2026
 bibliography: paper.bib

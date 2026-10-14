@@ -16,7 +16,7 @@ in `ione_ajs.log`.
 | I-06 | New `ajs/analysis/README.md`: `r_*` artifacts authoritative; `reproduce_a3.py`, `a3_*.csv`, `fig_bounds_vs_q.pdf`, `fig_verdicts.pdf` labelled superseded historical evidence (kept, not deleted) | `ajs/analysis/README.md` (new) | file list cross-checked vs `ajs/audit/` + `ajs/figures/` |
 | I-07 | README documents legacy CLI JSON key `"sufficiency"`; in-code comment added above the `print` | `ajs/analysis/README.md`, `ione/cli.py` | key name unchanged — no API break |
 | I-08 | Verified, not fabricated: PR #13/#14/#15 are merged; `main` @ b0e62d7 contains the full `ione/` package, `ajs/` tree, tests | repo inspection | `git log origin/main`; manuscript repo URL unchanged |
-| I-09 | Author metadata rechecked: affiliation "Shiga University, Data Science AI Innovation Research Promotion Center / 1-1-1 Banba, Hikone, Shiga 522-8522" and ORCID remain author-reported, not independently confirmed | `ione_ajs.tex` title block | flagged as submission-time author confirmation (genuine unresolved item) |
+| I-09 | Author metadata rechecked: affiliation "Shiga University, Data Science and AI Innovation Research Promotion Center / 1-1-1 Banba, Hikone, Shiga 522-8522" and ORCID remain author-reported, not independently confirmed | `ione_ajs.tex` title block | flagged as submission-time author confirmation (genuine unresolved item) |
 | I-10 | Added limitation clause: demonstrations drawn from cardiovascular and respiratory trials; workflow domain-agnostic but value across other specialties untested | `ione_ajs.tex` §Limitations | one clause, no new datasets demanded |
 
 Also synchronized: Intro roadmap "reports the three real-data audits" →
